@@ -1,0 +1,94 @@
+{
+  "policy_version": "1.0",
+  "default_decision": "DENY",
+  "policies": [
+    {
+      "policy_id": "A2A-REGISTERED-SKILL-DELEGATION",
+      "priority": 100,
+      "request_type": "A2A",
+      "actions": [
+        "delegate_skill",
+        "share_context"
+      ],
+      "agent_status": "ACTIVE",
+      "skill_must_be_registered": true,
+      "decision": "ALLOW_WITH_OBLIGATIONS",
+      "obligations": [
+        "LOG_ACCESS",
+        "PRESERVE_PROVENANCE"
+      ]
+    },
+    {
+      "policy_id": "MCP-REGISTERED-READ-TOOLS",
+      "priority": 90,
+      "request_type": "MCP",
+      "actions": [
+        "invoke_tool"
+      ],
+      "tool_must_be_registered_to_agent": true,
+      "operation_modes": [
+        "READ"
+      ],
+      "decision": "ALLOW_WITH_OBLIGATIONS",
+      "obligations": [
+        "READ_ONLY",
+        "LOG_ACCESS",
+        "PRESERVE_PROVENANCE"
+      ]
+    },
+    {
+      "policy_id": "MCP-PRODUCTION-MUTATION-ESCALATE",
+      "priority": 110,
+      "request_type": "MCP",
+      "actions": [
+        "invoke_tool"
+      ],
+      "operation_modes": [
+        "WRITE",
+        "EXECUTE"
+      ],
+      "resource_patterns": [
+        "servicenow.create_assessment",
+        "production.restart",
+        "production.rollback",
+        "production.scale"
+      ],
+      "decision": "ESCALATE",
+      "obligations": [
+        "HUMAN_APPROVAL_BEFORE_ACTION",
+        "LOG_ACCESS"
+      ]
+    },
+    {
+      "policy_id": "DATA-REGISTERED-DOMAIN-READ",
+      "priority": 90,
+      "request_type": "DATA",
+      "actions": [
+        "read"
+      ],
+      "data_domain_must_be_registered_to_agent": true,
+      "allowed_classifications": [
+        "SYNTHETIC"
+      ],
+      "decision": "ALLOW_WITH_OBLIGATIONS",
+      "obligations": [
+        "READ_ONLY",
+        "PRESERVE_PROVENANCE",
+        "LOG_ACCESS"
+      ]
+    },
+    {
+      "policy_id": "DATA-UNREGISTERED-DENY",
+      "priority": 10,
+      "request_type": "DATA",
+      "actions": [
+        "read",
+        "write"
+      ],
+      "decision": "DENY",
+      "obligations": [
+        "LOG_ACCESS"
+      ]
+    }
+  ]
+}

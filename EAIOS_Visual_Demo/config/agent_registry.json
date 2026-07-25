@@ -1,0 +1,139 @@
+{
+  "registry_version": "1.0",
+  "agents": [
+    {
+      "agent_id": "graph_context_agent",
+      "name": "Graph Context Agent",
+      "status": "ACTIVE",
+      "skills": [
+        "semantic_context"
+      ],
+      "reliability_score": 0.98,
+      "estimated_cost": 1.0,
+      "a2a_protocol": "LOCAL_A2A",
+      "mcp_tools": [
+        "semantic_graph.query"
+      ],
+      "data_domains": [
+        "entity_registry",
+        "semantic_relationships"
+      ]
+    },
+    {
+      "agent_id": "due_diligence_agent",
+      "name": "Due-Diligence Validation Agent",
+      "status": "ACTIVE",
+      "skills": [
+        "due_diligence_validation"
+      ],
+      "reliability_score": 0.95,
+      "estimated_cost": 1.1,
+      "a2a_protocol": "LOCAL_A2A",
+      "mcp_tools": [
+        "telemetry.query_summary",
+        "servicenow.query_recent_changes",
+        "knowledge.query_metadata"
+      ],
+      "data_domains": [
+        "health_observations",
+        "known_errors",
+        "outcome_history",
+        "changes",
+        "knowledge_metadata"
+      ]
+    },
+    {
+      "agent_id": "recommendation_governance_agent",
+      "name": "Recommendation and Governance Agent",
+      "status": "ACTIVE",
+      "skills": [
+        "governed_recommendation"
+      ],
+      "reliability_score": 0.97,
+      "estimated_cost": 1.0,
+      "a2a_protocol": "LOCAL_A2A",
+      "mcp_tools": [
+        "servicenow.create_assessment"
+      ],
+      "data_domains": [
+        "evidence_summary",
+        "business_context"
+      ]
+    },
+    {
+      "agent_id": "telemetry_analysis_agent",
+      "name": "Telemetry Analysis Agent",
+      "status": "ACTIVE",
+      "skills": [
+        "detailed_telemetry_analysis"
+      ],
+      "reliability_score": 0.96,
+      "estimated_cost": 1.5,
+      "a2a_protocol": "LOCAL_A2A",
+      "mcp_tools": [
+        "telemetry.query_timeseries"
+      ],
+      "data_domains": [
+        "telemetry_samples",
+        "metric_definitions"
+      ]
+    },
+    {
+      "agent_id": "knowledge_retrieval_agent",
+      "name": "Knowledge Retrieval Agent",
+      "status": "ACTIVE",
+      "skills": [
+        "governed_knowledge_retrieval"
+      ],
+      "reliability_score": 0.94,
+      "estimated_cost": 1.6,
+      "a2a_protocol": "LOCAL_A2A",
+      "mcp_tools": [
+        "enterprise_search.retrieve"
+      ],
+      "data_domains": [
+        "knowledge_documents",
+        "incidents",
+        "problems",
+        "changes"
+      ]
+    },
+    {
+      "agent_id": "change_dependency_agent",
+      "name": "Change and Dependency Investigation Agent",
+      "status": "ACTIVE",
+      "skills": [
+        "change_dependency_investigation"
+      ],
+      "reliability_score": 0.93,
+      "estimated_cost": 1.4,
+      "a2a_protocol": "LOCAL_A2A",
+      "mcp_tools": [
+        "servicenow.query_changes",
+        "semantic_graph.query_dependencies"
+      ],
+      "data_domains": [
+        "changes",
+        "semantic_relationships",
+        "business_context"
+      ]
+    },
+    {
+      "agent_id": "evidence_fusion_agent",
+      "name": "Evidence Fusion and Recommendation Agent",
+      "status": "ACTIVE",
+      "skills": [
+        "evidence_fusion_recommendation"
+      ],
+      "reliability_score": 0.97,
+      "estimated_cost": 1.8,
+      "a2a_protocol": "LOCAL_A2A",
+      "mcp_tools": [
+        "servicenow.create_assessment"
+      ],
+      "data_domains": [
+        "all_governed_evidence"
+      ]
+    }
+  ]
+}

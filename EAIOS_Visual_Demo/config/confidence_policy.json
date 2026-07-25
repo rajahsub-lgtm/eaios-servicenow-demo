@@ -1,0 +1,45 @@
+{
+  "policy_version": "1.0",
+  "levels": {
+    "HIGH": 0.85,
+    "MEDIUM": 0.5,
+    "LOW": 0.0
+  },
+  "weights": {
+    "graph_applicability": 0.2,
+    "outcome_reliability": 0.35,
+    "knowledge_readiness": 0.15,
+    "trigger_support": 0.1,
+    "evidence_coverage": 0.2
+  },
+  "outcome_reliability_weights": {
+    "success_rate": 0.55,
+    "inverse_recurrence": 0.2,
+    "evidence_usefulness": 0.15,
+    "prior_confidence_calibration": 0.1
+  },
+  "penalties": {
+    "recent_failure_signal_MEDIUM": 0.08,
+    "recent_failure_signal_HIGH": 0.15,
+    "recent_high_risk_change": 0.15,
+    "insufficient_outcome_sample": 0.08,
+    "candidate_ambiguity": 0.05,
+    "eroding_confidence": 0.1,
+    "stale_or_missing_governed_knowledge": 0.1
+  },
+  "thresholds": {
+    "minimum_outcome_sample": 15,
+    "recent_outcome_window": 10,
+    "drift_success_drop": 0.15,
+    "drift_recurrence_increase": 0.1,
+    "high_risk_change_lookback_hours": 6,
+    "knowledge_max_age_days": 180,
+    "minimum_evidence_coverage_for_acceleration": 0.8,
+    "maximum_contradiction_for_acceleration": 0.2,
+    "minimum_candidate_margin_for_acceleration": 0.12
+  },
+  "recency_weighting": {
+    "enabled": true,
+    "half_life_days": 90
+  }
+}

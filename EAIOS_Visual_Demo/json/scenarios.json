@@ -1,0 +1,35 @@
+[
+  {
+    "scenario_id": "SCN-PAY-001",
+    "name": "Payment connector degradation",
+    "description": "Rising database utilization and connector saturation precede checkout payment timeouts.",
+    "primary_service_id": "AS-ORDER-MGMT",
+    "primary_component_id": "COMP-PAY-CONNECTOR",
+    "trigger_observation_id": "OBS-PAY-006",
+    "expected_strategy": "Known Error Accelerated Validation",
+    "expected_confidence": "HIGH",
+    "expected_safety_status": "REQUIRES_HUMAN_APPROVAL",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "scenario_id": "SCN-QUEUE-001",
+    "name": "Order event queue degradation",
+    "description": "Queue depth and consumer lag increase after a consumer configuration change, delaying Accounting and Fraud Detection.",
+    "primary_service_id": "AS-ORDER-MGMT",
+    "primary_component_id": "COMP-ORDER-QUEUE",
+    "trigger_observation_id": "OBS-QUEUE-005",
+    "expected_strategy": "Full Investigation",
+    "expected_confidence": "MEDIUM",
+    "expected_safety_status": "REQUIRES_HUMAN_APPROVAL",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "scenario_id": "SCN-PAY-CONTRADICT-001",
+    "name": "Payment connector degradation with contradictory knowledge",
+    "description": "The payment connector initially matches the established pool-exhaustion pattern, but a credible uncorroborated technical article presents a material alternative explanation during due diligence.",
+    "primary_service_id": "AS-ORDER-MGMT",
+    "primary_component_id": "COMP-PAY-CONNECTOR",
+    "trigger_observation_id": "OBS-PAY-006",
+    "data_classification": "SYNTHETIC"
+  }
+]

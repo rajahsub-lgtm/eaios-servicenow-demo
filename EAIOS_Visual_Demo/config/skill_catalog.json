@@ -1,0 +1,54 @@
+{
+  "catalog_version": "1.0",
+  "skills": [
+    {
+      "skill_id": "semantic_context",
+      "name": "Establish governed semantic context",
+      "description": "Resolve the trigger to technical dependencies, business capabilities, and known-error applicability.",
+      "required_output": "graph_context",
+      "risk_level": "LOW"
+    },
+    {
+      "skill_id": "due_diligence_validation",
+      "name": "Perform accelerated due diligence",
+      "description": "Validate the known pattern against current severity, evidence readiness, recent change conflict, and outcome reliability.",
+      "required_output": "due_diligence_result",
+      "risk_level": "MEDIUM"
+    },
+    {
+      "skill_id": "governed_recommendation",
+      "name": "Produce bounded governed recommendation",
+      "description": "Produce a recommendation, confidence, safety state, and human-approval requirement.",
+      "required_output": "operational_recommendation",
+      "risk_level": "MEDIUM"
+    },
+    {
+      "skill_id": "detailed_telemetry_analysis",
+      "name": "Analyze detailed telemetry sequence",
+      "description": "Analyze multi-metric temporal ordering, threshold crossings, trends, and future-data exclusions.",
+      "required_output": "telemetry_analysis",
+      "risk_level": "LOW"
+    },
+    {
+      "skill_id": "governed_knowledge_retrieval",
+      "name": "Retrieve governed enterprise knowledge",
+      "description": "Retrieve and rank trusted, safe, current knowledge and structured enterprise records.",
+      "required_output": "retrieval_assessment",
+      "risk_level": "LOW"
+    },
+    {
+      "skill_id": "change_dependency_investigation",
+      "name": "Investigate changes and dependencies",
+      "description": "Evaluate recent changes, dependency behavior, competing contributors, and cross-service impact without claiming causation.",
+      "required_output": "investigation_context",
+      "risk_level": "MEDIUM"
+    },
+    {
+      "skill_id": "evidence_fusion_recommendation",
+      "name": "Fuse evidence and recommend",
+      "description": "Fuse graph, telemetry, knowledge, records, outcomes, uncertainty, and impact into a bounded recommendation.",
+      "required_output": "fusion_assessment",
+      "risk_level": "MEDIUM"
+    }
+  ]
+}

@@ -1,0 +1,422 @@
+{
+  "mapping_version": "1.2",
+  "target_table": "u_eaios_operational_assessment",
+  "status": "READY_FOR_V1_STORYTELLING",
+  "correlation_concept": "Correlation ID",
+  "instructions": "Replace config/servicenow_field_mapping.json with this file after creating u_correlation_id and u_external_observation_id, increasing u_probable_cause to at least 255 characters, and increasing u_recommended_action to 4000 characters. The inherited Task approval field is addressed by the column name approval.",
+  "fields": {
+    "Correlation ID": {
+      "internal_name": "u_correlation_id",
+      "required": true,
+      "confirmed": true,
+      "aliases": [
+        "Correlation ID"
+      ],
+      "review_note": "New String field, length 100; used as the idempotent upsert key."
+    },
+    "External observation ID": {
+      "internal_name": "u_external_observation_id",
+      "required": true,
+      "confirmed": true,
+      "aliases": [
+        "External observation ID",
+        "Trigger observation ID"
+      ],
+      "review_note": "New String field, length 100; stores values such as OBS-PAY-006."
+    },
+    "Scenario ID": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Scenario ID"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Primary service ID": {
+      "internal_name": "u_external_service_id",
+      "required": false,
+      "confirmed": true,
+      "aliases": [
+        "Primary service ID"
+      ]
+    },
+    "Primary component ID": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Primary component ID"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Business impact": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Business impact"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Leading hypothesis": {
+      "internal_name": "u_probable_cause",
+      "required": true,
+      "confirmed": true,
+      "aliases": [
+        "Leading hypothesis"
+      ],
+      "review_note": "Reuse Probable cause; increase max length from 40 to at least 255."
+    },
+    "Alternative hypotheses": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Alternative hypotheses"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Selected strategy": {
+      "internal_name": "u_strategy",
+      "required": true,
+      "confirmed": true,
+      "aliases": [
+        "Selected strategy",
+        "Strategy"
+      ],
+      "value_mapping": {
+        "Known Error Accelerated Validation": "Known Error Accelerated Validation",
+        "Full Investigation": "Full Investigation",
+        "Monitor Only": "Monitor Only"
+      }
+    },
+    "Confidence": {
+      "internal_name": "u_operational_confidence",
+      "required": true,
+      "confirmed": true,
+      "aliases": [
+        "Confidence"
+      ],
+      "value_mapping": {
+        "HIGH": "HIGH",
+        "MEDIUM": "MEDIUM",
+        "LOW": "LOW"
+      }
+    },
+    "Confidence score": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Confidence score"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Confidence trend": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Confidence trend"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Drift status": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Drift status"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Initial plan mode": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Initial plan mode"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Final plan mode": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Final plan mode"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Expanded during execution": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Expanded during execution"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Safety status": {
+      "internal_name": "u_safety_status",
+      "required": true,
+      "confirmed": true,
+      "aliases": [
+        "Safety status"
+      ],
+      "value_mapping": {
+        "SAFE_TO_INFORM": "SAFE_TO_INFORM",
+        "REQUIRES_HUMAN_APPROVAL": "REQUIRES_HUMAN_APPROVAL",
+        "BLOCKED": "BLOCKED"
+      }
+    },
+    "Approval required": {
+      "internal_name": "u_human_approval_required",
+      "required": false,
+      "confirmed": true,
+      "aliases": [
+        "Approval required"
+      ]
+    },
+    "Approval state": {
+      "internal_name": "approval",
+      "required": true,
+      "confirmed": true,
+      "aliases": [
+        "Approval state",
+        "Approval"
+      ],
+      "value_mapping": {
+        "AWAITING_APPROVAL": "requested",
+        "APPROVED": "approved",
+        "REJECTED": "rejected",
+        "NOT_REQUESTED": "not requested",
+        "NOT_REQUIRED": "not_required",
+        "CANCELLED": "cancelled"
+      },
+      "review_note": "Inherited Task string field with choice values; use approval, not task.approval."
+    },
+    "Recommended action": {
+      "internal_name": "u_recommended_action",
+      "required": true,
+      "confirmed": true,
+      "aliases": [
+        "Recommended action",
+        "Recommendation"
+      ],
+      "review_note": "Increase max length from 40 to 4000 before live sync."
+    },
+    "Validation steps": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Validation steps"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Evidence summary": {
+      "internal_name": "u_evidence_summary",
+      "required": false,
+      "confirmed": true,
+      "aliases": [
+        "Evidence summary"
+      ]
+    },
+    "Uncertainty factors": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Uncertainty factors"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Guardrail reasons": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Guardrail reasons"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Reasoning summary": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Reasoning summary"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Execution trace": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Execution trace"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Policy decision summary": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Policy decision summary"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "EAIOS response timestamp": {
+      "internal_name": "u_assessment_time",
+      "required": false,
+      "confirmed": true,
+      "aliases": [
+        "EAIOS response timestamp"
+      ]
+    },
+    "Outcome": {
+      "internal_name": "u_outcome",
+      "required": true,
+      "confirmed": true,
+      "aliases": [
+        "Outcome"
+      ],
+      "value_mapping": {
+        "Pending": "Pending",
+        "Successful": "Successful",
+        "Failed": "Failed",
+        "Partial": "Partial"
+      },
+      "review_note": "Operational outcome only; do not use Approved or Rejected here."
+    },
+    "Action performed": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Action performed"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Recovery minutes": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Recovery minutes"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Recurrence within 24h": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Recurrence within 24h"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Evidence usefulness score": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Evidence usefulness score"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Human modification": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Human modification"
+      ],
+      "review_note": "Intentionally not mapped in the lean ServiceNow demo."
+    },
+    "Initial confidence score": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Initial confidence score"
+      ],
+      "review_note": "Optional ServiceNow storytelling field."
+    },
+    "Final confidence score": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Final confidence score"
+      ],
+      "review_note": "Optional ServiceNow storytelling field."
+    },
+    "Initial agent count": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Initial agent count"
+      ],
+      "review_note": "Optional ServiceNow storytelling field."
+    },
+    "Final agent count": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Final agent count"
+      ],
+      "review_note": "Optional ServiceNow storytelling field."
+    },
+    "Plan revision reason": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Plan revision reason"
+      ],
+      "review_note": "Optional ServiceNow storytelling field."
+    },
+    "Automation readiness": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Automation readiness"
+      ],
+      "review_note": "Advisory only; human approval remains enforced in V1."
+    },
+    "Automation readiness rationale": {
+      "internal_name": null,
+      "required": false,
+      "confirmed": false,
+      "aliases": [
+        "Automation readiness rationale"
+      ],
+      "review_note": "Optional long text field for readiness criteria and blockers."
+    }
+  },
+  "implementation_notes": {
+    "required_pdi_changes": [
+      "Create u_correlation_id as String length 100.",
+      "Create u_external_observation_id as String length 100.",
+      "Increase u_probable_cause max length to at least 255.",
+      "Increase u_recommended_action max length to 4000."
+    ],
+    "approval_translation": {
+      "AWAITING_APPROVAL": "requested",
+      "APPROVED": "approved",
+      "REJECTED": "rejected"
+    },
+    "initial_live_values": {
+      "approval": "requested",
+      "u_outcome": "Pending"
+    },
+    "mapper_requirement": "map_for_live() must apply rule.value_mapping before assigning the payload value."
+  }
+}

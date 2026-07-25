@@ -1,0 +1,16 @@
+[
+  {
+    "signal_id": "SIG-KB-CONTRADICT-001",
+    "signal_type": "CREDIBLE_KNOWLEDGE_CONTRADICTION",
+    "entity_id": "COMP-PAY-CONNECTOR",
+    "discovered_after_skill": "due_diligence_validation",
+    "source_system": "Enterprise Knowledge Retrieval",
+    "description": "A recent technically credible but unapproved article presents gateway protocol incompatibility as an alternative explanation for the same payment timeout pattern.",
+    "data_classification": "SYNTHETIC",
+    "provenance": "KB-CONTRADICT-001 publication and trust metadata",
+    "scenario_id": "SCN-PAY-CONTRADICT-001",
+    "knowledge_source_id": "KB-CONTRADICT-001",
+    "evidence_disposition": "ACCEPTED_WITH_LIMITATIONS",
+    "contradicts_known_error_id": "KE-PAY-001"
+  }
+]

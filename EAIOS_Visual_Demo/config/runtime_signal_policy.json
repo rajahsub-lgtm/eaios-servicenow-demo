@@ -1,0 +1,47 @@
+{
+  "policy_version": "1.0",
+  "signals": {
+    "RECENT_HIGH_RISK_CHANGE": {
+      "confidence_penalty": 0.2,
+      "contradiction_increment": 0.35,
+      "force_drift_status": "ERODING",
+      "hard_flag": true
+    },
+    "PATTERN_DIVERGENCE": {
+      "confidence_penalty": 0.18,
+      "contradiction_increment": 0.3,
+      "force_drift_status": "ERODING",
+      "hard_flag": false
+    },
+    "KNOWLEDGE_VALIDATION_FAILED": {
+      "confidence_penalty": 0.15,
+      "contradiction_increment": 0.2,
+      "force_drift_status": "ERODING",
+      "hard_flag": true
+    },
+    "OBSERVABILITY_COVERAGE_LOW": {
+      "confidence_penalty": 0.12,
+      "contradiction_increment": 0.15,
+      "force_drift_status": "ERODING",
+      "hard_flag": true
+    },
+    "DEPENDENCY_HEALTH_CONFLICT": {
+      "confidence_penalty": 0.14,
+      "contradiction_increment": 0.25,
+      "force_drift_status": "ERODING",
+      "hard_flag": false
+    },
+    "DUE_DILIGENCE_PASSED": {
+      "confidence_penalty": 0.0,
+      "contradiction_increment": 0.0,
+      "force_drift_status": null,
+      "hard_flag": false
+    },
+    "CREDIBLE_KNOWLEDGE_CONTRADICTION": {
+      "confidence_penalty": 0.22,
+      "contradiction_increment": 0.35,
+      "force_drift_status": "ERODING",
+      "hard_flag": true
+    }
+  }
+}

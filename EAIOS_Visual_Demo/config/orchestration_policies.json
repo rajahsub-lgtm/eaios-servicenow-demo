@@ -1,0 +1,54 @@
+{
+  "policy_version": "1.0",
+  "default_mode": "FULL_INVESTIGATION",
+  "modes": [
+    {
+      "mode_id": "ACCELERATED_VALIDATION",
+      "name": "Known Error Accelerated Validation",
+      "priority": 100,
+      "entry_conditions": {
+        "confidence_levels": [
+          "HIGH"
+        ],
+        "allowed_drift_statuses": [
+          "NONE",
+          "STABLE",
+          "IMPROVING"
+        ],
+        "minimum_evidence_coverage": 0.8,
+        "maximum_contradiction_level": 0.2,
+        "minimum_candidate_margin": 0.12,
+        "disallowed_hard_flags": [
+          "RECENT_HIGH_RISK_CHANGE",
+          "MISSING_GOVERNED_KNOWLEDGE",
+          "INSUFFICIENT_OUTCOME_HISTORY",
+          "NO_APPLICABLE_KNOWN_ERROR"
+        ]
+      },
+      "required_skills": [
+        "semantic_context",
+        "due_diligence_validation",
+        "governed_recommendation"
+      ],
+      "reassess_after_skills": [
+        "due_diligence_validation"
+      ],
+      "expansion_mode": "FULL_INVESTIGATION"
+    },
+    {
+      "mode_id": "FULL_INVESTIGATION",
+      "name": "Full Investigation",
+      "priority": 10,
+      "entry_conditions": {},
+      "required_skills": [
+        "semantic_context",
+        "detailed_telemetry_analysis",
+        "governed_knowledge_retrieval",
+        "change_dependency_investigation",
+        "evidence_fusion_recommendation"
+      ],
+      "reassess_after_skills": [],
+      "expansion_mode": null
+    }
+  ]
+}

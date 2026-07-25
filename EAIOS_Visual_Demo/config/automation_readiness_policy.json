@@ -1,0 +1,46 @@
+{
+  "policy_version": "1.0",
+  "advisory_only": true,
+  "human_approval_enforced": true,
+  "thresholds": {
+    "minimum_confidence_score": 0.9,
+    "minimum_comparable_outcomes": 25,
+    "minimum_recent_success_rate": 0.95,
+    "maximum_recent_recurrence_rate": 0.05,
+    "maximum_contradiction_level": 0.2
+  },
+  "allowed_drift_statuses": [
+    "NONE",
+    "STABLE",
+    "IMPROVING"
+  ],
+  "suspension_hard_flags": [
+    "CREDIBLE_KNOWLEDGE_CONTRADICTION",
+    "RECENT_HIGH_RISK_CHANGE",
+    "KNOWLEDGE_VALIDATION_FAILED",
+    "OBSERVABILITY_COVERAGE_LOW"
+  ],
+  "control_profiles": {
+    "KE-PAY-001": {
+      "action_risk": "MEDIUM",
+      "reversible": true,
+      "bounded_blast_radius": true,
+      "policy_allows_candidate": true,
+      "required_constraints": [
+        "ONE_INSTANCE_AT_A_TIME",
+        "HEALTH_VERIFICATION_GATES",
+        "HUMAN_APPROVAL_IN_V1"
+      ]
+    },
+    "KE-QUEUE-002": {
+      "action_risk": "HIGH",
+      "reversible": false,
+      "bounded_blast_radius": false,
+      "policy_allows_candidate": false,
+      "required_constraints": [
+        "FULL_INVESTIGATION",
+        "HUMAN_APPROVAL"
+      ]
+    }
+  }
+}
