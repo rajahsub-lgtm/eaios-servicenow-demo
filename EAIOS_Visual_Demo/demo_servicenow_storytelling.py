@@ -227,6 +227,31 @@ def readiness_row(assessment: AdaptiveExecutionAssessment) -> dict:
     }
 
 
+def plan_summary_row(assessment: AdaptiveExecutionAssessment) -> dict:
+    """Canonical plan metrics, kept out of the frozen V1 CSV schemas.
+
+    Plan width and agent participation are separate measurements. Width comes
+    from resolved plans; participation comes from the execution trace. A
+    contraction ends narrower than it peaked while still having drawn on every
+    agent that contributed, so neither number can be derived from the other.
+    """
+    path = [assessment.initial_plan_mode] + [
+        transition.to_mode for transition in assessment.plan_transitions
+    ]
+    return {
+        "correlation_id": assessment.correlation_id,
+        "scenario": assessment.scenario_name,
+        "plan_path": " -> ".join(path),
+        "initial_plan_agent_count": assessment.initial_plan_agent_count,
+        "peak_plan_agent_count": assessment.peak_plan_agent_count,
+        "final_plan_agent_count": assessment.final_plan_agent_count,
+        "unique_agents_executed": assessment.unique_agents_executed,
+        "expanded_during_execution": assessment.expanded_during_execution,
+        "contracted_during_execution": assessment.contracted_during_execution,
+        "revision_count": len(assessment.plan_transitions),
+    }
+
+
 def main() -> None:
     OUTPUTS.mkdir(exist_ok=True)
     orchestrator = AdaptiveExecutionOrchestrator(ROOT)
@@ -268,14 +293,17 @@ def main() -> None:
     execution_rows = []
     revision_rows = []
     readiness_rows = []
+    plan_summary_rows = []
     for assessment in assessments:
         execution_rows.extend(execution_event_rows(assessment))
         revision_rows.extend(plan_revision_rows(assessment))
         readiness_rows.append(readiness_row(assessment))
+        plan_summary_rows.append(plan_summary_row(assessment))
 
     write_csv(OUTPUTS / "servicenow_execution_events.csv", execution_rows)
     write_csv(OUTPUTS / "servicenow_plan_revisions.csv", revision_rows)
     write_csv(OUTPUTS / "servicenow_automation_readiness.csv", readiness_rows)
+    write_csv(OUTPUTS / "servicenow_plan_summary.csv", plan_summary_rows)
     write_csv(OUTPUTS / "servicenow_confidence_maturation.csv", maturity_checkpoints())
 
     print("=== EAIOS SERVICENOW STORYTELLING V1 ===")

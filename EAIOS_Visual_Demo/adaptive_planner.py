@@ -52,6 +52,23 @@ class AdaptivePlanner:
             reverse=True,
         )
 
+    def _supplemental_skills(self, scenario_id: str) -> list[str]:
+        """Scenario-declared skills added to whichever mode is selected.
+
+        Scoping the skill to the scenario keeps it out of every other
+        scenario's plan, so existing mode definitions and their agent counts
+        are unaffected.
+        """
+        scenario = self.confidence_engine.scenario_by_id.get(scenario_id, {})
+        return list(scenario.get("supplemental_skills", []))
+
+    def _required_skills(self, mode: dict, scenario_id: str) -> list[str]:
+        skills = list(mode["required_skills"])
+        for skill in self._supplemental_skills(scenario_id):
+            if skill not in skills:
+                skills.append(skill)
+        return skills
+
     def plan(
         self,
         scenario_id: str,
@@ -63,7 +80,8 @@ class AdaptivePlanner:
             as_of=as_of,
         )
         mode, reasons = self._select_mode(confidence)
-        resolution = self.skill_resolver.resolve(mode["required_skills"])
+        required_skills = self._required_skills(mode, confidence.scenario_id)
+        resolution = self.skill_resolver.resolve(required_skills)
 
         return AdaptivePlan(
             scenario_id=confidence.scenario_id,
@@ -75,7 +93,7 @@ class AdaptivePlanner:
             confidence_trend=confidence.confidence_trend,
             drift_status=confidence.drift_status,
             selected_known_error_id=confidence.selected_known_error_id,
-            required_skills=list(mode["required_skills"]),
+            required_skills=list(required_skills),
             selected_agents=resolution.selected_agents,
             reasoning_agent_count=len(resolution.selected_agents),
             uncovered_skills=resolution.uncovered_skills,
@@ -91,7 +109,8 @@ class AdaptivePlanner:
         confidence: OperationalConfidenceAssessment,
     ) -> AdaptivePlan:
         mode, reasons = self._select_mode(confidence)
-        resolution = self.skill_resolver.resolve(mode["required_skills"])
+        required_skills = self._required_skills(mode, confidence.scenario_id)
+        resolution = self.skill_resolver.resolve(required_skills)
         return AdaptivePlan(
             scenario_id=confidence.scenario_id,
             scenario_name=confidence.scenario_name,
@@ -102,7 +121,7 @@ class AdaptivePlanner:
             confidence_trend=confidence.confidence_trend,
             drift_status=confidence.drift_status,
             selected_known_error_id=confidence.selected_known_error_id,
-            required_skills=list(mode["required_skills"]),
+            required_skills=list(required_skills),
             selected_agents=resolution.selected_agents,
             reasoning_agent_count=len(resolution.selected_agents),
             uncovered_skills=resolution.uncovered_skills,

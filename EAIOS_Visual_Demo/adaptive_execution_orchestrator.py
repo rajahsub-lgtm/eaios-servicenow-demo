@@ -90,8 +90,16 @@ class AdaptiveExecutionAssessment:
     completed_skills: list[str]
     reasoning_agents_executed: list[str]
     reasoning_agent_execution_count: int
+    # Legacy pair, meaning preserved: initial plan width, then unique agents
+    # actually executed. Asymmetric, but frozen so V1 outputs do not move.
     initial_agent_count: int
     final_agent_count: int
+    # Canonical metrics. Plan widths come from resolved plans; participation
+    # comes from the execution trace. Never derive one from the other.
+    initial_plan_agent_count: int
+    peak_plan_agent_count: int
+    final_plan_agent_count: int
+    unique_agents_executed: int
     automation_readiness: dict
     recommendation: dict
     skill_outputs: dict[str, dict]
@@ -190,6 +198,10 @@ class AdaptiveExecutionOrchestrator:
         runtime_signals: list[RuntimeEvidenceSignal] = []
         transitions: list[PlanTransition] = []
         reassessments: dict[str, dict] = {}
+        # Width of every plan the run actually resolved, in order. Peak width
+        # is read from here rather than inferred from execution, so an
+        # excursion stays visible even when the plan returns to its start.
+        plan_widths: list[int] = [plan.reasoning_agent_count]
 
         pending = list(plan.required_skills)
         while pending:
@@ -260,6 +272,7 @@ class AdaptiveExecutionOrchestrator:
                         )
                     )
                     plan = updated_plan
+                    plan_widths.append(updated_plan.reasoning_agent_count)
                     pending = list(still_required)
 
         recommendation_skill = (
@@ -305,6 +318,10 @@ class AdaptiveExecutionOrchestrator:
             reasoning_agent_execution_count=len(executed_agents),
             initial_agent_count=initial_plan.reasoning_agent_count,
             final_agent_count=len(dict.fromkeys(executed_agents)),
+            initial_plan_agent_count=initial_plan.reasoning_agent_count,
+            peak_plan_agent_count=max(plan_widths),
+            final_plan_agent_count=plan.reasoning_agent_count,
+            unique_agents_executed=len(dict.fromkeys(executed_agents)),
             automation_readiness=self.readiness_evaluator.to_dict(readiness),
             recommendation=recommendation,
             skill_outputs=outputs,
