@@ -1,5 +1,10 @@
 {
-  "policy_version": "1.0",
+  "policy_version": "1.1",
+  "limits": {
+    "maximum_credit_per_reassessment": 0.1,
+    "maximum_runtime_confidence": 0.95,
+    "credits_require_no_unresolved_hard_flags": true
+  },
   "signals": {
     "RECENT_HIGH_RISK_CHANGE": {
       "confidence_penalty": 0.2,
@@ -42,6 +47,44 @@
       "contradiction_increment": 0.35,
       "force_drift_status": "ERODING",
       "hard_flag": true
+    },
+    "VENDOR_INCIDENT_CONFIRMED": {
+      "confidence_credit": 0.08,
+      "contradiction_decrement": 0.2,
+      "force_drift_status": "STABLE",
+      "hard_flag": false
+    },
+    "INTERNAL_HYPOTHESIS_ELIMINATED": {
+      "confidence_credit": 0.06,
+      "contradiction_decrement": 0.15,
+      "hard_flag": false
+    },
+    "KNOWLEDGE_CONTRADICTION_RESOLVED": {
+      "confidence_credit": 0.05,
+      "contradiction_decrement": 0.3,
+      "force_drift_status": "IMPROVING",
+      "hard_flag": false,
+      "resolves_flags": [
+        "CREDIBLE_KNOWLEDGE_CONTRADICTION",
+        "KNOWLEDGE_VALIDATION_FAILED"
+      ]
+    },
+    "CHANGE_RULED_OUT": {
+      "confidence_credit": 0.05,
+      "contradiction_decrement": 0.2,
+      "force_drift_status": "IMPROVING",
+      "hard_flag": false,
+      "resolves_flags": [
+        "RECENT_HIGH_RISK_CHANGE"
+      ]
+    },
+    "OBSERVABILITY_COVERAGE_RESTORED": {
+      "confidence_credit": 0.04,
+      "contradiction_decrement": 0.1,
+      "hard_flag": false,
+      "resolves_flags": [
+        "OBSERVABILITY_COVERAGE_LOW"
+      ]
     }
   }
 }
