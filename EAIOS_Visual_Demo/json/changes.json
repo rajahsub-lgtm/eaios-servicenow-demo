@@ -100,5 +100,22 @@
     "summary": "Routine patching completed with no related issues.",
     "is_recent": false,
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "change_id": "CHG-GATEWAY-001",
+    "scenario_id": "SCN-CROSS-GATEWAY-001",
+    "entity_id": "COMP-GATEWAY-TLS-POLICY",
+    "external_service_id": "SVC-NETWORK-001",
+    "short_description": "Extend TLS inspection to additional outbound SaaS destination categories",
+    "change_type": "Standard",
+    "risk": "High",
+    "state": "Implemented",
+    "planned_start": "2026-07-16 07:00:00",
+    "planned_end": "2026-07-16 07:45:00",
+    "implemented_at": "2026-07-16 07:38:00",
+    "owner": "Network Security Team",
+    "summary": "Inspection scope widened at the enterprise secure web gateway. Validation covered browser traffic only; long-lived authenticated sessions and real-time media signalling were not exercised before release.",
+    "is_recent": true,
+    "data_classification": "SYNTHETIC"
   }
 ]

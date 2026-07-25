@@ -32,6 +32,15 @@ class PathStep:
     to_entity_id: str
     traversal_direction: Literal["out", "in"]
 
+@dataclass(frozen=True)
+class SharedDependency:
+    """An entity every starting point independently reaches."""
+    entity_id: str
+    paths: dict[str, tuple[PathStep, ...]]
+    deepest_hop_count: int
+    weakest_confidence: float
+    authorities: tuple[str, ...]
+
 class SemanticGraph:
     """Small, dependency-free semantic graph for the Hybrid EAIOS demo."""
 
@@ -146,6 +155,114 @@ class SemanticGraph:
             minimum_confidence=minimum_confidence,
             allowed_authorities=allowed_authorities,
         ))
+
+    def reachable_paths(
+        self,
+        start_entity_id: str,
+        *,
+        max_hops: int = 3,
+        direction: Direction = "out",
+        predicates: set[str] | None = None,
+        minimum_confidence: float = 0.0,
+        allowed_authorities: set[str] | None = None,
+    ) -> dict[str, tuple[PathStep, ...]]:
+        """Breadth-first search returning the shortest accepted path to each
+        entity reachable within ``max_hops``.
+
+        Filters apply per edge, so a path is only returned when every edge on
+        it clears the confidence and authority bar. A weak or unauthoritative
+        edge severs the route rather than degrading it.
+        """
+        self.get_entity(start_entity_id)
+        if max_hops < 1:
+            return {}
+
+        found: dict[str, tuple[PathStep, ...]] = {}
+        frontier: list[tuple[str, tuple[PathStep, ...]]] = [(start_entity_id, ())]
+        visited = {start_entity_id}
+
+        for _ in range(max_hops):
+            next_frontier: list[tuple[str, tuple[PathStep, ...]]] = []
+            for entity_id, path_so_far in frontier:
+                for step in self.iter_neighbors(
+                    entity_id,
+                    direction=direction,
+                    predicates=predicates,
+                    minimum_confidence=minimum_confidence,
+                    allowed_authorities=allowed_authorities,
+                ):
+                    if step.to_entity_id in visited:
+                        continue
+                    visited.add(step.to_entity_id)
+                    extended = path_so_far + (step,)
+                    found[step.to_entity_id] = extended
+                    next_frontier.append((step.to_entity_id, extended))
+            if not next_frontier:
+                break
+            frontier = next_frontier
+        return found
+
+    def shared_dependencies(
+        self,
+        start_entity_ids: Iterable[str],
+        *,
+        max_hops: int = 3,
+        direction: Direction = "out",
+        predicates: set[str] | None = None,
+        minimum_confidence: float = 0.0,
+        allowed_authorities: set[str] | None = None,
+    ) -> list[SharedDependency]:
+        """Entities that every starting point independently depends on.
+
+        This is how a shared cause is discovered rather than asserted: give it
+        two unrelated-looking symptoms and it reports what they have in common,
+        without being told what to look for. Results are ordered nearest and
+        strongest first.
+        """
+        starts = list(start_entity_ids)
+        if len(starts) < 2:
+            raise ValueError("Shared dependencies need at least two starting entities.")
+
+        per_start = {
+            start: self.reachable_paths(
+                start,
+                max_hops=max_hops,
+                direction=direction,
+                predicates=predicates,
+                minimum_confidence=minimum_confidence,
+                allowed_authorities=allowed_authorities,
+            )
+            for start in starts
+        }
+
+        common = set.intersection(*(set(paths) for paths in per_start.values()))
+        common -= set(starts)
+
+        results = []
+        for entity_id in common:
+            paths = {start: per_start[start][entity_id] for start in starts}
+            every_step = [step for path in paths.values() for step in path]
+            results.append(
+                SharedDependency(
+                    entity_id=entity_id,
+                    paths=paths,
+                    deepest_hop_count=max(len(path) for path in paths.values()),
+                    weakest_confidence=min(
+                        step.relationship.confidence for step in every_step
+                    ),
+                    authorities=tuple(
+                        sorted({step.relationship.authority for step in every_step})
+                    ),
+                )
+            )
+        results.sort(
+            key=lambda item: (
+                item.deepest_hop_count,
+                -item.weakest_confidence,
+                item.entity_id,
+            )
+        )
+        return results
 
     def format_step(self, step: PathStep) -> str:
         source = self.get_entity(step.from_entity_id)
