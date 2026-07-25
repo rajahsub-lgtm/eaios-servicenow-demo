@@ -13,15 +13,24 @@ from servicenow_table_client import ServiceNowCredentials, ServiceNowTableClient
 ROOT = Path(__file__).resolve().parent
 
 
+def known_scenario_ids() -> list[str]:
+    """Scenarios the CLI will accept, read from the fixture rather than fixed.
+
+    A hardcoded list silently excludes any scenario added later, which is how
+    a working scenario ends up unable to reach ServiceNow at all.
+    """
+    rows = json.loads(
+        (ROOT / "json" / "scenarios.json").read_text(encoding="utf-8")
+    )
+    return [row["scenario_id"] for row in rows]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "scenario_id",
-        choices=[
-            "SCN-PAY-001",
-            "SCN-QUEUE-001",
-            "SCN-PAY-CONTRADICT-001",
-        ],
+        choices=known_scenario_ids(),
+        help="Scenario to assess. Choices are read from json/scenarios.json.",
     )
     parser.add_argument("--correlation-id", required=True)
     mode = parser.add_mutually_exclusive_group(required=True)
