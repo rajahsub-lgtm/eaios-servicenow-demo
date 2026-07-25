@@ -1,0 +1,76 @@
+[
+  {
+    "advisory_id": "VND-GITHUB-001",
+    "vendor": "GitHub",
+    "service": "GitHub Enterprise Cloud",
+    "applies_to_entity_ids": [
+      "AS-GITHUB-ENTERPRISE",
+      "COMP-GITHUB-REPO-ACCESS"
+    ],
+    "status": "OPERATIONAL",
+    "incident_confirmed": false,
+    "affected_scope": "NONE",
+    "observed_at": "2026-07-16 09:05:00",
+    "published_at": "2026-07-16 08:50:00",
+    "source_authority": "VENDOR_OFFICIAL",
+    "source_reference": "Synthetic GitHub status feed snapshot",
+    "confidence": 0.95,
+    "summary": "Git operations, repository access, and Actions reported operating normally across all regions.",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "advisory_id": "VND-MSFT-001",
+    "vendor": "Microsoft",
+    "service": "Microsoft Teams",
+    "applies_to_entity_ids": [
+      "AS-TEAMS",
+      "COMP-TEAMS-SIGNALING"
+    ],
+    "status": "OPERATIONAL",
+    "incident_confirmed": false,
+    "affected_scope": "NONE",
+    "observed_at": "2026-07-16 09:05:00",
+    "published_at": "2026-07-16 08:42:00",
+    "source_authority": "VENDOR_TENANT_HEALTH",
+    "source_reference": "Synthetic Microsoft 365 service health snapshot for the enterprise tenant",
+    "confidence": 0.93,
+    "summary": "No tenant-level Teams service issue is advertised for meetings, calling, or signalling.",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "advisory_id": "VND-GITHUB-STALE-001",
+    "vendor": "GitHub",
+    "service": "GitHub Enterprise Cloud",
+    "applies_to_entity_ids": [
+      "AS-GITHUB-ENTERPRISE"
+    ],
+    "status": "OPERATIONAL",
+    "incident_confirmed": false,
+    "affected_scope": "NONE",
+    "observed_at": "2026-07-14 06:00:00",
+    "published_at": "2026-07-14 05:30:00",
+    "source_authority": "VENDOR_OFFICIAL",
+    "source_reference": "Synthetic GitHub status feed snapshot captured two days earlier",
+    "confidence": 0.95,
+    "summary": "Historical healthy snapshot retained for provenance; too old to describe the current window.",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "advisory_id": "VND-COMMUNITY-001",
+    "vendor": "Microsoft",
+    "service": "Microsoft Teams",
+    "applies_to_entity_ids": [
+      "AS-TEAMS"
+    ],
+    "status": "OPERATIONAL",
+    "incident_confirmed": false,
+    "affected_scope": "UNKNOWN",
+    "observed_at": "2026-07-16 09:00:00",
+    "published_at": "2026-07-16 08:55:00",
+    "source_authority": "COMMUNITY_REPORT",
+    "source_reference": "Synthetic aggregated user-report site",
+    "confidence": 0.45,
+    "summary": "Crowd-sourced reports show no widespread outage. Not an authoritative tenant signal.",
+    "data_classification": "SYNTHETIC"
+  }
+]

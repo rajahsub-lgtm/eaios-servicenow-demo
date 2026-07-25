@@ -49,6 +49,13 @@
       "description": "Fuse graph, telemetry, knowledge, records, outcomes, uncertainty, and impact into a bounded recommendation.",
       "required_output": "fusion_assessment",
       "risk_level": "MEDIUM"
+    },
+    {
+      "skill_id": "external_service_health",
+      "name": "Establish external vendor service health",
+      "description": "Retrieve and normalise vendor-published service-health evidence for external SaaS dependencies, and judge whether it is fresh, authoritative, and confident enough to rely on. Reports vendor truth only; it does not attribute internal cause.",
+      "required_output": "vendor_health_assessment",
+      "risk_level": "LOW"
     }
   ]
 }

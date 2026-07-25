@@ -37,6 +37,7 @@ from skill_agents import (
 )
 from skill_resolver import AgentSelection, SkillResolver
 from telemetry_agent import TelemetryAnalysisAgent
+from vendor_health_agent import VendorHealthAgent
 
 
 UTC = timezone.utc
@@ -163,6 +164,10 @@ class AdaptiveExecutionOrchestrator:
         self.due_diligence_agent = DueDiligenceValidationAgent(self.json_dir)
         self.change_agent = ChangeDependencyInvestigationAgent(self.json_dir)
         self.recommendation_agent = AdaptiveRecommendationAgent(self.json_dir)
+        self.vendor_health_agent = VendorHealthAgent(
+            self.json_dir,
+            config / "vendor_health_policy.json",
+        )
 
         self.agent_by_skill = {}
         for agent in self.skill_resolver.agent_registry["agents"]:
@@ -638,6 +643,36 @@ class AdaptiveExecutionOrchestrator:
                     f"{len(result.rejected_candidates)} rejected."
                 ),
                 output=self.retrieval_agent.to_dict(result),
+                runtime_signals=[],
+            )
+
+        if skill_id == "external_service_health":
+            self._enforce_data(
+                correlation_id=correlation_id,
+                agent=agent,
+                skill_id=skill_id,
+                domain="vendor_advisories",
+                decision_ids=decision_ids,
+            )
+            self._enforce_tool(
+                correlation_id=correlation_id,
+                agent=agent,
+                skill_id=skill_id,
+                tool="vendor_status.query",
+                operation_mode="READ",
+                decision_ids=decision_ids,
+            )
+            graph_context = outputs["semantic_context"]
+            result = self.vendor_health_agent.assess(
+                scenario_id=scenario_id,
+                entity_ids=set(graph_context.get("authoritative_entity_ids", [])),
+                as_of=confidence.assessed_at,
+            )
+            return SkillExecutionResult(
+                skill_id=skill_id,
+                agent_id=agent.agent_id,
+                summary=result.explanation,
+                output=self.vendor_health_agent.to_dict(result),
                 runtime_signals=[],
             )
 

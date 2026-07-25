@@ -134,6 +134,23 @@
       "data_domains": [
         "all_governed_evidence"
       ]
+    },
+    {
+      "agent_id": "vendor_health_agent",
+      "name": "Vendor Health Agent",
+      "status": "ACTIVE",
+      "skills": [
+        "external_service_health"
+      ],
+      "reliability_score": 0.92,
+      "estimated_cost": 0.8,
+      "a2a_protocol": "LOCAL_A2A",
+      "mcp_tools": [
+        "vendor_status.query"
+      ],
+      "data_domains": [
+        "vendor_advisories"
+      ]
     }
   ]
 }

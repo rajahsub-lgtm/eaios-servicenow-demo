@@ -1,0 +1,18 @@
+{
+  "policy_version": "1.0",
+  "maximum_freshness_minutes": 180,
+  "trusted_source_authorities": [
+    "VENDOR_OFFICIAL",
+    "VENDOR_TENANT_HEALTH"
+  ],
+  "minimum_source_confidence": 0.8,
+  "healthy_statuses": [
+    "OPERATIONAL"
+  ],
+  "incident_statuses": [
+    "DEGRADED",
+    "MAJOR_OUTAGE",
+    "PARTIAL_OUTAGE"
+  ],
+  "notes": "Vendor evidence describes vendor services only. Eliminating an external hypothesis requires evidence that is fresh, from an authority with standing over the named service, and confident enough to rely on. Absence of a reported incident is weaker than a positive report and never establishes an internal cause."
+}

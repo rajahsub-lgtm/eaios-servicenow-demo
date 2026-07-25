@@ -27,6 +27,7 @@ IDENTIFIER_FIELDS = {
     "knowledge_documents.json": "document_id",
     "metric_definitions.json": "metric_id",
     "outcome_history.json": "outcome_id",
+    "vendor_advisories.json": "advisory_id",
 }
 
 
