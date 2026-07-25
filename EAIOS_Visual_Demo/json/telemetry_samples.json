@@ -1976,7 +1976,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-001",
+    "sample_id": "TEL-QUEUE-ACC-DELAY-001",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-ACCOUNTING",
     "external_service_id": "SVC-ACC-001",
@@ -1995,7 +1995,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-002",
+    "sample_id": "TEL-QUEUE-ACC-DELAY-002",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-ACCOUNTING",
     "external_service_id": "SVC-ACC-001",
@@ -2014,7 +2014,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-003",
+    "sample_id": "TEL-QUEUE-ACC-DELAY-003",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-ACCOUNTING",
     "external_service_id": "SVC-ACC-001",
@@ -2033,7 +2033,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-004",
+    "sample_id": "TEL-QUEUE-ACC-DELAY-004",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-ACCOUNTING",
     "external_service_id": "SVC-ACC-001",
@@ -2052,7 +2052,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-005",
+    "sample_id": "TEL-QUEUE-ACC-DELAY-005",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-ACCOUNTING",
     "external_service_id": "SVC-ACC-001",
@@ -2071,7 +2071,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-006",
+    "sample_id": "TEL-QUEUE-ACC-DELAY-006",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-ACCOUNTING",
     "external_service_id": "SVC-ACC-001",
@@ -2090,7 +2090,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-007",
+    "sample_id": "TEL-QUEUE-ACC-DELAY-007",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-ACCOUNTING",
     "external_service_id": "SVC-ACC-001",
@@ -2109,7 +2109,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-008",
+    "sample_id": "TEL-QUEUE-ACC-DELAY-008",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-ACCOUNTING",
     "external_service_id": "SVC-ACC-001",
@@ -2128,7 +2128,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-009",
+    "sample_id": "TEL-QUEUE-ACC-DELAY-009",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-ACCOUNTING",
     "external_service_id": "SVC-ACC-001",
@@ -2147,7 +2147,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-010",
+    "sample_id": "TEL-QUEUE-ACC-DELAY-010",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-ACCOUNTING",
     "external_service_id": "SVC-ACC-001",
@@ -2166,7 +2166,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-011",
+    "sample_id": "TEL-QUEUE-ACC-DELAY-011",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-ACCOUNTING",
     "external_service_id": "SVC-ACC-001",
@@ -2185,7 +2185,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-012",
+    "sample_id": "TEL-QUEUE-ACC-DELAY-012",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-ACCOUNTING",
     "external_service_id": "SVC-ACC-001",
@@ -2204,7 +2204,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-013",
+    "sample_id": "TEL-QUEUE-ACC-DELAY-013",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-ACCOUNTING",
     "external_service_id": "SVC-ACC-001",
@@ -2223,7 +2223,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-001",
+    "sample_id": "TEL-QUEUE-FRAUD-DELAY-001",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-FRAUD",
     "external_service_id": "SVC-FRAUD-001",
@@ -2242,7 +2242,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-002",
+    "sample_id": "TEL-QUEUE-FRAUD-DELAY-002",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-FRAUD",
     "external_service_id": "SVC-FRAUD-001",
@@ -2261,7 +2261,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-003",
+    "sample_id": "TEL-QUEUE-FRAUD-DELAY-003",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-FRAUD",
     "external_service_id": "SVC-FRAUD-001",
@@ -2280,7 +2280,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-004",
+    "sample_id": "TEL-QUEUE-FRAUD-DELAY-004",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-FRAUD",
     "external_service_id": "SVC-FRAUD-001",
@@ -2299,7 +2299,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-005",
+    "sample_id": "TEL-QUEUE-FRAUD-DELAY-005",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-FRAUD",
     "external_service_id": "SVC-FRAUD-001",
@@ -2318,7 +2318,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-006",
+    "sample_id": "TEL-QUEUE-FRAUD-DELAY-006",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-FRAUD",
     "external_service_id": "SVC-FRAUD-001",
@@ -2337,7 +2337,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-007",
+    "sample_id": "TEL-QUEUE-FRAUD-DELAY-007",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-FRAUD",
     "external_service_id": "SVC-FRAUD-001",
@@ -2356,7 +2356,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-008",
+    "sample_id": "TEL-QUEUE-FRAUD-DELAY-008",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-FRAUD",
     "external_service_id": "SVC-FRAUD-001",
@@ -2375,7 +2375,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-009",
+    "sample_id": "TEL-QUEUE-FRAUD-DELAY-009",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-FRAUD",
     "external_service_id": "SVC-FRAUD-001",
@@ -2394,7 +2394,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-010",
+    "sample_id": "TEL-QUEUE-FRAUD-DELAY-010",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-FRAUD",
     "external_service_id": "SVC-FRAUD-001",
@@ -2413,7 +2413,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-011",
+    "sample_id": "TEL-QUEUE-FRAUD-DELAY-011",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-FRAUD",
     "external_service_id": "SVC-FRAUD-001",
@@ -2432,7 +2432,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-012",
+    "sample_id": "TEL-QUEUE-FRAUD-DELAY-012",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-FRAUD",
     "external_service_id": "SVC-FRAUD-001",
@@ -2451,7 +2451,7 @@
     "data_classification": "SYNTHETIC"
   },
   {
-    "sample_id": "TEL-QUEUE-DELAY-013",
+    "sample_id": "TEL-QUEUE-FRAUD-DELAY-013",
     "scenario_id": "SCN-QUEUE-001",
     "entity_id": "AS-FRAUD",
     "external_service_id": "SVC-FRAUD-001",
