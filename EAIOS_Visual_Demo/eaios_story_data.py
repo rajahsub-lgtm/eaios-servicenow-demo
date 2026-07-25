@@ -22,6 +22,7 @@ class StoryPaths:
     automation_readiness: Path
     confidence_maturation: Path
     visual_config: Path
+    scenarios: Path
 
     @classmethod
     def from_base_dir(cls, base_dir: str | Path) -> "StoryPaths":
@@ -35,6 +36,7 @@ class StoryPaths:
             automation_readiness=outputs / "servicenow_automation_readiness.csv",
             confidence_maturation=outputs / "servicenow_confidence_maturation.csv",
             visual_config=base / "config" / "visual_demo.json",
+            scenarios=base / "json" / "scenarios.json",
         )
 
 
@@ -47,6 +49,7 @@ class StoryRepository:
     automation_readiness: pd.DataFrame
     confidence_maturation: pd.DataFrame
     visual_config: dict[str, Any]
+    scenario_metadata: dict[str, dict[str, Any]]
 
     @classmethod
     def load(cls, base_dir: str | Path) -> "StoryRepository":
@@ -73,6 +76,13 @@ class StoryRepository:
         if paths.visual_config.exists():
             visual_config = json.loads(paths.visual_config.read_text(encoding="utf-8"))
 
+        scenario_metadata: dict[str, dict[str, Any]] = {}
+        if paths.scenarios.exists():
+            scenario_metadata = {
+                row["scenario_id"]: row
+                for row in json.loads(paths.scenarios.read_text(encoding="utf-8"))
+            }
+
         return cls(
             paths=paths,
             bundle=bundle,
@@ -81,6 +91,7 @@ class StoryRepository:
             automation_readiness=pd.read_csv(paths.automation_readiness),
             confidence_maturation=pd.read_csv(paths.confidence_maturation),
             visual_config=visual_config,
+            scenario_metadata=scenario_metadata,
         )
 
     @property
@@ -94,17 +105,26 @@ class StoryRepository:
             labels[correlation_id] = self._friendly_scenario_label(assessment)
         return labels
 
-    @staticmethod
-    def _friendly_scenario_label(assessment: dict[str, Any]) -> str:
-        expanded = assessment.get("expanded_during_execution")
-        contracted = assessment.get("contracted_during_execution")
-        if expanded and contracted:
-            return "Contradiction resolved — plan narrows again"
-        if expanded:
-            return "Contradictory knowledge — confidence erodes"
-        if contracted:
-            return "Evidence converges — plan narrows"
-        return "Stable evidence — confidence remains high"
+    def scenario_identity(self, scenario_id: str) -> dict[str, str]:
+        """Declared identity for a scenario, with a derived last resort.
+
+        Identity is what the scenario is about. Expansion and contraction
+        describe how a particular run behaved, which is a property of the
+        execution and cannot stand in for the story being told: two scenarios
+        can contract for entirely different reasons.
+        """
+        row = self.scenario_metadata.get(scenario_id, {})
+        fallback = format_identifier(
+            scenario_id.removeprefix("SCN-").replace("-", " ")
+        )
+        return {
+            "display_name": row.get("display_name") or row.get("name") or fallback,
+            "short_label": row.get("short_label") or fallback,
+            "scenario_category": row.get("scenario_category", ""),
+        }
+
+    def _friendly_scenario_label(self, assessment: dict[str, Any]) -> str:
+        return self.scenario_identity(assessment.get("scenario_id", ""))["display_name"]
 
     def get_assessment(self, correlation_id: str) -> dict[str, Any]:
         for assessment in self.assessments:
@@ -296,6 +316,63 @@ class StoryRepository:
                     }
                 )
         return pd.DataFrame(rows)
+
+    def comparison_metrics(self, correlation_id: str) -> dict[str, Any]:
+        """One scenario's comparable figures, in a fixed order.
+
+        The same metrics are reported for every scenario so the two columns
+        can be read against each other without the meaning shifting between
+        them.
+        """
+        assessment = self.get_assessment(correlation_id)
+        preview = self.get_servicenow_preview(correlation_id)
+        conceptual = preview.get("conceptual_values", {})
+        counts = self.conflict_counts(correlation_id)
+        readiness = assessment.get("automation_readiness", {})
+
+        return {
+            "Initial confidence": (
+                f"{assessment['initial_confidence_score']:.3f} "
+                f"{assessment['initial_confidence_level']}"
+            ),
+            "Final confidence": (
+                f"{assessment['final_confidence_score']:.3f} "
+                f"{assessment['final_confidence_level']}"
+            ),
+            "Initial plan width": assessment.get(
+                "initial_plan_agent_count", assessment["initial_agent_count"]
+            ),
+            "Peak plan width": assessment.get(
+                "peak_plan_agent_count", assessment["initial_agent_count"]
+            ),
+            "Final plan width": assessment.get(
+                "final_plan_agent_count", assessment["final_agent_count"]
+            ),
+            "Unique agents contributing": assessment.get(
+                "unique_agents_executed", assessment["final_agent_count"]
+            ),
+            "Readiness state": readiness.get("status", ""),
+            "Approval status": str(
+                conceptual.get("Approval state", assessment.get("approval_state", ""))
+            ).replace("AWAITING_APPROVAL", "REQUESTED"),
+            "Active conflicts": counts["active"],
+            "Resolved conflicts": counts["resolved"],
+        }
+
+    def compare(self, baseline_id: str, comparison_id: str) -> pd.DataFrame:
+        baseline = self.comparison_metrics(baseline_id)
+        comparison = self.comparison_metrics(comparison_id)
+        labels = self.assessment_labels()
+        return pd.DataFrame(
+            [
+                {
+                    "Metric": metric,
+                    labels.get(baseline_id, baseline_id): baseline[metric],
+                    labels.get(comparison_id, comparison_id): comparison[metric],
+                }
+                for metric in baseline
+            ]
+        )
 
     def vendor_health(self, correlation_id: str) -> dict[str, Any]:
         """External service-health evidence, when the scenario gathered any."""

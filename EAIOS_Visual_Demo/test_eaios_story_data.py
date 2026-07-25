@@ -23,7 +23,7 @@ def test_each_scenario_gets_a_distinct_label() -> None:
     labels = repo.assessment_labels()
     assert len(set(labels.values())) == len(labels)
     assert labels["EAIOS-DEMO-RESOLVED-001"] == (
-        "Contradiction resolved — plan narrows again"
+        "Payment connector — contradiction resolved"
     )
 
 

@@ -9,7 +9,10 @@
     "expected_strategy": "Known Error Accelerated Validation",
     "expected_confidence": "HIGH",
     "expected_safety_status": "REQUIRES_HUMAN_APPROVAL",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "display_name": "Payment connector \u2014 stable evidence",
+    "short_label": "Stable evidence",
+    "scenario_category": "Baseline behaviour"
   },
   {
     "scenario_id": "SCN-QUEUE-001",
@@ -21,7 +24,10 @@
     "expected_strategy": "Full Investigation",
     "expected_confidence": "MEDIUM",
     "expected_safety_status": "REQUIRES_HUMAN_APPROVAL",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "display_name": "Order queue \u2014 consumer lag under recent change",
+    "short_label": "Queue lag",
+    "scenario_category": "Baseline behaviour"
   },
   {
     "scenario_id": "SCN-PAY-CONTRADICT-001",
@@ -30,7 +36,10 @@
     "primary_service_id": "AS-ORDER-MGMT",
     "primary_component_id": "COMP-PAY-CONNECTOR",
     "trigger_observation_id": "OBS-PAY-006",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "display_name": "Payment connector \u2014 contradictory knowledge",
+    "short_label": "Contradiction",
+    "scenario_category": "Confidence erosion"
   },
   {
     "scenario_id": "SCN-PAY-RESOLVED-001",
@@ -39,7 +48,10 @@
     "primary_service_id": "AS-ORDER-MGMT",
     "primary_component_id": "COMP-PAY-CONNECTOR",
     "trigger_observation_id": "OBS-PAY-006",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "display_name": "Payment connector \u2014 contradiction resolved",
+    "short_label": "Resolution",
+    "scenario_category": "Confidence recovery"
   },
   {
     "scenario_id": "SCN-CROSS-GATEWAY-001",
@@ -51,6 +63,9 @@
     "supplemental_skills": [
       "external_service_health"
     ],
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "display_name": "GitHub and Teams \u2014 shared gateway dependency",
+    "short_label": "Shared gateway",
+    "scenario_category": "Cross-platform dependency discovery"
   }
 ]

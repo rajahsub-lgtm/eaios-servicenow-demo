@@ -311,48 +311,86 @@ def render_adaptive_story(
                 st.write(f"{index}. {step}")
 
 
-def render_comparison(repo: StoryRepository) -> None:
+def render_comparison(repo: StoryRepository, selected: str) -> None:
+    labels = repo.assessment_labels()
+    ids = list(labels)
+
+    st.subheader("Compare two scenarios")
+    st.caption(
+        "The engine and the business goal are identical across scenarios. "
+        "Evidence changes confidence, confidence changes the required skills, "
+        "and the required skills change which agents are selected."
+    )
+
+    picker = st.columns(2)
+    baseline_id = picker[0].selectbox(
+        "Baseline scenario",
+        ids,
+        index=ids.index(selected) if selected in ids else 0,
+        format_func=lambda cid: labels[cid],
+        key="comparison_baseline",
+    )
+    remaining = [cid for cid in ids if cid != baseline_id]
+    comparison_id = picker[1].selectbox(
+        "Comparison scenario",
+        remaining,
+        format_func=lambda cid: labels[cid],
+        key="comparison_target",
+    )
+
+    if baseline_id == comparison_id:
+        st.info("Choose two different scenarios to compare.")
+        return
+
+    st.dataframe(
+        repo.compare(baseline_id, comparison_id),
+        hide_index=True,
+        width="stretch",
+    )
+
+    identities = [repo.scenario_identity(
+        repo.get_assessment(cid)["scenario_id"]
+    ) for cid in (baseline_id, comparison_id)]
+    st.caption(
+        " · ".join(
+            f"**{identity['short_label']}**: {identity['scenario_category']}"
+            for identity in identities
+            if identity["scenario_category"]
+        )
+    )
+
+    paths = st.columns(2)
+    for column, correlation_id in zip(paths, (baseline_id, comparison_id)):
+        assessment = repo.get_assessment(correlation_id)
+        route = " → ".join(
+            format_identifier(mode)
+            for mode in [assessment["initial_plan_mode"]]
+            + [t["to_mode"] for t in assessment.get("plan_transitions", []) or []]
+        )
+        column.markdown(f"**Plan path**  \n{route}")
+
+
+def render_scenario_spread(repo: StoryRepository) -> None:
+    """Confidence across every scenario, as context for the pair above."""
     rows = []
     for assessment in repo.assessments:
-        rows.append(
-            {
-                "Scenario": repo._friendly_scenario_label(assessment),
-                "Confidence": (
-                    f"{assessment['initial_confidence_score']:.2f} → "
-                    f"{assessment['final_confidence_score']:.2f}"
-                ),
-                "Level": (
-                    f"{assessment['initial_confidence_level']} → "
-                    f"{assessment['final_confidence_level']}"
-                ),
-                "Plan": (
-                    f"{format_identifier(assessment['initial_plan_mode'])} → "
-                    f"{format_identifier(assessment['final_plan_mode'])}"
-                ),
-                "Agents": f"{assessment['initial_agent_count']} → {assessment['final_agent_count']}",
-                "Knowledge": assessment["recommendation"].get("knowledge_disposition", ""),
-                "Readiness": assessment["automation_readiness"]["status"],
-                "Approval": "Required",
-            }
-        )
-    st.subheader("Same business goal, different orchestration")
-    st.caption(
-        "The engine code and business outcome remain unchanged. Evidence changes confidence; "
-        "confidence changes skills; skills change the selected agents."
-    )
-    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
-
-    confidence_rows = []
-    for assessment in repo.assessments:
-        label = repo._friendly_scenario_label(assessment).split(" — ")[0]
-        confidence_rows.extend(
+        identity = repo.scenario_identity(assessment["scenario_id"])
+        rows.extend(
             [
-                {"scenario": label, "stage": "Initial", "confidence": assessment["initial_confidence_score"]},
-                {"scenario": label, "stage": "Final", "confidence": assessment["final_confidence_score"]},
+                {
+                    "scenario": identity["short_label"],
+                    "stage": "Initial",
+                    "confidence": assessment["initial_confidence_score"],
+                },
+                {
+                    "scenario": identity["short_label"],
+                    "stage": "Final",
+                    "confidence": assessment["final_confidence_score"],
+                },
             ]
         )
     figure = px.bar(
-        pd.DataFrame(confidence_rows),
+        pd.DataFrame(rows),
         x="scenario",
         y="confidence",
         color="stage",
@@ -360,102 +398,14 @@ def render_comparison(repo: StoryRepository) -> None:
         text_auto=".2f",
     )
     figure.update_layout(
-        title="Confidence remains high with stable evidence and falls under contradiction",
+        title="Confidence before and after governed execution",
         xaxis_title="",
         yaxis_title="Operational confidence",
         yaxis_range=[0, 1.05],
-        height=440,
+        height=420,
         margin={"l": 20, "r": 20, "t": 65, "b": 20},
     )
     st.plotly_chart(figure, width="stretch")
-
-
-def render_vendor_health(repo: StoryRepository, correlation_id: str) -> None:
-    """External service-health evidence, kept visually separate from internal."""
-    vendor = repo.vendor_health(correlation_id)
-    if not vendor:
-        return
-
-    healthy = vendor.get("vendors_reporting_healthy", []) or []
-    incidents = vendor.get("vendors_reporting_incident", []) or []
-    eliminated = vendor.get("eliminated_external_hypotheses", []) or []
-    required = vendor.get("required_vendor_dependencies", []) or []
-
-    st.subheader("External vendor evidence")
-    st.caption(
-        "Vendor sources describe their own services only. Establishing that a "
-        "vendor is healthy narrows what remains; it never identifies an "
-        "internal cause."
-    )
-    cols = st.columns(4)
-    cols[0].metric("Vendor dependencies", len(required) or "—")
-    cols[1].metric("Reporting healthy", len(healthy))
-    cols[2].metric("Reporting an incident", len(incidents))
-    cols[3].metric("Hypotheses retired", len(eliminated))
-
-    if eliminated:
-        st.markdown(
-            "**External hypotheses retired:** "
-            + ", ".join(f"`{item}`" for item in eliminated)
-        )
-
-    findings = repo.vendor_findings(correlation_id)
-    if not findings.empty:
-        st.dataframe(findings, hide_index=True, width="stretch")
-        st.caption(
-            "Evidence that fails a freshness, authority, or confidence check is "
-            "retained with its provenance rather than discarded."
-        )
-    st.divider()
-
-
-def render_adjudication(adjudication: dict[str, Any] | None) -> None:
-    """The governed decision layered over an unchanged evidence record."""
-    if not adjudication:
-        return
-
-    resolved = adjudication["adjudication"] == "RESOLVED"
-    rows = [
-        ("Original status", "Material at retrieval time"),
-        ("Original disposition", adjudication.get("original_disposition", "")),
-        ("Detected after", format_identifier(adjudication.get("detected_after_skill", ""))),
-        ("Current adjudication", adjudication["adjudication"]),
-    ]
-    if resolved:
-        rows += [
-            ("Resolved by", adjudication.get("resolved_by", "")),
-            (
-                "Resolving signals",
-                ", ".join(
-                    format_identifier(signal)
-                    for signal in adjudication.get("resolving_signals", [])
-                ),
-            ),
-            (
-                "Confidence effect",
-                f"{adjudication.get('level_before', '')} "
-                f"{adjudication.get('confidence_before', '')} → "
-                f"{adjudication.get('level_after', '')} "
-                f"{adjudication.get('confidence_after', '')}",
-            ),
-        ]
-    rows.append(("Governed event", adjudication.get("governed_event", "")))
-
-    body = "".join(
-        f"<div>{safe_text(label)}</div><div>{safe_text(value)}</div>"
-        for label, value in rows
-    )
-    st.markdown(
-        f"""
-        <div class="eaios-conflict" style="margin-top:-.4rem;">
-          <div class="eaios-section-label">
-            Adjudication · recorded separately, evidence unchanged
-          </div>
-          <div class="eaios-kv" style="margin-top:.5rem;">{body}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 def render_evidence(repo: StoryRepository, assessment: dict[str, Any], correlation_id: str) -> None:
@@ -779,7 +729,9 @@ def main() -> None:
     with tabs[0]:
         render_adaptive_story(repo, assessment, selected)
     with tabs[1]:
-        render_comparison(repo)
+        render_comparison(repo, selected)
+        st.divider()
+        render_scenario_spread(repo)
     with tabs[2]:
         render_evidence(repo, assessment, selected)
     with tabs[3]:
