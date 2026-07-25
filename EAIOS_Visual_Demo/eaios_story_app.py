@@ -409,11 +409,72 @@ def render_vendor_health(repo: StoryRepository, correlation_id: str) -> None:
     st.divider()
 
 
+def render_adjudication(adjudication: dict[str, Any] | None) -> None:
+    """The governed decision layered over an unchanged evidence record."""
+    if not adjudication:
+        return
+
+    resolved = adjudication["adjudication"] == "RESOLVED"
+    rows = [
+        ("Original status", "Material at retrieval time"),
+        ("Original disposition", adjudication.get("original_disposition", "")),
+        ("Detected after", format_identifier(adjudication.get("detected_after_skill", ""))),
+        ("Current adjudication", adjudication["adjudication"]),
+    ]
+    if resolved:
+        rows += [
+            ("Resolved by", adjudication.get("resolved_by", "")),
+            (
+                "Resolving signals",
+                ", ".join(
+                    format_identifier(signal)
+                    for signal in adjudication.get("resolving_signals", [])
+                ),
+            ),
+            (
+                "Confidence effect",
+                f"{adjudication.get('level_before', '')} "
+                f"{adjudication.get('confidence_before', '')} → "
+                f"{adjudication.get('level_after', '')} "
+                f"{adjudication.get('confidence_after', '')}",
+            ),
+        ]
+    rows.append(("Governed event", adjudication.get("governed_event", "")))
+
+    body = "".join(
+        f"<div>{safe_text(label)}</div><div>{safe_text(value)}</div>"
+        for label, value in rows
+    )
+    st.markdown(
+        f"""
+        <div class="eaios-conflict" style="margin-top:-.4rem;">
+          <div class="eaios-section-label">
+            Adjudication · recorded separately, evidence unchanged
+          </div>
+          <div class="eaios-kv" style="margin-top:.5rem;">{body}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def render_evidence(repo: StoryRepository, assessment: dict[str, Any], correlation_id: str) -> None:
     render_vendor_health(repo, correlation_id)
     conflicts = repo.material_conflicts(correlation_id)
+    adjudications = {
+        row["source_id"]: row for row in repo.conflict_adjudications(correlation_id)
+    }
     if conflicts:
+        counts = repo.conflict_counts(correlation_id)
         st.subheader("Material knowledge conflict")
+        count_cols = st.columns(2)
+        count_cols[0].metric("Active material conflicts", counts["active"])
+        count_cols[1].metric("Resolved material conflicts", counts["resolved"])
+        st.caption(
+            "Evidence is never rewritten to match the conclusion. A conflict that "
+            "was material when retrieved stays recorded that way; retiring it is a "
+            "separate, auditable decision shown alongside."
+        )
         for conflict in conflicts:
             reasons = conflict.get("limitation_reasons", []) or []
             reason_html = "".join(f"<li>{safe_text(format_identifier(reason))}</li>" for reason in reasons)
@@ -434,6 +495,7 @@ def render_evidence(repo: StoryRepository, assessment: dict[str, Any], correlati
                 """,
                 unsafe_allow_html=True,
             )
+            render_adjudication(adjudications.get(conflict.get("source_id")))
         st.info(
             "The article is accepted as evidence that uncertainty exists, but not as confirmed root cause. "
             "That distinction reduces confidence and expands due diligence."

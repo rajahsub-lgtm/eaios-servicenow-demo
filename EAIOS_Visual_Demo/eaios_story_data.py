@@ -330,6 +330,91 @@ class StoryRepository:
         context = assessment.get("skill_outputs", {}).get("semantic_context", {})
         return list(context.get("authoritative_paths", []) or [])
 
+    CONTRADICTION_FLAG = "CREDIBLE_KNOWLEDGE_CONTRADICTION"
+
+    def _contradiction_events(self, correlation_id: str) -> dict[str, Any]:
+        """Where the contradiction was raised and, if ever, where it was retired.
+
+        Both are read from the reassessment record rather than stored on the
+        conflict, so the retrieval output stays exactly as it was written.
+        """
+        assessment = self.get_assessment(correlation_id)
+        reassessments = (
+            assessment.get("skill_outputs", {}).get("confidence_reassessments")
+            or {}
+        )
+        detected: tuple[str, dict[str, Any]] | None = None
+        resolved: tuple[str, dict[str, Any]] | None = None
+        for skill_id, record in reassessments.items():
+            signals = record.get("runtime_signal_types") or []
+            cleared = record.get("resolved_hard_flags") or []
+            if detected is None and self.CONTRADICTION_FLAG in signals:
+                detected = (skill_id, record)
+            if resolved is None and self.CONTRADICTION_FLAG in cleared:
+                resolved = (skill_id, record)
+        return {"detected": detected, "resolved": resolved}
+
+    def conflict_adjudications(self, correlation_id: str) -> list[dict[str, Any]]:
+        """Each material conflict with its current adjudication.
+
+        The conflict record itself is never rewritten. A conflict that was
+        material when retrieved stays material when retrieved; if later evidence
+        retired it, that is a separate governed decision recorded alongside,
+        with the skill and signals that carried it.
+        """
+        conflicts = self.material_conflicts(correlation_id)
+        if not conflicts:
+            return []
+
+        events = self._contradiction_events(correlation_id)
+        detected = events["detected"]
+        resolved = events["resolved"]
+
+        rows: list[dict[str, Any]] = []
+        for conflict in conflicts:
+            row: dict[str, Any] = {
+                "source_id": conflict.get("source_id", ""),
+                "title": conflict.get("title", ""),
+                "original_disposition": conflict.get("governance_decision", ""),
+                "original_status": "MATERIAL_AT_RETRIEVAL",
+                "detected_after_skill": detected[0] if detected else "",
+                "adjudication": "RESOLVED" if resolved else "ACTIVE",
+                "governed_event": (
+                    f"{self.CONTRADICTION_FLAG} resolved"
+                    if resolved
+                    else f"{self.CONTRADICTION_FLAG} outstanding"
+                ),
+            }
+            if resolved:
+                skill_id, record = resolved
+                row.update(
+                    {
+                        "resolved_after_skill": skill_id,
+                        "resolving_signals": list(
+                            record.get("runtime_signal_types") or []
+                        ),
+                        "confidence_before": record.get("initial_confidence_score"),
+                        "confidence_after": record.get("updated_confidence_score"),
+                        "level_before": record.get("initial_confidence_level", ""),
+                        "level_after": record.get("updated_confidence_level", ""),
+                        "resolved_by": (
+                            f"{format_identifier(skill_id)} retired the alternative "
+                            "explanation"
+                        ),
+                    }
+                )
+            rows.append(row)
+        return rows
+
+    def conflict_counts(self, correlation_id: str) -> dict[str, int]:
+        rows = self.conflict_adjudications(correlation_id)
+        resolved = sum(1 for row in rows if row["adjudication"] == "RESOLVED")
+        return {
+            "active": len(rows) - resolved,
+            "resolved": resolved,
+            "total": len(rows),
+        }
+
     def material_conflicts(self, correlation_id: str) -> list[dict[str, Any]]:
         assessment = self.get_assessment(correlation_id)
         retrieval = assessment.get("skill_outputs", {}).get(
