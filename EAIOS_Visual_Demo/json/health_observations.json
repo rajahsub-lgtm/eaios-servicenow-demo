@@ -214,5 +214,41 @@
     "threshold_breached": true,
     "observation_summary": "Correlated alerts confirm cross-service degradation across queue consumers.",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "observation_id": "OBS-GITHUB-001",
+    "scenario_id": "SCN-CROSS-GATEWAY-001",
+    "source_record_id": "DT-GITHUB-20260716-001",
+    "external_service_id": "SVC-GITHUB-001",
+    "service_name": "GitHub Enterprise Cloud",
+    "entity_id": "COMP-GITHUB-REPO-ACCESS",
+    "metric_id": "MET-GIT-AUTH-FAIL",
+    "metric_name": "GitHub Authenticated Operation Failure Rate",
+    "current_value": 11.4,
+    "threshold_value": 5.0,
+    "severity": "HIGH",
+    "observed_at": "2026-07-16 08:35:00",
+    "requires_enterprise_reasoning": true,
+    "threshold_breached": true,
+    "observation_summary": "Authenticated clone and push operations began failing intermittently across multiple engineering teams.",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "observation_id": "OBS-TEAMS-001",
+    "scenario_id": "SCN-CROSS-GATEWAY-001",
+    "source_record_id": "DT-TEAMS-20260716-001",
+    "external_service_id": "SVC-TEAMS-001",
+    "service_name": "Microsoft Teams",
+    "entity_id": "COMP-TEAMS-SIGNALING",
+    "metric_id": "MET-TEAMS-JOIN-FAIL",
+    "metric_name": "Teams Meeting Join Failure Rate",
+    "current_value": 9.8,
+    "threshold_value": 5.0,
+    "severity": "HIGH",
+    "observed_at": "2026-07-16 08:35:00",
+    "requires_enterprise_reasoning": true,
+    "threshold_breached": true,
+    "observation_summary": "Meeting join attempts began failing or entering reconnect loops for users across several sites.",
+    "data_classification": "SYNTHETIC"
   }
 ]

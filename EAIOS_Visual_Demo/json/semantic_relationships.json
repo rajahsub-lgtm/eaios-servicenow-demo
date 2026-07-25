@@ -568,5 +568,50 @@
     "source_system": "Synthetic ServiceNow Change Management",
     "provenance": "Change record CHG-GATEWAY-001 configuration item association",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "relationship_id": "REL-031",
+    "subject_entity_id": "KE-GATEWAY-001",
+    "predicate": "APPLIES_TO",
+    "object_entity_id": "COMP-GITHUB-REPO-ACCESS",
+    "direction": "OUTBOUND",
+    "relationship_authority": "AUTHORITATIVE",
+    "confidence": 0.88,
+    "valid_from": "2026-06-28 10:00:00",
+    "valid_to": "",
+    "status": "ACTIVE",
+    "source_system": "Synthetic Enterprise Knowledge Management",
+    "provenance": "Known error KE-GATEWAY-001 applicability review",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "relationship_id": "REL-032",
+    "subject_entity_id": "KE-GATEWAY-001",
+    "predicate": "APPLIES_TO",
+    "object_entity_id": "COMP-TEAMS-SIGNALING",
+    "direction": "OUTBOUND",
+    "relationship_authority": "AUTHORITATIVE",
+    "confidence": 0.88,
+    "valid_from": "2026-06-28 10:00:00",
+    "valid_to": "",
+    "status": "ACTIVE",
+    "source_system": "Synthetic Enterprise Knowledge Management",
+    "provenance": "Known error KE-GATEWAY-001 applicability review",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "relationship_id": "REL-033",
+    "subject_entity_id": "KE-GATEWAY-001",
+    "predicate": "APPLIES_TO",
+    "object_entity_id": "COMP-SECURE-WEB-GATEWAY",
+    "direction": "OUTBOUND",
+    "relationship_authority": "AUTHORITATIVE",
+    "confidence": 0.88,
+    "valid_from": "2026-06-28 10:00:00",
+    "valid_to": "",
+    "status": "ACTIVE",
+    "source_system": "Synthetic Enterprise Knowledge Management",
+    "provenance": "Known error KE-GATEWAY-001 applicability review",
+    "data_classification": "SYNTHETIC"
   }
 ]

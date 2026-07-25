@@ -63,11 +63,31 @@ class AdaptivePlanner:
         return list(scenario.get("supplemental_skills", []))
 
     def _required_skills(self, mode: dict, scenario_id: str) -> list[str]:
+        """Base mode skills plus any the scenario supplements, in usable order.
+
+        Supplemental skills gather evidence, so they are scheduled before the
+        earliest reassessment that could act on it. Appending them at the end
+        would let the plan be revised while the very evidence the scenario
+        added was still outstanding.
+        """
         skills = list(mode["required_skills"])
-        for skill in self._supplemental_skills(scenario_id):
-            if skill not in skills:
-                skills.append(skill)
-        return skills
+        supplemental = [
+            skill
+            for skill in self._supplemental_skills(scenario_id)
+            if skill not in skills
+        ]
+        if not supplemental:
+            return skills
+
+        hooks = [
+            skills.index(skill)
+            for skill in mode.get("reassess_after_skills", [])
+            if skill in skills
+        ]
+        if not hooks:
+            return skills + supplemental
+        cut = min(hooks)
+        return skills[:cut] + supplemental + skills[cut:]
 
     def plan(
         self,

@@ -128,5 +128,57 @@
     "owner": "Risk Platform Team",
     "source_system": "Synthetic OpenTelemetry",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "metric_id": "MET-GIT-AUTH-FAIL",
+    "name": "GitHub Authenticated Operation Failure Rate",
+    "description": "Percent of authenticated clone, fetch, and push operations failing.",
+    "unit": "percent",
+    "aggregation": "5-minute average",
+    "warning_threshold": 2.0,
+    "critical_threshold": 5.0,
+    "higher_is_worse": true,
+    "owner": "Developer Platform Team",
+    "source_system": "Synthetic OpenTelemetry",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "metric_id": "MET-TEAMS-JOIN-FAIL",
+    "name": "Teams Meeting Join Failure Rate",
+    "description": "Percent of meeting join attempts failing or entering reconnect loops.",
+    "unit": "percent",
+    "aggregation": "5-minute average",
+    "warning_threshold": 2.0,
+    "critical_threshold": 5.0,
+    "higher_is_worse": true,
+    "owner": "Workplace Technology Team",
+    "source_system": "Synthetic OpenTelemetry",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "metric_id": "MET-GW-TLS-HANDSHAKE-FAIL",
+    "name": "Gateway TLS Handshake Failure Rate",
+    "description": "Percent of outbound TLS handshakes failing at the secure web gateway.",
+    "unit": "percent",
+    "aggregation": "5-minute average",
+    "warning_threshold": 1.0,
+    "critical_threshold": 3.0,
+    "higher_is_worse": true,
+    "owner": "Network Security Team",
+    "source_system": "Synthetic OpenTelemetry",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "metric_id": "MET-GW-INTERNAL-PATH-OK",
+    "name": "Non-Inspected Path Success Rate",
+    "description": "Percent of outbound requests succeeding on routes exempt from TLS inspection.",
+    "unit": "percent",
+    "aggregation": "5-minute average",
+    "warning_threshold": 98.0,
+    "critical_threshold": 95.0,
+    "higher_is_worse": false,
+    "owner": "Network Security Team",
+    "source_system": "Synthetic OpenTelemetry",
+    "data_classification": "SYNTHETIC"
   }
 ]

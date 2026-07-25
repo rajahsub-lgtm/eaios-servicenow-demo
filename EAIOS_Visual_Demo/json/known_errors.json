@@ -118,5 +118,25 @@
     "valid_from": "2026-06-01",
     "valid_to": "",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "known_error_id": "KE-GATEWAY-001",
+    "title": "Enterprise Gateway TLS Inspection Disrupts Long-Lived Sessions",
+    "applies_to_entity_id": "COMP-SECURE-WEB-GATEWAY",
+    "external_service_id": "SVC-NETWORK-001",
+    "symptom_category": "GATEWAY_SESSION_DISRUPTION",
+    "trigger_metric_id": "MET-GW-TLS-HANDSHAKE-FAIL",
+    "probable_cause": "Expanded TLS inspection scope at the enterprise secure web gateway interrupts long-lived authenticated sessions and real-time signalling to external SaaS services.",
+    "recommended_action": "Confirm vendor service health, identify the shared gateway dependency, and roll back or narrow the inspection policy after approval.",
+    "knowledge_status": "Active",
+    "trust_level": "Trusted",
+    "historical_occurrences": 28,
+    "historical_success_rate_numeric": 93.0,
+    "recent_failure_signal": "LOW",
+    "average_resolution_minutes": 22,
+    "requires_human_approval": true,
+    "valid_from": "2026-06-01",
+    "valid_to": "",
+    "data_classification": "SYNTHETIC"
   }
 ]

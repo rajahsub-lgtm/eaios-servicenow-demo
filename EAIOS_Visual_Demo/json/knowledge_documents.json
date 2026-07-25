@@ -213,5 +213,21 @@
     "body": "A gateway protocol negotiation incompatibility can produce payment timeouts and downstream latency that resemble connector pool exhaustion. Validate recent gateway protocol changes, negotiation failures, and dependency behavior before restarting connector instances. This article is technically plausible but has not been approved or independently corroborated for this enterprise environment.",
     "recommended_action": "Broaden the investigation to validate protocol negotiation, recent integration changes, dependency health, and detailed telemetry before connector restart.",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "document_id": "KB-GATEWAY-001",
+    "document_type": "KNOWLEDGE_ARTICLE",
+    "title": "Diagnosing SaaS Access Failures Caused by Gateway Inspection Changes",
+    "entity_ids": "COMP-SECURE-WEB-GATEWAY,COMP-GATEWAY-TLS-POLICY,COMP-GITHUB-REPO-ACCESS,COMP-TEAMS-SIGNALING",
+    "symptom_categories": "GATEWAY_SESSION_DISRUPTION,SAAS_ACCESS_FAILURE",
+    "status": "Published",
+    "trust_level": "Trusted",
+    "content_safety_status": "SAFE",
+    "published_at": "2026-06-02",
+    "last_validated_at": "2026-06-28",
+    "owner": "Network Security Team",
+    "body": "Use this article when two or more unrelated SaaS services degrade at the same time while each vendor reports its own services healthy. Establish vendor service health first, from an authoritative and current source, before considering internal causes. Then identify whether the affected services share an egress dependency. Long-lived authenticated sessions and real-time signalling are the first to fail when inspection scope widens, while ordinary browser traffic continues to work, so a healthy exempt route does not clear the gateway. Confirm a recent change against the inspection policy before proposing a rollback, and obtain human approval before changing gateway policy.",
+    "recommended_action": "Confirm vendor health, identify the shared egress dependency, correlate the recent inspection policy change, then narrow or roll back the policy after approval.",
+    "data_classification": "SYNTHETIC"
   }
 ]

@@ -201,6 +201,7 @@ class AdaptiveExecutionOrchestrator:
         completed_skills: list[str] = []
         executed_agents: list[str] = []
         runtime_signals: list[RuntimeEvidenceSignal] = []
+        unprocessed_signals: list[RuntimeEvidenceSignal] = []
         transitions: list[PlanTransition] = []
         reassessments: dict[str, dict] = {}
         # Width of every plan the run actually resolved, in order. Peak width
@@ -231,12 +232,17 @@ class AdaptiveExecutionOrchestrator:
             completed_skills.append(skill_id)
             executed_agents.append(agent.agent_id)
             runtime_signals.extend(result.runtime_signals)
+            # Evidence discovered since the last reassessment, not only by the
+            # skill that happens to carry the hook. A supplemental skill can
+            # gather evidence a step earlier and it must still be weighed.
+            unprocessed_signals.extend(result.runtime_signals)
 
             if skill_id in set(plan.reassess_after_skills):
                 confidence, reassessment = self.reassessor.reassess(
                     confidence,
-                    result.runtime_signals,
+                    list(unprocessed_signals),
                 )
+                unprocessed_signals.clear()
                 record = asdict(reassessment)
                 reassessments[skill_id] = record
                 # The unkeyed entry stays bound to the first reassessment so

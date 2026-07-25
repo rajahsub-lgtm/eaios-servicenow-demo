@@ -40,5 +40,17 @@
     "primary_component_id": "COMP-PAY-CONNECTOR",
     "trigger_observation_id": "OBS-PAY-006",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "scenario_id": "SCN-CROSS-GATEWAY-001",
+    "name": "Cross-platform access failure via shared enterprise gateway",
+    "description": "GitHub Enterprise access failures and Microsoft Teams meeting-join failures arrive as separate incidents in different support groups. Vendor evidence, graph traversal, change correlation, and internal path telemetry establish whether the cause is external or a shared internal dependency.",
+    "primary_service_id": "AS-GITHUB-ENTERPRISE",
+    "primary_component_id": "COMP-GITHUB-REPO-ACCESS",
+    "trigger_observation_id": "OBS-GITHUB-001",
+    "supplemental_skills": [
+      "external_service_health"
+    ],
+    "data_classification": "SYNTHETIC"
   }
 ]
