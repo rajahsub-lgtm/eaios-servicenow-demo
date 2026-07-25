@@ -271,7 +271,11 @@ def main() -> None:
         correlation_id="EAIOS-DEMO-RESOLVED-001",
         scenario_id="SCN-PAY-RESOLVED-001",
     )
-    assessments = [stable, contradiction, resolved]
+    cross_platform = orchestrator.execute(
+        correlation_id="EAIOS-DEMO-CROSS-GATEWAY-001",
+        scenario_id="SCN-CROSS-GATEWAY-001",
+    )
+    assessments = [stable, contradiction, resolved, cross_platform]
 
     bundle = {
         "demo_version": "V1 ServiceNow Storytelling",

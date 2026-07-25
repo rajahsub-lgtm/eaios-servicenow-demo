@@ -127,6 +127,50 @@ class GraphContextAgent:
                 "UPSTREAM_DEPENDENCY",
             )
 
+        # Shared egress dependencies, then whatever else depends on them.
+        # Two services failing together look unrelated until the thing they
+        # both route through is named, so the question asked here is "what
+        # else needs what I need". Services with no such edges are unaffected.
+        shared_dependencies: list[str] = []
+        for component in list(focal_components):
+            for step in add_steps(
+                self.graph.follow(
+                    component,
+                    predicate="ROUTED_THROUGH",
+                    direction="out",
+                    minimum_confidence=0.75,
+                    allowed_authorities={"AUTHORITATIVE"},
+                ),
+                "SHARED_EGRESS_DEPENDENCY",
+            ):
+                if step.to_entity_id not in shared_dependencies:
+                    shared_dependencies.append(step.to_entity_id)
+
+        for dependency in shared_dependencies:
+            # Sibling services reached through the same dependency.
+            add_steps(
+                self.graph.follow(
+                    dependency,
+                    predicate="ROUTED_THROUGH",
+                    direction="in",
+                    minimum_confidence=0.75,
+                    allowed_authorities={"AUTHORITATIVE"},
+                ),
+                "CO_DEPENDENT_SERVICE",
+            )
+            # What the shared dependency itself rests on, so a configuration
+            # or policy object is reachable for change correlation.
+            add_steps(
+                self.graph.follow(
+                    dependency,
+                    predicate="DEPENDS_ON",
+                    direction="out",
+                    minimum_confidence=0.75,
+                    allowed_authorities={"AUTHORITATIVE"},
+                ),
+                "SHARED_DEPENDENCY_CONFIGURATION",
+            )
+
         # Outbound technical blast radius: CALLS and FEEDS, then IMPLEMENTS.
         frontier = list(focal_components)
         visited = set(frontier)

@@ -297,6 +297,39 @@ class StoryRepository:
                 )
         return pd.DataFrame(rows)
 
+    def vendor_health(self, correlation_id: str) -> dict[str, Any]:
+        """External service-health evidence, when the scenario gathered any."""
+        assessment = self.get_assessment(correlation_id)
+        return dict(
+            assessment.get("skill_outputs", {}).get("external_service_health", {})
+        )
+
+    def vendor_findings(self, correlation_id: str) -> pd.DataFrame:
+        findings = self.vendor_health(correlation_id).get("findings", []) or []
+        rows = [
+            {
+                "Advisory": item.get("advisory_id", ""),
+                "Vendor": item.get("vendor", ""),
+                "Service": item.get("service", ""),
+                "Reported": item.get("status", ""),
+                "Authority": item.get("source_authority", ""),
+                "Age (min)": item.get("freshness_minutes", ""),
+                "Usable": "Yes" if item.get("eliminates_external_hypothesis") else "No",
+                "Why not": ", ".join(
+                    format_identifier(reason)
+                    for reason in item.get("disqualification_reasons", []) or []
+                ),
+            }
+            for item in findings
+        ]
+        return pd.DataFrame(rows)
+
+    def shared_dependency_paths(self, correlation_id: str) -> list[dict[str, Any]]:
+        """Graph routes that converge, as recorded by the semantic context skill."""
+        assessment = self.get_assessment(correlation_id)
+        context = assessment.get("skill_outputs", {}).get("semantic_context", {})
+        return list(context.get("authoritative_paths", []) or [])
+
     def material_conflicts(self, correlation_id: str) -> list[dict[str, Any]]:
         assessment = self.get_assessment(correlation_id)
         retrieval = assessment.get("skill_outputs", {}).get(

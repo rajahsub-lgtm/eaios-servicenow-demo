@@ -9,11 +9,12 @@ BASE_DIR = Path(__file__).resolve().parent
 def test_repository_loads_every_demonstration_assessment() -> None:
     repo = StoryRepository.load(BASE_DIR)
     labels = repo.assessment_labels()
-    assert len(repo.assessments) == 3
+    assert len(repo.assessments) == 4
     assert set(labels) == {
         "EAIOS-DEMO-STABLE-001",
         "EAIOS-DEMO-CONTRADICTION-001",
         "EAIOS-DEMO-RESOLVED-001",
+        "EAIOS-DEMO-CROSS-GATEWAY-001",
     }
 
 

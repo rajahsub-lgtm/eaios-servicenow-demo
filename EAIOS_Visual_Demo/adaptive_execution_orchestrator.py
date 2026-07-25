@@ -675,8 +675,19 @@ class AdaptiveExecutionOrchestrator:
                 entity_ids=entity_ids,
                 as_of=confidence.assessed_at,
             )
-            required_vendors = self.confidence_engine.external_vendor_dependencies(
-                confidence.observed_entity_id
+            # Every vendor inside the investigation's discovered scope must be
+            # established, not just the one the trigger happened to land on.
+            # A second platform pulled in by graph traversal brings its own
+            # vendor with it, and leaving that unestablished would let the
+            # flag clear on half the evidence.
+            required_vendors = sorted(
+                {
+                    vendor
+                    for scope_entity in entity_ids | {confidence.observed_entity_id}
+                    for vendor in self.confidence_engine.external_vendor_dependencies(
+                        scope_entity
+                    )
+                }
             )
             signals = [
                 RuntimeEvidenceSignal(

@@ -129,10 +129,17 @@ def metric_row(assessment: dict[str, Any], preview: dict[str, Any]) -> None:
         plan_delta_text,
         delta_color="off",
     )
+    # Plan width and agent participation are different measurements and are
+    # always labelled as such, so a narrowing plan never looks like a
+    # contradiction of the agents that informed it.
+    initial_width = int(assessment.get("initial_plan_agent_count", initial_agents))
+    final_width = int(assessment.get("final_plan_agent_count", final_agents))
+    peak_width = int(assessment.get("peak_plan_agent_count", final_width))
     cols[2].metric(
-        "Reasoning agents",
-        str(final_agents),
-        f"{final_agents - initial_agents:+d} from {initial_agents}",
+        "Plan width",
+        f"{initial_width} → {final_width}",
+        f"peak {peak_width}" if peak_width > max(initial_width, final_width)
+        else f"{final_width - initial_width:+d} agents",
         delta_color="off",
     )
     readiness = assessment["automation_readiness"]["status"]
@@ -363,7 +370,47 @@ def render_comparison(repo: StoryRepository) -> None:
     st.plotly_chart(figure, width="stretch")
 
 
+def render_vendor_health(repo: StoryRepository, correlation_id: str) -> None:
+    """External service-health evidence, kept visually separate from internal."""
+    vendor = repo.vendor_health(correlation_id)
+    if not vendor:
+        return
+
+    healthy = vendor.get("vendors_reporting_healthy", []) or []
+    incidents = vendor.get("vendors_reporting_incident", []) or []
+    eliminated = vendor.get("eliminated_external_hypotheses", []) or []
+    required = vendor.get("required_vendor_dependencies", []) or []
+
+    st.subheader("External vendor evidence")
+    st.caption(
+        "Vendor sources describe their own services only. Establishing that a "
+        "vendor is healthy narrows what remains; it never identifies an "
+        "internal cause."
+    )
+    cols = st.columns(4)
+    cols[0].metric("Vendor dependencies", len(required) or "—")
+    cols[1].metric("Reporting healthy", len(healthy))
+    cols[2].metric("Reporting an incident", len(incidents))
+    cols[3].metric("Hypotheses retired", len(eliminated))
+
+    if eliminated:
+        st.markdown(
+            "**External hypotheses retired:** "
+            + ", ".join(f"`{item}`" for item in eliminated)
+        )
+
+    findings = repo.vendor_findings(correlation_id)
+    if not findings.empty:
+        st.dataframe(findings, hide_index=True, width="stretch")
+        st.caption(
+            "Evidence that fails a freshness, authority, or confidence check is "
+            "retained with its provenance rather than discarded."
+        )
+    st.divider()
+
+
 def render_evidence(repo: StoryRepository, assessment: dict[str, Any], correlation_id: str) -> None:
+    render_vendor_health(repo, correlation_id)
     conflicts = repo.material_conflicts(correlation_id)
     if conflicts:
         st.subheader("Material knowledge conflict")
@@ -603,15 +650,21 @@ def main() -> None:
         f"{assessment['initial_confidence_level']} {assessment['initial_confidence_score']:.2f} → "
         f"{assessment['final_confidence_level']} {assessment['final_confidence_score']:.2f}"
     )
+    plan_path = " → ".join(
+        format_identifier(mode)
+        for mode in [assessment["initial_plan_mode"]]
+        + [t["to_mode"] for t in assessment.get("plan_transitions", []) or []]
+    )
     st.markdown(
         f"""
         <div class="eaios-hero">
           <div class="eaios-eyebrow">Enterprise AI Operating System · Adaptive operations</div>
           <div class="eaios-title">{safe_text(assessment['scenario_name'])}</div>
           <div class="eaios-subtitle">
-            {safe_text(transition)} · {safe_text(format_identifier(assessment['initial_plan_mode']))}
-            → {safe_text(format_identifier(assessment['final_plan_mode']))} ·
-            {assessment['initial_agent_count']} → {assessment['final_agent_count']} reasoning agents
+            {safe_text(transition)} · {safe_text(plan_path)} ·
+            plan width {assessment.get('initial_plan_agent_count', assessment['initial_agent_count'])}
+            → {assessment.get('final_plan_agent_count', assessment['final_agent_count'])} ·
+            {assessment.get('unique_agents_executed', assessment['final_agent_count'])} agents contributed
           </div>
         </div>
         """,
