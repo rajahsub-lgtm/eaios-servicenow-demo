@@ -105,6 +105,18 @@ class StoryRepository:
             labels[correlation_id] = self._friendly_scenario_label(assessment)
         return labels
 
+    def readiness_confidence_threshold(self) -> float:
+        """The confidence bar readiness actually applies.
+
+        Read from policy so the chart and the evaluator cannot disagree after
+        the threshold is tuned.
+        """
+        path = self.paths.base_dir / "config" / "automation_readiness_policy.json"
+        if not path.exists():
+            return 0.9
+        policy = json.loads(path.read_text(encoding="utf-8"))
+        return float(policy["thresholds"]["minimum_confidence_score"])
+
     def scenario_identity(self, scenario_id: str) -> dict[str, str]:
         """Declared identity for a scenario, with a derived last resort.
 

@@ -28,6 +28,9 @@ SUSPICIOUS_PATTERNS = (
     re.compile(r"disable\s+(?:controls?|safety|guardrails?)", re.I),
     re.compile(r"delete\s+retained\s+messages", re.I),
 )
+# Fallback only. Symptom vocabulary belongs beside the metric it describes,
+# in metric_definitions.json, where a new metric can declare its own meaning
+# without a code change. This map covers metrics that predate that field.
 METRIC_SYMPTOMS = {
     "MET-PAY-TIMEOUT": {"PAYMENT_TIMEOUT"},
     "MET-CONN-ACTIVE": {"CONNECTOR_SATURATION"},
@@ -115,6 +118,7 @@ class KnowledgeRetrievalAgent:
         self.observations = self._load_json("health_observations.json")
         self.knowledge_documents = self._load_json("knowledge_documents.json")
         self.incidents = self._load_json("incidents.json")
+        self.metric_symptoms = self._declared_metric_symptoms()
         self.problems = self._load_json("problems.json")
         self.changes = self._load_json("changes.json")
         self.corpus = self._load_jsonl("rag_corpus.jsonl")
@@ -131,6 +135,22 @@ class KnowledgeRetrievalAgent:
     def _load_jsonl(self, filename: str) -> list[dict]:
         with open(self.json_dir / filename, encoding="utf-8") as f:
             return [json.loads(line) for line in f if line.strip()]
+
+    def _declared_metric_symptoms(self) -> dict[str, set[str]]:
+        """Symptom vocabulary declared alongside each metric definition."""
+        declared: dict[str, set[str]] = {}
+        for row in self._load_json("metric_definitions.json"):
+            categories = row.get("symptom_categories") or []
+            if categories:
+                declared[row["metric_id"]] = set(categories)
+        return declared
+
+    def _symptoms_for(self, metric_id: str) -> set[str]:
+        """Declared symptoms win; the legacy map covers metrics without them."""
+        declared = self.metric_symptoms.get(metric_id)
+        if declared:
+            return set(declared)
+        return set(METRIC_SYMPTOMS.get(metric_id, set()))
 
     def _build_structured_availability(self) -> dict[str, datetime]:
         result: dict[str, datetime] = {}
@@ -337,7 +357,7 @@ class KnowledgeRetrievalAgent:
         symptoms: set[str] = set()
         for summary in telemetry.metric_summaries:
             if summary.current_status in {"HIGH", "CRITICAL"}:
-                symptoms.update(METRIC_SYMPTOMS.get(summary.metric_id, set()))
+                symptoms.update(self._symptoms_for(summary.metric_id))
 
         graph_names = [
             self.graph.get_entity(entity_id).name

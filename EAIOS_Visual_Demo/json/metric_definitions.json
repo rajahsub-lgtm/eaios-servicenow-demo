@@ -10,7 +10,10 @@
     "higher_is_worse": true,
     "owner": "Order Platform Team",
     "source_system": "Synthetic OpenTelemetry",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "symptom_categories": [
+      "PAYMENT_TIMEOUT"
+    ]
   },
   {
     "metric_id": "MET-P95-LATENCY",
@@ -23,7 +26,10 @@
     "higher_is_worse": true,
     "owner": "Site Reliability Engineering",
     "source_system": "Synthetic OpenTelemetry",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "symptom_categories": [
+      "LATENCY"
+    ]
   },
   {
     "metric_id": "MET-DB-UTIL",
@@ -36,7 +42,10 @@
     "higher_is_worse": true,
     "owner": "Database Reliability Team",
     "source_system": "Synthetic OpenTelemetry",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "symptom_categories": [
+      "DB_CONNECTION_SATURATION"
+    ]
   },
   {
     "metric_id": "MET-CONN-ACTIVE",
@@ -49,7 +58,10 @@
     "higher_is_worse": true,
     "owner": "Order Platform Team",
     "source_system": "Synthetic OpenTelemetry",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "symptom_categories": [
+      "CONNECTOR_SATURATION"
+    ]
   },
   {
     "metric_id": "MET-HTTP-5XX",
@@ -62,7 +74,10 @@
     "higher_is_worse": true,
     "owner": "Site Reliability Engineering",
     "source_system": "Synthetic OpenTelemetry",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "symptom_categories": [
+      "HTTP_5XX"
+    ]
   },
   {
     "metric_id": "MET-ALERT-COUNT",
@@ -75,7 +90,10 @@
     "higher_is_worse": true,
     "owner": "Service Operations",
     "source_system": "Synthetic Event Management",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "symptom_categories": [
+      "ALERT_STORM"
+    ]
   },
   {
     "metric_id": "MET-QUEUE-DEPTH",
@@ -88,7 +106,10 @@
     "higher_is_worse": true,
     "owner": "Messaging Platform Team",
     "source_system": "Synthetic OpenTelemetry",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "symptom_categories": [
+      "QUEUE_BACKLOG"
+    ]
   },
   {
     "metric_id": "MET-CONSUMER-LAG",
@@ -101,7 +122,10 @@
     "higher_is_worse": true,
     "owner": "Messaging Platform Team",
     "source_system": "Synthetic OpenTelemetry",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "symptom_categories": [
+      "CONSUMER_LAG"
+    ]
   },
   {
     "metric_id": "MET-ACC-DELAY",
@@ -114,7 +138,10 @@
     "higher_is_worse": true,
     "owner": "Finance Platform Team",
     "source_system": "Synthetic OpenTelemetry",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "symptom_categories": [
+      "CONSUMER_LAG"
+    ]
   },
   {
     "metric_id": "MET-FRAUD-DELAY",
@@ -127,7 +154,10 @@
     "higher_is_worse": true,
     "owner": "Risk Platform Team",
     "source_system": "Synthetic OpenTelemetry",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "symptom_categories": [
+      "CONSUMER_LAG"
+    ]
   },
   {
     "metric_id": "MET-GIT-AUTH-FAIL",
@@ -140,7 +170,10 @@
     "higher_is_worse": true,
     "owner": "Developer Platform Team",
     "source_system": "Synthetic OpenTelemetry",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "symptom_categories": [
+      "SAAS_ACCESS_FAILURE"
+    ]
   },
   {
     "metric_id": "MET-TEAMS-JOIN-FAIL",
@@ -153,7 +186,10 @@
     "higher_is_worse": true,
     "owner": "Workplace Technology Team",
     "source_system": "Synthetic OpenTelemetry",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "symptom_categories": [
+      "SAAS_ACCESS_FAILURE"
+    ]
   },
   {
     "metric_id": "MET-GW-TLS-HANDSHAKE-FAIL",
@@ -166,7 +202,10 @@
     "higher_is_worse": true,
     "owner": "Network Security Team",
     "source_system": "Synthetic OpenTelemetry",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "symptom_categories": [
+      "GATEWAY_SESSION_DISRUPTION"
+    ]
   },
   {
     "metric_id": "MET-GW-INTERNAL-PATH-OK",

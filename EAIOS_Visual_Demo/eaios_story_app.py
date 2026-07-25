@@ -179,7 +179,12 @@ def confidence_chart(repo: StoryRepository, correlation_id: str) -> go.Figure:
         height=390,
         margin={"l": 20, "r": 20, "t": 58, "b": 20},
     )
-    figure.add_hline(y=0.9, line_dash="dash", annotation_text="Advisory readiness threshold")
+    threshold = repo.readiness_confidence_threshold()
+    figure.add_hline(
+        y=threshold,
+        line_dash="dash",
+        annotation_text=f"Automation-readiness threshold: {threshold:.2f}",
+    )
     return figure
 
 
@@ -543,7 +548,12 @@ def render_readiness(repo: StoryRepository, assessment: dict[str, Any], correlat
         height=430,
         margin={"l": 20, "r": 20, "t": 65, "b": 20},
     )
-    figure.add_hline(y=0.9, line_dash="dash", annotation_text="Confidence criterion")
+    threshold = repo.readiness_confidence_threshold()
+    figure.add_hline(
+        y=threshold,
+        line_dash="dash",
+        annotation_text=f"Automation-readiness threshold: {threshold:.2f}",
+    )
     st.plotly_chart(figure, width="stretch")
     st.caption(
         "The dip at 40 outcomes demonstrates that recent failure and recurrence can suspend readiness; "
