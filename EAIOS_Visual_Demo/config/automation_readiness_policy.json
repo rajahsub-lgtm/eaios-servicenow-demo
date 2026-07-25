@@ -41,6 +41,22 @@
         "FULL_INVESTIGATION",
         "HUMAN_APPROVAL"
       ]
+    },
+    "KE-GATEWAY-001": {
+      "action_risk": "MEDIUM",
+      "reversible": true,
+      "bounded_blast_radius": true,
+      "blast_radius_scope": "CROSS_PLATFORM_BOUNDED",
+      "policy_allows_candidate": true,
+      "autonomous_execution_permitted": false,
+      "required_constraints": [
+        "ONE_GATEWAY_POLICY_AT_A_TIME",
+        "CROSS_PLATFORM_VERIFICATION",
+        "HUMAN_APPROVAL_IN_V1"
+      ],
+      "rationale": "Reverting an inspection policy restores a known previous configuration, so the action is technically reversible. Its blast radius is bounded to egress traffic but spans every platform routed through the gateway, so recovery must be verified on more than the platform that raised the incident. A successful historical pattern makes the remediation governable; it does not authorise autonomous execution."
     }
-  }
+  },
+  "automation_exempt_known_errors": {},
+  "profile_coverage_note": "Every known error a scenario can select needs a control profile or an explicit exemption. Absent both, the evaluator reports reversibility, blast radius, and policy as failed purely because nobody described the action."
 }
