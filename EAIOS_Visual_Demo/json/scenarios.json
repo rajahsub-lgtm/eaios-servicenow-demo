@@ -31,5 +31,14 @@
     "primary_component_id": "COMP-PAY-CONNECTOR",
     "trigger_observation_id": "OBS-PAY-006",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "scenario_id": "SCN-PAY-RESOLVED-001",
+    "name": "Payment connector degradation with resolved contradiction",
+    "description": "The contradictory article expands the plan as before, but deeper change and dependency investigation retires the alternative explanation, allowing the governed plan to narrow again without restoring the original confidence.",
+    "primary_service_id": "AS-ORDER-MGMT",
+    "primary_component_id": "COMP-PAY-CONNECTOR",
+    "trigger_observation_id": "OBS-PAY-006",
+    "data_classification": "SYNTHETIC"
   }
 ]

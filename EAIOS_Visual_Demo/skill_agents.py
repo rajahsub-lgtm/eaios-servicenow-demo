@@ -74,6 +74,7 @@ class ChangeDependencyInvestigationAgent:
     def __init__(self, json_dir: str | Path) -> None:
         self.json_dir = Path(json_dir)
         self.changes = self._load("changes.json")
+        self.probe = RuntimeEvidenceProbe(self.json_dir)
 
     def _load(self, filename: str) -> list[dict]:
         with open(self.json_dir / filename, encoding="utf-8") as f:
@@ -113,18 +114,29 @@ class ChangeDependencyInvestigationAgent:
                     "implemented_at": "",
                 }
             )
+        # Deeper investigation can also retire hypotheses. Signals discovered
+        # here may resolve earlier hard flags and narrow the plan again.
+        discovered = self.probe.discover(
+            scenario_id=scenario_id,
+            entity_ids=relevant,
+            after_skill="change_dependency_investigation",
+        )
         return SkillExecutionResult(
             skill_id="change_dependency_investigation",
             agent_id="change_dependency_agent",
             summary=(
                 f"Retained {len(hypotheses)} change/dependency hypothesis "
-                f"record(s) without promoting correlation to causation."
+                f"record(s) without promoting correlation to causation; "
+                f"discovered {len(discovered)} resolving signal(s)."
             ),
             output={
                 "hypotheses": hypotheses,
                 "causal_status": "UNCONFIRMED",
+                "resolving_signal_types": [
+                    signal.signal_type for signal in discovered
+                ],
             },
-            runtime_signals=[],
+            runtime_signals=discovered,
         )
 
 

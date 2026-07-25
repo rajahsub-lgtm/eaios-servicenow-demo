@@ -6,10 +6,36 @@ from eaios_story_data import StoryRepository
 BASE_DIR = Path(__file__).resolve().parent
 
 
-def test_repository_loads_two_assessments() -> None:
+def test_repository_loads_every_demonstration_assessment() -> None:
     repo = StoryRepository.load(BASE_DIR)
-    assert len(repo.assessments) == 2
-    assert "EAIOS-DEMO-CONTRADICTION-001" in repo.assessment_labels()
+    labels = repo.assessment_labels()
+    assert len(repo.assessments) == 3
+    assert set(labels) == {
+        "EAIOS-DEMO-STABLE-001",
+        "EAIOS-DEMO-CONTRADICTION-001",
+        "EAIOS-DEMO-RESOLVED-001",
+    }
+
+
+def test_each_scenario_gets_a_distinct_label() -> None:
+    repo = StoryRepository.load(BASE_DIR)
+    labels = repo.assessment_labels()
+    assert len(set(labels.values())) == len(labels)
+    assert labels["EAIOS-DEMO-RESOLVED-001"] == (
+        "Contradiction resolved — plan narrows again"
+    )
+
+
+def test_resolved_scenario_cancels_the_fusion_step() -> None:
+    repo = StoryRepository.load(BASE_DIR)
+    delta = repo.plan_delta("EAIOS-DEMO-RESOLVED-001")
+    assert "evidence_fusion_recommendation" in delta["cancelled"]
+    assert delta["directions"] == ["EXPANSION", "CONTRACTION"]
+
+
+def test_scenarios_without_revisions_report_no_cancellations() -> None:
+    repo = StoryRepository.load(BASE_DIR)
+    assert repo.plan_delta("EAIOS-DEMO-STABLE-001")["cancelled"] == []
 
 
 def test_contradiction_scenario_erodes_confidence_and_expands() -> None:

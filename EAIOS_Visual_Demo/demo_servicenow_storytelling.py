@@ -102,7 +102,18 @@ def execution_event_rows(
         }
     )
 
-    reassessment = assessment.skill_outputs.get("confidence_reassessment", {})
+    reassessments = assessment.skill_outputs.get(
+        "confidence_reassessments"
+    ) or {}
+    if not reassessments:
+        legacy = assessment.skill_outputs.get("confidence_reassessment")
+        if legacy:
+            reassessments = {"due_diligence_validation": legacy}
+    transition_by_skill = {
+        transition.triggered_after_skill: transition
+        for transition in assessment.plan_transitions
+    }
+
     for trace in assessment.execution_trace:
         event_type = "SKILL_COMPLETED"
         confidence_before = ""
@@ -115,19 +126,28 @@ def execution_event_rows(
         agent_count_after = ""
         summary = trace.summary
 
-        if trace.skill_id == "due_diligence_validation" and reassessment:
-            event_type = (
-                "CONFIDENCE_ERODED"
-                if reassessment.get("updated_confidence_score", 0)
-                < reassessment.get("initial_confidence_score", 0)
-                else "CONFIDENCE_RECONFIRMED"
-            )
-            confidence_before = reassessment.get("initial_confidence_score", "")
-            confidence_after = reassessment.get("updated_confidence_score", "")
+        reassessment = reassessments.get(trace.skill_id)
+        if reassessment:
+            before = reassessment.get("initial_confidence_score", 0)
+            after = reassessment.get("updated_confidence_score", 0)
+            if after < before:
+                event_type = "CONFIDENCE_ERODED"
+            elif after > before:
+                event_type = "CONFIDENCE_RESTORED"
+            else:
+                event_type = "CONFIDENCE_RECONFIRMED"
+            confidence_before = before
+            confidence_after = after
             confidence_level_before = reassessment.get("initial_confidence_level", "")
             confidence_level_after = reassessment.get("updated_confidence_level", "")
-            plan_before = assessment.initial_plan_mode
-            plan_after = assessment.final_plan_mode
+
+            transition = transition_by_skill.get(trace.skill_id)
+            if transition:
+                plan_before = transition.from_mode
+                plan_after = transition.to_mode
+            else:
+                plan_before = assessment.initial_plan_mode
+                plan_after = assessment.final_plan_mode
             agent_count_before = assessment.initial_agent_count
             agent_count_after = assessment.final_agent_count
             signal_types = reassessment.get("runtime_signal_types", [])
@@ -177,11 +197,14 @@ def plan_revision_rows(
                 "confidence_level_after": assessment.final_confidence_level,
                 "agent_count_before": assessment.initial_agent_count,
                 "agent_count_after": assessment.final_agent_count,
-                "expanded": True,
+                "direction": transition.direction,
+                "expanded": transition.direction == "EXPANSION",
+                "triggered_after_skill": transition.triggered_after_skill,
                 "preserved_completed_skills": ",".join(
                     transition.completed_skills_retained
                 ),
                 "added_skills": ",".join(transition.added_skills),
+                "cancelled_skills": ",".join(transition.cancelled_skills),
                 "revision_reason": transition.reason,
             }
         )
@@ -219,7 +242,11 @@ def main() -> None:
         correlation_id="EAIOS-DEMO-CONTRADICTION-001",
         scenario_id="SCN-PAY-CONTRADICT-001",
     )
-    assessments = [stable, contradiction]
+    resolved = orchestrator.execute(
+        correlation_id="EAIOS-DEMO-RESOLVED-001",
+        scenario_id="SCN-PAY-RESOLVED-001",
+    )
+    assessments = [stable, contradiction, resolved]
 
     bundle = {
         "demo_version": "V1 ServiceNow Storytelling",

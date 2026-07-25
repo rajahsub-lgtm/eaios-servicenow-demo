@@ -279,7 +279,7 @@ class ExecutionReachabilityTests(unittest.TestCase):
     evidence arrives.
     """
 
-    def test_full_investigation_has_no_reassessment_hook_yet(self):
+    def test_every_mode_can_reassess_confidence(self):
         modes = {
             mode["mode_id"]: mode
             for mode in json.loads(
@@ -292,11 +292,10 @@ class ExecutionReachabilityTests(unittest.TestCase):
             modes[ACCELERATED]["reassess_after_skills"],
             ["due_diligence_validation"],
         )
-        self.assertEqual(
+        self.assertTrue(
             modes[FULL]["reassess_after_skills"],
-            [],
-            "Recorded gap: without a hook here, contraction is provable at "
-            "the planner but unreachable during execution.",
+            "FULL_INVESTIGATION needs a reassessment hook or contraction can "
+            "never occur during execution.",
         )
 
     def test_reassessment_hooks_name_skills_the_mode_actually_runs(self):

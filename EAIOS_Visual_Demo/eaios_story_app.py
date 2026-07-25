@@ -70,6 +70,7 @@ def inject_css() -> None:
             background: rgba(128,128,128,.08);
           }
           .skill-chip.added {font-weight: 650;}
+          .skill-chip.cancelled {text-decoration: line-through; opacity: .55;}
           .eaios-conflict {
             border: 1px solid rgba(128,128,128,.28);
             border-radius: 14px;
@@ -111,10 +112,21 @@ def metric_row(assessment: dict[str, Any], preview: dict[str, Any]) -> None:
         f"{final_score:.2f} {assessment['final_confidence_level']}",
         f"{confidence_delta:+.2f} from {initial_score:.2f}",
     )
+    transitions = assessment.get("plan_transitions", []) or []
+    intermediate = [
+        format_identifier(transition["to_mode"])
+        for transition in transitions[:-1]
+    ]
+    if intermediate:
+        plan_delta_text = "via " + " → ".join(intermediate)
+    else:
+        plan_delta_text = (
+            f"from {format_identifier(assessment['initial_plan_mode'])}"
+        )
     cols[1].metric(
         "Plan",
         format_identifier(assessment["final_plan_mode"]),
-        f"from {format_identifier(assessment['initial_plan_mode'])}",
+        plan_delta_text,
         delta_color="off",
     )
     cols[2].metric(
@@ -197,6 +209,16 @@ def plan_transition_html(assessment: dict[str, Any], delta: dict[str, Any]) -> s
             for item in items
         )
 
+    cancelled_block = ""
+    if delta.get("cancelled"):
+        cancelled_block = (
+            '<div style="margin-top:.55rem;">'
+            '<div class="eaios-section-label" style="margin-bottom:.2rem;">'
+            "Cancelled before execution</div>"
+            + chips(delta["cancelled"], "cancelled")
+            + "</div>"
+        )
+
     return f"""
     <div class="eaios-section-label">Adaptive plan revision</div>
     <div style="display:grid;grid-template-columns:1fr 80px 1fr;gap:.75rem;align-items:stretch;">
@@ -210,6 +232,7 @@ def plan_transition_html(assessment: dict[str, Any], delta: dict[str, Any]) -> s
         <div class="eaios-plan-title">Final · {safe_text(format_identifier(assessment['final_plan_mode']))}</div>
         <div>{chips(delta['preserved'])}</div>
         <div style="margin-top:.45rem;">{chips(delta['added'], 'added')}</div>
+        {cancelled_block}
         <div style="margin-top:.8rem;opacity:.72;">{assessment['final_agent_count']} qualified agents executed</div>
       </div>
     </div>
@@ -220,10 +243,17 @@ def render_timeline(events: pd.DataFrame) -> None:
     if events.empty:
         st.info("No execution events were generated for this assessment.")
         return
+    def cell(value: Any) -> str:
+        # Empty CSV cells arrive as NaN, which is truthy and stringifies to
+        # "nan"; plan-level events legitimately have no agent or skill.
+        if value is None or (isinstance(value, float) and pd.isna(value)):
+            return ""
+        return str(value).strip()
+
     for _, row in events.iterrows():
         title = str(row["event_type"]).replace("_", " ").title()
-        agent = str(row.get("agent_name") or "").strip()
-        skill = str(row.get("skill_id") or "").strip()
+        agent = cell(row.get("agent_name"))
+        skill = cell(row.get("skill_id"))
         context = " · ".join(part for part in [agent, format_identifier(skill) if skill else ""] if part)
         with st.expander(f"{int(row['sequence'])}. {title}" + (f" — {context}" if context else "")):
             st.write(row.get("summary", ""))
@@ -307,7 +337,7 @@ def render_comparison(repo: StoryRepository) -> None:
 
     confidence_rows = []
     for assessment in repo.assessments:
-        label = "Contradictory knowledge" if assessment.get("expanded_during_execution") else "Stable evidence"
+        label = repo._friendly_scenario_label(assessment).split(" — ")[0]
         confidence_rows.extend(
             [
                 {"scenario": label, "stage": "Initial", "confidence": assessment["initial_confidence_score"]},
@@ -590,27 +620,37 @@ def main() -> None:
 
     metric_row(assessment, preview)
 
-    if assessment.get("expanded_during_execution"):
-        st.markdown(
-            """
-            <div class="eaios-callout">
-              <b>Adaptive behavior demonstrated:</b> credible contradictory knowledge was not promoted to truth.
-              It increased uncertainty, reduced confidence, preserved completed work, and expanded the governed
-              skill plan from three to six reasoning agents.
-            </div>
-            """,
-            unsafe_allow_html=True,
+    expanded = assessment.get("expanded_during_execution")
+    contracted = assessment.get("contracted_during_execution")
+    if expanded and contracted:
+        callout = (
+            "<b>Bidirectional adaptation demonstrated:</b> contradictory knowledge widened the "
+            "investigation, then deeper change and dependency evidence retired the alternative "
+            "explanation. The plan narrowed again and the unneeded fusion step was cancelled before "
+            "it ran &mdash; but confidence did not return to its original level, because recovery is "
+            "capped well below what contradiction costs."
+        )
+    elif expanded:
+        callout = (
+            "<b>Adaptive behavior demonstrated:</b> credible contradictory knowledge was not promoted "
+            "to truth. It increased uncertainty, reduced confidence, preserved completed work, and "
+            "expanded the governed skill plan from three to six reasoning agents."
+        )
+    elif contracted:
+        callout = (
+            "<b>Converging evidence demonstrated:</b> resolving evidence retired competing hypotheses, "
+            "so EAIOS narrowed the governed plan and cancelled work that was no longer justified."
         )
     else:
-        st.markdown(
-            """
-            <div class="eaios-callout">
-              <b>Efficient behavior demonstrated:</b> trusted evidence remained coherent, confidence stayed high,
-              and EAIOS retained the smallest governed skill plan needed for a recommendation.
-            </div>
-            """,
-            unsafe_allow_html=True,
+        callout = (
+            "<b>Efficient behavior demonstrated:</b> trusted evidence remained coherent, confidence "
+            "stayed high, and EAIOS retained the smallest governed skill plan needed for a "
+            "recommendation."
         )
+    st.markdown(
+        f'<div class="eaios-callout">{callout}</div>',
+        unsafe_allow_html=True,
+    )
 
     tabs = st.tabs(
         [

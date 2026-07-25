@@ -12,5 +12,47 @@
     "knowledge_source_id": "KB-CONTRADICT-001",
     "evidence_disposition": "ACCEPTED_WITH_LIMITATIONS",
     "contradicts_known_error_id": "KE-PAY-001"
+  },
+  {
+    "signal_id": "SIG-KB-CONTRADICT-002",
+    "signal_type": "CREDIBLE_KNOWLEDGE_CONTRADICTION",
+    "entity_id": "COMP-PAY-CONNECTOR",
+    "discovered_after_skill": "due_diligence_validation",
+    "source_system": "Enterprise Knowledge Retrieval",
+    "description": "A recent technically credible but unapproved article presents gateway protocol incompatibility as an alternative explanation for the same payment timeout pattern.",
+    "data_classification": "SYNTHETIC",
+    "provenance": "KB-CONTRADICT-001 publication and trust metadata",
+    "scenario_id": "SCN-PAY-RESOLVED-001",
+    "knowledge_source_id": "KB-CONTRADICT-001",
+    "evidence_disposition": "ACCEPTED_WITH_LIMITATIONS",
+    "contradicts_known_error_id": "KE-PAY-001"
+  },
+  {
+    "signal_id": "SIG-KB-RESOLVE-001",
+    "signal_type": "KNOWLEDGE_CONTRADICTION_RESOLVED",
+    "entity_id": "COMP-PAY-CONNECTOR",
+    "discovered_after_skill": "change_dependency_investigation",
+    "source_system": "Enterprise Knowledge Retrieval",
+    "description": "Dependency investigation established that the gateway protocol version described in the contradictory article is not deployed on this connector, retiring the alternative explanation.",
+    "data_classification": "SYNTHETIC",
+    "provenance": "Configuration item version evidence and KB-CONTRADICT-001 applicability review",
+    "scenario_id": "SCN-PAY-RESOLVED-001",
+    "knowledge_source_id": "KB-CONTRADICT-001",
+    "evidence_disposition": "RETIRED_AS_NOT_APPLICABLE",
+    "contradicts_known_error_id": null
+  },
+  {
+    "signal_id": "SIG-HYP-ELIMINATE-001",
+    "signal_type": "INTERNAL_HYPOTHESIS_ELIMINATED",
+    "entity_id": "COMP-PAY-CONNECTOR",
+    "discovered_after_skill": "change_dependency_investigation",
+    "source_system": "Change and Dependency Investigation",
+    "description": "No recent change to the connector or its declared dependencies falls within the degradation window, eliminating change correlation as a competing hypothesis.",
+    "data_classification": "SYNTHETIC",
+    "provenance": "Change record window comparison against observed degradation onset",
+    "scenario_id": "SCN-PAY-RESOLVED-001",
+    "knowledge_source_id": null,
+    "evidence_disposition": "ELIMINATED",
+    "contradicts_known_error_id": null
   }
 ]

@@ -47,7 +47,9 @@
         "change_dependency_investigation",
         "evidence_fusion_recommendation"
       ],
-      "reassess_after_skills": [],
+      "reassess_after_skills": [
+        "change_dependency_investigation"
+      ],
       "expansion_mode": null
     }
   ]

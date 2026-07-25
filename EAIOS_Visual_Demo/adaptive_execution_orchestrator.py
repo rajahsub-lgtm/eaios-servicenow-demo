@@ -61,9 +61,12 @@ class SkillExecutionTrace:
 class PlanTransition:
     from_mode: str
     to_mode: str
+    direction: str
+    triggered_after_skill: str
     reason: str
     completed_skills_retained: list[str]
     added_skills: list[str]
+    cancelled_skills: list[str]
 
 
 @dataclass(frozen=True)
@@ -80,6 +83,7 @@ class AdaptiveExecutionAssessment:
     final_confidence_level: str
     drift_status: str
     expanded_during_execution: bool
+    contracted_during_execution: bool
     plan_transitions: list[PlanTransition]
     required_skills_initial: list[str]
     required_skills_final: list[str]
@@ -185,6 +189,7 @@ class AdaptiveExecutionOrchestrator:
         executed_agents: list[str] = []
         runtime_signals: list[RuntimeEvidenceSignal] = []
         transitions: list[PlanTransition] = []
+        reassessments: dict[str, dict] = {}
 
         pending = list(plan.required_skills)
         while pending:
@@ -215,28 +220,47 @@ class AdaptiveExecutionOrchestrator:
                     confidence,
                     result.runtime_signals,
                 )
-                outputs["confidence_reassessment"] = asdict(reassessment)
+                record = asdict(reassessment)
+                reassessments[skill_id] = record
+                # The unkeyed entry stays bound to the first reassessment so
+                # existing consumers keep their meaning when a run reassesses
+                # more than once.
+                outputs.setdefault("confidence_reassessment", record)
+                outputs["confidence_reassessments"] = dict(reassessments)
                 updated_plan = self.planner.plan_from_confidence(confidence)
 
                 if updated_plan.orchestration_mode != plan.orchestration_mode:
-                    added_skills = [
+                    still_required = [
                         skill for skill in updated_plan.required_skills
                         if skill not in completed_skills
                     ]
+                    # Narrowing is a substitution, not a truncation: skills the
+                    # wider plan had queued are cancelled while the narrower
+                    # plan introduces skills of its own. Completed work is
+                    # never cancelled, only what is still pending.
+                    cancelled_skills = [
+                        skill for skill in pending
+                        if skill not in updated_plan.required_skills
+                    ]
+                    contracted = len(updated_plan.required_skills) < len(
+                        plan.required_skills
+                    )
                     transitions.append(
                         PlanTransition(
                             from_mode=plan.orchestration_mode,
                             to_mode=updated_plan.orchestration_mode,
+                            direction=(
+                                "CONTRACTION" if contracted else "EXPANSION"
+                            ),
+                            triggered_after_skill=skill_id,
                             reason=reassessment.explanation,
                             completed_skills_retained=list(completed_skills),
-                            added_skills=added_skills,
+                            added_skills=list(still_required),
+                            cancelled_skills=cancelled_skills,
                         )
                     )
                     plan = updated_plan
-                    pending = [
-                        skill for skill in updated_plan.required_skills
-                        if skill not in completed_skills
-                    ]
+                    pending = list(still_required)
 
         recommendation_skill = (
             "governed_recommendation"
@@ -265,7 +289,14 @@ class AdaptiveExecutionOrchestrator:
             initial_confidence_level=initial_confidence.confidence_level,
             final_confidence_level=confidence.confidence_level,
             drift_status=confidence.drift_status,
-            expanded_during_execution=bool(transitions),
+            expanded_during_execution=any(
+                transition.direction == "EXPANSION"
+                for transition in transitions
+            ),
+            contracted_during_execution=any(
+                transition.direction == "CONTRACTION"
+                for transition in transitions
+            ),
             plan_transitions=transitions,
             required_skills_initial=initial_plan.required_skills,
             required_skills_final=plan.required_skills,

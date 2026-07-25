@@ -96,8 +96,14 @@ class StoryRepository:
 
     @staticmethod
     def _friendly_scenario_label(assessment: dict[str, Any]) -> str:
-        if assessment.get("expanded_during_execution"):
+        expanded = assessment.get("expanded_during_execution")
+        contracted = assessment.get("contracted_during_execution")
+        if expanded and contracted:
+            return "Contradiction resolved — plan narrows again"
+        if expanded:
             return "Contradictory knowledge — confidence erodes"
+        if contracted:
+            return "Evidence converges — plan narrows"
         return "Stable evidence — confidence remains high"
 
     def get_assessment(self, correlation_id: str) -> dict[str, Any]:
@@ -207,12 +213,27 @@ class StoryRepository:
             skill for skill in initial
             if skill not in preserved and skill not in final
         ]
+        # Cancelled skills were queued by a previous plan and never executed.
+        # They accumulate across revisions, so collect every transition.
+        cancelled: list[str] = []
+        for transition in transitions:
+            for skill in transition.get("cancelled_skills", []) or []:
+                if skill not in cancelled:
+                    cancelled.append(skill)
+        executed = list(assessment.get("completed_skills", []))
+        cancelled = [skill for skill in cancelled if skill not in executed]
+
         return {
             "initial": initial,
             "final": final,
             "preserved": preserved,
             "added": added,
             "removed": removed,
+            "cancelled": cancelled,
+            "directions": [
+                transition.get("direction", "EXPANSION")
+                for transition in transitions
+            ],
         }
 
     def readiness_criteria(self, correlation_id: str) -> pd.DataFrame:
