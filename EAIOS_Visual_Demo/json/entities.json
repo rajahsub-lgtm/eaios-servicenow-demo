@@ -10,7 +10,8 @@
     "description": "Maintain reliable digital commerce services and reduce customer-impacting degradation.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "CAP-CHECKOUT",
@@ -23,7 +24,8 @@
     "description": "Allow customers to confirm an order and complete payment.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "CAP-ORDER-CAPTURE",
@@ -36,7 +38,8 @@
     "description": "Capture and persist customer orders.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "CAP-BILLING",
@@ -49,7 +52,8 @@
     "description": "Record and reconcile billable transactions.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "CAP-FRAUD",
@@ -62,7 +66,8 @@
     "description": "Assess transactions for fraud risk.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "CAP-RECON",
@@ -75,7 +80,8 @@
     "description": "Reconcile transactions between commerce and finance platforms.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "CAP-CX",
@@ -88,7 +94,8 @@
     "description": "Provide a responsive and reliable customer journey.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "BS-DIGITAL-COMMERCE",
@@ -101,7 +108,8 @@
     "description": "Customer-facing digital ordering and checkout business service.",
     "source_system": "Synthetic Service Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "AS-ORDER-MGMT",
@@ -114,7 +122,8 @@
     "description": "Coordinates cart, checkout, payment, persistence, and order event publication.",
     "source_system": "Synthetic CMDB",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "AS-PAYMENT-GATEWAY",
@@ -127,7 +136,8 @@
     "description": "Authorizes and captures customer payments.",
     "source_system": "Synthetic CMDB",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "AS-ACCOUNTING",
@@ -140,7 +150,8 @@
     "description": "Consumes order events and records accounting transactions.",
     "source_system": "Synthetic CMDB",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "AS-FRAUD",
@@ -153,7 +164,8 @@
     "description": "Consumes order events and performs fraud analysis.",
     "source_system": "Synthetic CMDB",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "COMP-ORDER-API",
@@ -166,7 +178,8 @@
     "description": "Primary API tier for Order Management.",
     "source_system": "Synthetic CMDB",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "COMP-PAY-CONNECTOR",
@@ -179,7 +192,8 @@
     "description": "Connection-pooled adapter from Order Management to Payment Gateway.",
     "source_system": "Synthetic CMDB",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "COMP-ORDER-DB",
@@ -192,7 +206,8 @@
     "description": "Relational database supporting order persistence and connector metadata.",
     "source_system": "Synthetic CMDB",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "COMP-ORDER-QUEUE",
@@ -205,7 +220,8 @@
     "description": "Event queue carrying completed-order events to downstream consumers.",
     "source_system": "Synthetic CMDB",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "COMP-ACC-CONSUMER",
@@ -218,7 +234,8 @@
     "description": "Consumes order events for accounting processing.",
     "source_system": "Synthetic CMDB",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "COMP-FRAUD-CONSUMER",
@@ -231,7 +248,8 @@
     "description": "Consumes order events for fraud screening.",
     "source_system": "Synthetic CMDB",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "AS-GITHUB-ENTERPRISE",
@@ -244,7 +262,9 @@
     "description": "Vendor-hosted source control, pull requests, and Actions used by engineering teams.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "EXTERNAL_VENDOR",
+    "vendor": "GitHub"
   },
   {
     "entity_id": "COMP-GITHUB-REPO-ACCESS",
@@ -257,7 +277,8 @@
     "description": "Authenticated clone, fetch, and push traffic to protected enterprise repositories.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "AS-TEAMS",
@@ -270,7 +291,9 @@
     "description": "Vendor-hosted meetings, calling, chat, and presence for enterprise collaboration.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "EXTERNAL_VENDOR",
+    "vendor": "Microsoft"
   },
   {
     "entity_id": "COMP-TEAMS-SIGNALING",
@@ -283,7 +306,8 @@
     "description": "Meeting join negotiation and media session signalling for Teams clients.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "COMP-SECURE-WEB-GATEWAY",
@@ -296,7 +320,8 @@
     "description": "Egress inspection and policy enforcement point for outbound enterprise SaaS traffic.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "COMP-GATEWAY-TLS-POLICY",
@@ -309,7 +334,8 @@
     "description": "Ruleset governing which outbound destinations are TLS-inspected at the gateway.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "CAP-ENG-DELIVERY",
@@ -322,7 +348,8 @@
     "description": "Ability of engineering teams to build, review, and release software.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "CAP-COLLABORATION",
@@ -335,7 +362,8 @@
     "description": "Ability of employees to meet, present, and communicate across the organisation.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   },
   {
     "entity_id": "BO-PRODUCTIVITY",
@@ -348,6 +376,7 @@
     "description": "Keep engineering delivery and workforce collaboration operating without disruption.",
     "source_system": "Synthetic Enterprise Portfolio",
     "trust_level": "TRUSTED",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "service_provider_type": "INTERNAL"
   }
 ]

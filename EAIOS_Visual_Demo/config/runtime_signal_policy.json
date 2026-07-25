@@ -85,6 +85,22 @@
       "resolves_flags": [
         "OBSERVABILITY_COVERAGE_LOW"
       ]
+    },
+    "VENDOR_STATUS_CONFIRMED": {
+      "confidence_credit": 0.06,
+      "contradiction_decrement": 0.1,
+      "hard_flag": false,
+      "resolves_flags": [
+        "VENDOR_STATUS_UNKNOWN"
+      ],
+      "note": "Emitted only when every external vendor the service depends on has fresh, authoritative evidence. Partial coverage leaves the flag standing."
+    },
+    "EXTERNAL_HYPOTHESIS_ELIMINATED": {
+      "confidence_credit": 0.05,
+      "contradiction_decrement": 0.15,
+      "force_drift_status": "IMPROVING",
+      "hard_flag": false,
+      "note": "Retires one external-outage hypothesis. Narrows what remains; never establishes an internal cause on its own."
     }
   }
 }

@@ -191,6 +191,68 @@ class VendorHealthAgent:
             ),
         )
 
+    def signals_for(
+        self,
+        assessment: VendorHealthAssessment,
+        *,
+        required_vendors: list[str],
+        entity_id: str,
+    ) -> list[dict]:
+        """Runtime signals the vendor evidence justifies.
+
+        VENDOR_STATUS_CONFIRMED is emitted only when every vendor the service
+        depends on has usable evidence. Confirming one platform while another
+        remains unestablished leaves the flag standing, so a single advisory
+        can never clear a multi-vendor dependency.
+
+        Signals carry no verdict about internal infrastructure. Eliminating an
+        external hypothesis narrows what is left; it does not name a cause.
+        """
+        signals: list[dict] = []
+        covered = set(assessment.vendors_reporting_healthy)
+        outstanding = sorted(set(required_vendors) - covered)
+
+        if required_vendors and not outstanding:
+            signals.append(
+                {
+                    "signal_id": f"SIG-VENDOR-STATUS-{entity_id}",
+                    "signal_type": "VENDOR_STATUS_CONFIRMED",
+                    "entity_id": entity_id,
+                    "discovered_after_skill": "external_service_health",
+                    "source_system": "Vendor Health Agent",
+                    "description": (
+                        "Fresh, authoritative service-health evidence was obtained "
+                        f"for every external vendor dependency: {', '.join(sorted(covered))}."
+                    ),
+                    "data_classification": "SYNTHETIC",
+                    "provenance": ", ".join(
+                        f.advisory_id
+                        for f in assessment.findings
+                        if f.eliminates_external_hypothesis
+                    ),
+                    "evidence_disposition": "VENDOR_STATUS_ESTABLISHED",
+                }
+            )
+
+        for hypothesis in assessment.eliminated_external_hypotheses:
+            signals.append(
+                {
+                    "signal_id": f"SIG-{hypothesis}",
+                    "signal_type": "EXTERNAL_HYPOTHESIS_ELIMINATED",
+                    "entity_id": entity_id,
+                    "discovered_after_skill": "external_service_health",
+                    "source_system": "Vendor Health Agent",
+                    "description": (
+                        f"{hypothesis} retired: the vendor reports the named service "
+                        "operating normally on fresh, authoritative evidence."
+                    ),
+                    "data_classification": "SYNTHETIC",
+                    "provenance": "Vendor service-health evidence",
+                    "evidence_disposition": "HYPOTHESIS_RETIRED",
+                }
+            )
+        return signals
+
     @staticmethod
     def to_dict(assessment: VendorHealthAssessment) -> dict:
         return asdict(assessment)

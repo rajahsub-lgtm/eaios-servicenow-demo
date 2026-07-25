@@ -663,17 +663,34 @@ class AdaptiveExecutionOrchestrator:
                 decision_ids=decision_ids,
             )
             graph_context = outputs["semantic_context"]
+            entity_ids = set(graph_context.get("authoritative_entity_ids", []))
             result = self.vendor_health_agent.assess(
                 scenario_id=scenario_id,
-                entity_ids=set(graph_context.get("authoritative_entity_ids", [])),
+                entity_ids=entity_ids,
                 as_of=confidence.assessed_at,
             )
+            required_vendors = self.confidence_engine.external_vendor_dependencies(
+                confidence.observed_entity_id
+            )
+            signals = [
+                RuntimeEvidenceSignal(
+                    **row,
+                    scenario_id=scenario_id,
+                )
+                for row in self.vendor_health_agent.signals_for(
+                    result,
+                    required_vendors=required_vendors,
+                    entity_id=confidence.observed_entity_id,
+                )
+            ]
+            output = self.vendor_health_agent.to_dict(result)
+            output["required_vendor_dependencies"] = required_vendors
             return SkillExecutionResult(
                 skill_id=skill_id,
                 agent_id=agent.agent_id,
                 summary=result.explanation,
-                output=self.vendor_health_agent.to_dict(result),
-                runtime_signals=[],
+                output=output,
+                runtime_signals=signals,
             )
 
         if skill_id == "change_dependency_investigation":

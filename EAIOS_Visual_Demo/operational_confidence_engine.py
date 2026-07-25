@@ -129,6 +129,40 @@ class OperationalConfidenceEngine:
             return "MEDIUM"
         return "LOW"
 
+    def external_vendor_dependencies(self, observed_entity_id: str) -> list[str]:
+        """Vendors whose services the observed entity forms part of.
+
+        Derived by traversal, not declared on the scenario. A service that
+        depends on an external vendor starts with that vendor's status
+        unestablished, and the engine can only know that by looking at the
+        graph. Entities with no vendor-provided ancestor produce nothing, so
+        wholly internal scenarios are unaffected.
+        """
+        if observed_entity_id not in self.graph.entities:
+            return []
+        reachable = self.graph.reachable_paths(
+            observed_entity_id,
+            max_hops=3,
+            direction="in",
+            predicates={"DEPENDS_ON", "ROUTED_THROUGH"},
+            allowed_authorities={"AUTHORITATIVE"},
+        )
+        vendors = set()
+        for entity_id in list(reachable) + [observed_entity_id]:
+            attributes = self.graph.get_entity(entity_id).attributes
+            if attributes.get("service_provider_type") == "EXTERNAL_VENDOR":
+                vendor = str(attributes.get("vendor", "")).strip()
+                if vendor:
+                    vendors.add(vendor)
+        return sorted(vendors)
+
+    def _vendor_status_flags(self, observed_entity_id: str) -> list[str]:
+        return (
+            ["VENDOR_STATUS_UNKNOWN"]
+            if self.external_vendor_dependencies(observed_entity_id)
+            else []
+        )
+
     def assess(
         self,
         scenario_id: str,
@@ -170,7 +204,9 @@ class OperationalConfidenceEngine:
         )
 
         if not assessed_candidates:
-            hard_flags = ["NO_APPLICABLE_KNOWN_ERROR"]
+            hard_flags = ["NO_APPLICABLE_KNOWN_ERROR"] + self._vendor_status_flags(
+                observed_entity_id
+            )
             return OperationalConfidenceAssessment(
                 scenario_id=scenario_id,
                 scenario_name=scenario["name"],
@@ -236,7 +272,10 @@ class OperationalConfidenceEngine:
             evidence_coverage=selected.evidence_coverage,
             contradiction_level=selected.contradiction_level,
             candidate_margin=round(max(0.0, candidate_margin), 3),
-            hard_flags=selected.hard_flags,
+            hard_flags=sorted(
+                set(selected.hard_flags)
+                | set(self._vendor_status_flags(observed_entity_id))
+            ),
             factor_scores=selected.factor_scores,
             penalty_scores=selected.penalty_scores,
             candidate_assessments=assessed_candidates,
