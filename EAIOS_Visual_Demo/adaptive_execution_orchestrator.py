@@ -22,6 +22,7 @@ from policy_layer import (
     MCPEnforcementPoint,
     PolicyDecision,
     PolicyDecisionPoint,
+    PolicyEnforcementError,
     PolicyRequest,
 )
 from runtime_confidence_reassessment import (
@@ -488,6 +489,48 @@ class AdaptiveExecutionOrchestrator:
         )
         decision_ids.append(decision.decision_id)
 
+    def _request_data_access(
+        self,
+        *,
+        correlation_id: str,
+        agent: AgentSelection,
+        skill_id: str,
+        domains: list[str],
+        decision_ids: list[str],
+    ) -> tuple[list[str], list[dict]]:
+        """Ask for several evidence domains and report what was granted.
+
+        An agent may ask for everything its question could use; the
+        enforcement point decides what it actually receives. A refusal is
+        recorded and the agent continues within its grant rather than failing,
+        which is the difference between an agent that is bounded and one that
+        is broken. An agent cannot widen itself by asking.
+        """
+        granted: list[str] = []
+        refused: list[dict] = []
+        for domain in domains:
+            try:
+                self._enforce_data(
+                    correlation_id=correlation_id,
+                    agent=agent,
+                    skill_id=skill_id,
+                    domain=domain,
+                    decision_ids=decision_ids,
+                )
+                granted.append(domain)
+            except PolicyEnforcementError:
+                decision = self.policy_audit[-1]
+                decision_ids.append(decision.decision_id)
+                refused.append(
+                    {
+                        "data_domain": domain,
+                        "decision": decision.decision,
+                        "policy_id": decision.policy_id,
+                        "reason": decision.reason,
+                    }
+                )
+        return granted, refused
+
     def _enforce_tool(
         self,
         *,
@@ -653,11 +696,16 @@ class AdaptiveExecutionOrchestrator:
             )
 
         if skill_id == "external_service_health":
-            self._enforce_data(
+            # Correlating vendor status against internal telemetry would answer
+            # the question more completely, so the agent asks for both. It is
+            # registered for vendor advisories only, and the second request is
+            # refused. The boundary the agent is designed to respect is also
+            # enforced independently of its design.
+            granted_domains, refused_domains = self._request_data_access(
                 correlation_id=correlation_id,
                 agent=agent,
                 skill_id=skill_id,
-                domain="vendor_advisories",
+                domains=["vendor_advisories", "telemetry_samples"],
                 decision_ids=decision_ids,
             )
             self._enforce_tool(
@@ -702,6 +750,12 @@ class AdaptiveExecutionOrchestrator:
             ]
             output = self.vendor_health_agent.to_dict(result)
             output["required_vendor_dependencies"] = required_vendors
+            output["requested_evidence_domains"] = [
+                "vendor_advisories",
+                "telemetry_samples",
+            ]
+            output["granted_evidence_domains"] = granted_domains
+            output["refused_evidence_domains"] = refused_domains
             return SkillExecutionResult(
                 skill_id=skill_id,
                 agent_id=agent.agent_id,

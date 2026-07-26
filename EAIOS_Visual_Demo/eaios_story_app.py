@@ -562,6 +562,47 @@ def render_readiness(repo: StoryRepository, assessment: dict[str, Any], correlat
     )
 
 
+def render_control_plane(repo: StoryRepository, correlation_id: str) -> None:
+    """Every access decision the run made, including the ones refused."""
+    counts = repo.policy_decision_counts(correlation_id)
+    if not counts:
+        return
+
+    st.subheader("Access control plane")
+    st.caption(
+        "Every data read, tool call, and agent delegation is decided before it "
+        "happens. Agents may ask for what their question needs; policy decides "
+        "what they receive."
+    )
+    cols = st.columns(3)
+    cols[0].metric("Allowed", counts.get("ALLOW_WITH_OBLIGATIONS", 0))
+    cols[1].metric("Escalated to a human", counts.get("ESCALATE", 0))
+    cols[2].metric("Refused", counts.get("DENY", 0))
+
+    for refusal in repo.refused_evidence(correlation_id):
+        st.markdown(
+            f"""
+            <div class="eaios-callout">
+              <b>Refused:</b> <code>{safe_text(refusal.get('data_domain'))}</code>
+              &mdash; {safe_text(refusal.get('policy_id'))}<br>
+              The agent asked for evidence outside its registration and
+              continued within its grant. An agent cannot widen itself by asking.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    decisions = repo.policy_decisions(correlation_id)
+    if not decisions.empty:
+        notable = decisions[decisions["Decision"] != "ALLOW_WITH_OBLIGATIONS"]
+        if not notable.empty:
+            st.markdown("**Decisions requiring attention**")
+            st.dataframe(notable, hide_index=True, width="stretch")
+        with st.expander(f"Full decision log ({len(decisions)} decisions)"):
+            st.dataframe(decisions, hide_index=True, width="stretch")
+    st.divider()
+
+
 def render_servicenow_boundary(
     repo: StoryRepository,
     assessment: dict[str, Any],
@@ -572,6 +613,8 @@ def render_servicenow_boundary(
     payload = preview.get("mapped_servicenow_payload", {})
     metadata = repo.servicenow_record_metadata(correlation_id)
     url = repo.servicenow_record_url(correlation_id)
+
+    render_control_plane(repo, correlation_id)
 
     st.subheader("ServiceNow remains the operational system of record and control")
     cols = st.columns(4)

@@ -105,6 +105,44 @@ class StoryRepository:
             labels[correlation_id] = self._friendly_scenario_label(assessment)
         return labels
 
+    def policy_decisions(self, correlation_id: str) -> pd.DataFrame:
+        """Every access decision the run made, in order.
+
+        Governance that is never seen refusing anything reads as decoration.
+        The audit already records allow, escalate and deny; this makes it
+        observable rather than merely retained.
+        """
+        assessment = self.get_assessment(correlation_id)
+        rows = []
+        for decision in assessment.get("policy_decisions", []) or []:
+            request = decision.get("request", {})
+            rows.append(
+                {
+                    "Decision": decision.get("decision", ""),
+                    "Agent": request.get("requesting_agent_id", ""),
+                    "Action": request.get("action", ""),
+                    "Resource": request.get("resource_id", ""),
+                    "Type": request.get("request_type", ""),
+                    "Policy": decision.get("policy_id", ""),
+                    "Obligations": ", ".join(
+                        format_identifier(item)
+                        for item in decision.get("obligations", []) or []
+                    ),
+                    "Reason": decision.get("reason", ""),
+                }
+            )
+        return pd.DataFrame(rows)
+
+    def policy_decision_counts(self, correlation_id: str) -> dict[str, int]:
+        return dict(
+            self.get_assessment(correlation_id).get("policy_decision_counts", {})
+        )
+
+    def refused_evidence(self, correlation_id: str) -> list[dict[str, Any]]:
+        """Evidence domains an agent asked for and was not granted."""
+        vendor = self.vendor_health(correlation_id)
+        return list(vendor.get("refused_evidence_domains", []) or [])
+
     def readiness_confidence_threshold(self) -> float:
         """The confidence bar readiness actually applies.
 
