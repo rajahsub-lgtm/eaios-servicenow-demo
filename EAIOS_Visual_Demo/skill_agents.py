@@ -258,6 +258,46 @@ class AdaptiveRecommendationAgent:
                     for item in fusion.alternative_hypotheses
                     if item.status == "REJECTED"
                 ],
+                # Every candidate considered, with its score and disposition.
+                # Reporting only the winner hides the reasoning that chose it.
+                "hypotheses": [
+                    {
+                        "hypothesis_id": item.hypothesis_id,
+                        "hypothesis_type": item.hypothesis_type,
+                        "title": item.title,
+                        "score": item.score,
+                        "confidence_level": item.confidence_level,
+                        "status": status,
+                        "supporting_evidence_ids": list(item.supporting_evidence_ids),
+                        "contradicting_evidence_ids": list(
+                            item.contradicting_evidence_ids
+                        ),
+                        "rejection_reason": item.rejection_reason,
+                        "uncertainty_factors": list(item.uncertainty_factors),
+                        "historical_success_rate": item.historical_success_rate,
+                    }
+                    for item, status in (
+                        [(fusion.leading_hypothesis, "LEADING")]
+                        + [(alt, alt.status) for alt in fusion.alternative_hypotheses]
+                    )
+                ],
+                # What each source contributed, weighted, with provenance.
+                # This is the collective part of collective intelligence.
+                "evidence_ledger": [
+                    {
+                        "evidence_id": item.evidence_id,
+                        "evidence_type": item.evidence_type,
+                        "evidence_class": item.evidence_class,
+                        "role": item.role,
+                        "reliability": item.reliability,
+                        "contribution": item.contribution,
+                        "rationale": item.rationale,
+                        "provenance": item.provenance,
+                    }
+                    for item in fusion.evidence_ledger
+                ],
+                "rejected_evidence_count": len(fusion.rejected_evidence_ids),
+                "reasoning_summary": fusion.reasoning_summary,
                 "selected_strategy": plan_name,
                 "confidence_level": confidence.confidence_level,
                 "confidence_score": confidence.confidence_score,

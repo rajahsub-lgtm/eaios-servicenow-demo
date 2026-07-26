@@ -286,9 +286,28 @@ def render_adaptive_story(
     with agent_col:
         st.plotly_chart(agent_chart(assessment), width="stretch")
 
+    asymmetry = repo.confidence_asymmetry()
+    st.caption(
+        f"Confidence is asymmetric by design. A contradiction costs up to "
+        f"{asymmetry['largest_penalty']:.2f} and applies in full; recovery is "
+        f"capped at {asymmetry['credit_cap']:.2f} per reassessment and cannot "
+        f"exceed {asymmetry['runtime_ceiling']:.2f} at runtime. Cycling erodes "
+        f"confidence; it never restores it."
+    )
+
     delta = repo.plan_delta(correlation_id)
     st.markdown(plan_transition_html(assessment, delta), unsafe_allow_html=True)
     if assessment.get("plan_transitions"):
+        overlap = set(delta["initial"]) & set(delta["final"])
+        if delta["added"] and len(overlap) < min(
+            len(delta["initial"]), len(delta["final"])
+        ):
+            st.caption(
+                f"A revision substitutes rather than truncates. These plans share "
+                f"only {len(overlap)} skill, so narrowing still schedules work: "
+                f"the wider plan's remaining steps are cancelled and the narrower "
+                f"plan brings its own."
+            )
         st.caption(assessment["plan_transitions"][-1].get("reason", ""))
     else:
         st.caption("Confidence remained stable, so no plan revision was required.")
@@ -413,7 +432,149 @@ def render_scenario_spread(repo: StoryRepository) -> None:
     st.plotly_chart(figure, width="stretch")
 
 
+def render_fusion(repo: StoryRepository, correlation_id: str) -> None:
+    """What was considered, what contributed, and what argued against it."""
+    summary = repo.contribution_summary(correlation_id)
+    if not summary["contributions"]:
+        return
+
+    st.subheader("What the conclusion was built from")
+    st.caption(
+        "No single source establishes the answer. Each contributes weighted "
+        "evidence with its own provenance, and candidates are retired on "
+        "evidence rather than dropped."
+    )
+    cols = st.columns(4)
+    cols[0].metric("Hypotheses considered", summary["hypotheses"])
+    cols[1].metric("Retired on evidence", summary["retired"])
+    cols[2].metric("Contributing sources", summary["contributions"])
+    cols[3].metric("Evidence rejected", summary["rejected_evidence"])
+
+    hypotheses = repo.hypotheses(correlation_id)
+    if not hypotheses.empty:
+        st.markdown("**Candidates considered**")
+        st.dataframe(
+            hypotheses.drop(columns=["Why retired"]),
+            hide_index=True,
+            width="stretch",
+        )
+        for _, row in hypotheses.iterrows():
+            if str(row["Why retired"]).strip():
+                st.markdown(
+                    f"""
+                    <div class="eaios-callout">
+                      <b>{safe_text(row['Hypothesis'])} retired.</b>
+                      {safe_text(row['Why retired'])}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+    ledger = repo.evidence_ledger(correlation_id)
+    if not ledger.empty:
+        st.markdown(
+            f"**Evidence ledger** · {summary['contributions']} contributions "
+            f"across {summary['distinct_types']} source types · "
+            f"roles: {', '.join(summary['roles'])}"
+        )
+        st.dataframe(ledger, hide_index=True, width="stretch", height=340)
+        st.caption(
+            "Contradicting and uncertain evidence is listed first. What argued "
+            "against the answer is the part most worth reading."
+        )
+    st.divider()
+
+
+def render_adjudication(adjudication: dict[str, Any] | None) -> None:
+    """The governed decision layered over an unchanged evidence record."""
+    if not adjudication:
+        return
+
+    resolved = adjudication["adjudication"] == "RESOLVED"
+    rows = [
+        ("Original status", "Material at retrieval time"),
+        ("Original disposition", adjudication.get("original_disposition", "")),
+        ("Detected after", format_identifier(adjudication.get("detected_after_skill", ""))),
+        ("Current adjudication", adjudication["adjudication"]),
+    ]
+    if resolved:
+        rows += [
+            ("Resolved by", adjudication.get("resolved_by", "")),
+            (
+                "Resolving signals",
+                ", ".join(
+                    format_identifier(signal)
+                    for signal in adjudication.get("resolving_signals", [])
+                ),
+            ),
+            (
+                "Confidence effect",
+                f"{adjudication.get('level_before', '')} "
+                f"{adjudication.get('confidence_before', '')} → "
+                f"{adjudication.get('level_after', '')} "
+                f"{adjudication.get('confidence_after', '')}",
+            ),
+        ]
+    rows.append(("Governed event", adjudication.get("governed_event", "")))
+
+    body = "".join(
+        f"<div>{safe_text(label)}</div><div>{safe_text(value)}</div>"
+        for label, value in rows
+    )
+    st.markdown(
+        f"""
+        <div class="eaios-conflict" style="margin-top:-.4rem;">
+          <div class="eaios-section-label">
+            Adjudication · recorded separately, evidence unchanged
+          </div>
+          <div class="eaios-kv" style="margin-top:.5rem;">{body}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_vendor_health(repo: StoryRepository, correlation_id: str) -> None:
+    """External service-health evidence, kept visually separate from internal."""
+    vendor = repo.vendor_health(correlation_id)
+    if not vendor:
+        return
+
+    healthy = vendor.get("vendors_reporting_healthy", []) or []
+    incidents = vendor.get("vendors_reporting_incident", []) or []
+    eliminated = vendor.get("eliminated_external_hypotheses", []) or []
+    required = vendor.get("required_vendor_dependencies", []) or []
+
+    st.subheader("External vendor evidence")
+    st.caption(
+        "Vendor sources describe their own services only. Establishing that a "
+        "vendor is healthy narrows what remains; it never identifies an "
+        "internal cause."
+    )
+    cols = st.columns(4)
+    cols[0].metric("Vendor dependencies", len(required) or "—")
+    cols[1].metric("Reporting healthy", len(healthy))
+    cols[2].metric("Reporting an incident", len(incidents))
+    cols[3].metric("Hypotheses retired", len(eliminated))
+
+    if eliminated:
+        st.markdown(
+            "**External hypotheses retired:** "
+            + ", ".join(f"`{item}`" for item in eliminated)
+        )
+
+    findings = repo.vendor_findings(correlation_id)
+    if not findings.empty:
+        st.dataframe(findings, hide_index=True, width="stretch")
+        st.caption(
+            "Evidence that fails a freshness, authority, or confidence check is "
+            "retained with its provenance rather than discarded."
+        )
+    st.divider()
+
+
 def render_evidence(repo: StoryRepository, assessment: dict[str, Any], correlation_id: str) -> None:
+    render_fusion(repo, correlation_id)
     render_vendor_health(repo, correlation_id)
     conflicts = repo.material_conflicts(correlation_id)
     adjudications = {

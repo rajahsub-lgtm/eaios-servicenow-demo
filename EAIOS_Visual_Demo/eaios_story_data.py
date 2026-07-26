@@ -105,6 +105,67 @@ class StoryRepository:
             labels[correlation_id] = self._friendly_scenario_label(assessment)
         return labels
 
+    def hypotheses(self, correlation_id: str) -> pd.DataFrame:
+        """Every candidate considered, with its disposition.
+
+        Reporting only the winner hides the reasoning that chose it. A ranked
+        field with one retired on evidence is the difference between a
+        conclusion and a judgement.
+        """
+        recommendation = self.get_assessment(correlation_id).get("recommendation", {})
+        rows = [
+            {
+                "Status": item.get("status", ""),
+                "Hypothesis": item.get("hypothesis_id", ""),
+                "Statement": item.get("title", ""),
+                "Score": item.get("score", 0.0),
+                "Supported by": len(item.get("supporting_evidence_ids", []) or []),
+                "Contradicted by": ", ".join(
+                    item.get("contradicting_evidence_ids", []) or []
+                ),
+                "Why retired": item.get("rejection_reason", ""),
+            }
+            for item in recommendation.get("hypotheses", []) or []
+        ]
+        return pd.DataFrame(rows)
+
+    def evidence_ledger(self, correlation_id: str) -> pd.DataFrame:
+        """What each source contributed to the conclusion, and how much."""
+        recommendation = self.get_assessment(correlation_id).get("recommendation", {})
+        rows = [
+            {
+                "Role": item.get("role", ""),
+                "Evidence": item.get("evidence_id", ""),
+                "Type": format_identifier(item.get("evidence_type", "")),
+                "Weight": item.get("contribution", 0.0),
+                "Reliability": item.get("reliability", 0.0),
+                "Rationale": item.get("rationale", ""),
+                "Provenance": item.get("provenance", ""),
+            }
+            for item in recommendation.get("evidence_ledger", []) or []
+        ]
+        frame = pd.DataFrame(rows)
+        if frame.empty:
+            return frame
+        # Contradicting evidence first: what argued against the answer is the
+        # part most worth reading.
+        order = {"CONTRADICTS": 0, "UNCERTAINTY": 1, "SUPPORTS": 2, "CONTEXT": 3}
+        frame["_sort"] = frame["Role"].map(lambda r: order.get(r, 9))
+        return frame.sort_values(["_sort", "Evidence"]).drop(columns="_sort")
+
+    def contribution_summary(self, correlation_id: str) -> dict[str, Any]:
+        recommendation = self.get_assessment(correlation_id).get("recommendation", {})
+        ledger = recommendation.get("evidence_ledger", []) or []
+        hypotheses = recommendation.get("hypotheses", []) or []
+        return {
+            "contributions": len(ledger),
+            "distinct_types": len({item.get("evidence_type") for item in ledger}),
+            "roles": sorted({item.get("role", "") for item in ledger}),
+            "hypotheses": len(hypotheses),
+            "retired": sum(1 for h in hypotheses if h.get("status") == "REJECTED"),
+            "rejected_evidence": recommendation.get("rejected_evidence_count", 0),
+        }
+
     def policy_decisions(self, correlation_id: str) -> pd.DataFrame:
         """Every access decision the run made, in order.
 
@@ -142,6 +203,31 @@ class StoryRepository:
         """Evidence domains an agent asked for and was not granted."""
         vendor = self.vendor_health(correlation_id)
         return list(vendor.get("refused_evidence_domains", []) or [])
+
+    def confidence_asymmetry(self) -> dict[str, float]:
+        """The penalty a contradiction costs against the credit recovery earns.
+
+        The curve alone shows confidence falling and partly returning. It
+        cannot show that returning is capped below falling, which is the whole
+        governance argument: cycling erodes, it never restores.
+        """
+        policy = json.loads(
+            (self.paths.base_dir / "config" / "runtime_signal_policy.json")
+            .read_text(encoding="utf-8")
+        )
+        penalties = [
+            float(config.get("confidence_penalty", 0.0))
+            for config in policy["signals"].values()
+        ]
+        return {
+            "largest_penalty": max(penalties),
+            "credit_cap": float(
+                policy["limits"]["maximum_credit_per_reassessment"]
+            ),
+            "runtime_ceiling": float(
+                policy["limits"]["maximum_runtime_confidence"]
+            ),
+        }
 
     def readiness_confidence_threshold(self) -> float:
         """The confidence bar readiness actually applies.
