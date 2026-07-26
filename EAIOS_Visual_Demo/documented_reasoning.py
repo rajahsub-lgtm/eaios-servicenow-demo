@@ -181,6 +181,38 @@ class DocumentationReasoner:
         documented = set(_split(document.get("symptom_categories")))
         return len(presenting & documented) / len(presenting)
 
+    def eligibility_of(
+        self, document_id: str, case: CaseFingerprint, assessed_at: datetime
+    ) -> tuple[str, float]:
+        """On what basis this document was admitted for this case.
+
+        Two paths read the same corpus. Retrieval finds material a human might
+        want to read, by lexical relevance to the graph neighbourhood; this
+        reasoner asks the narrower question of whether a document is about
+        this component and this symptom. Neither is wrong, but they answer
+        different questions, and the ledger has been quoting the first as
+        though it had answered the second.
+
+        Returns the basis and the symptom coverage, so fusion can weigh the
+        difference rather than a gate hiding it.
+        """
+        document = next(
+            (
+                row
+                for row in self.documents
+                if row.get("document_id") == document_id
+            ),
+            None,
+        )
+        if document is None:
+            return "NOT_A_GOVERNED_DOCUMENT", 0.0
+        if not self._eligible(document, case, assessed_at):
+            return "LEXICAL_RELEVANCE_ONLY", 0.0
+        coverage = self._symptom_coverage(document, case)
+        if coverage < float(self.eligibility["minimum_symptom_coverage"]):
+            return "ENTITY_MATCHED_SYMPTOM_DIVERGES", coverage
+        return "ENTITY_AND_SYMPTOM_MATCHED", coverage
+
     def propose(
         self, case: CaseFingerprint, *, assessed_at: datetime
     ) -> list[DocumentedHypothesis]:

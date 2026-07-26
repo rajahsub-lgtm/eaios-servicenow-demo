@@ -46,6 +46,10 @@ class EvidenceContribution:
     contribution: float
     rationale: str
     provenance: str
+    # Why this item was admitted. Lexical relevance to the graph
+    # neighbourhood and being about this component and this symptom are
+    # different findings, and the ledger used to report both as "relevant".
+    eligibility_basis: str = "NOT_ASSESSED"
 
 
 @dataclass(frozen=True)
@@ -476,6 +480,17 @@ class EvidenceFusionAgent:
         data["outcome_history"] = hypothesis.outcome_history
         return HypothesisAssessment(**data)
 
+    def _eligibility_for(self, document_id: str, case, assessed_at):
+        """Which basis admitted this document, via the documentation reasoner.
+
+        Asked here rather than decided here: the eligibility rule already
+        exists and having a second copy of it is the fault this whole
+        correction is about.
+        """
+        if case is None or assessed_at is None:
+            return "NOT_ASSESSED", 0.0
+        return self.documentation.eligibility_of(document_id, case, assessed_at)
+
     def _evidence_ledger(
         self,
         *,
@@ -484,6 +499,8 @@ class EvidenceFusionAgent:
         leading: HypothesisAssessment,
         recent_changes: list[dict],
         vendor_health: dict | None = None,
+        case=None,
+        assessed_at=None,
     ) -> list[EvidenceContribution]:
         ledger: list[EvidenceContribution] = list(
             self._vendor_contributions(vendor_health)
@@ -542,19 +559,45 @@ class EvidenceFusionAgent:
         )
 
         for candidate in retrieval.accepted_free_text[:5]:
+            basis, coverage = self._eligibility_for(
+                candidate.source_id, case, assessed_at
+            )
+            supports = basis == "ENTITY_AND_SYMPTOM_MATCHED"
             ledger.append(
                 EvidenceContribution(
                     evidence_id=candidate.source_id,
                     evidence_type=candidate.source_type,
                     evidence_class=candidate.evidence_class,
-                    role="SUPPORTS",
-                    reliability=1.0,
-                    contribution=round(min(0.12, candidate.score / 250), 3),
+                    # Only material about this component and this symptom may
+                    # support a cause. The rest is worth a human's attention
+                    # and is carried as context contributing nothing, rather
+                    # than gated away where nobody would see it.
+                    role="SUPPORTS" if supports else "CONTEXT",
+                    reliability=1.0 if supports else 0.4,
+                    contribution=(
+                        round(min(0.12, candidate.score / 250), 3)
+                        if supports
+                        else 0.0
+                    ),
                     rationale=(
-                        f"Governed free-text evidence passed publication, trust, "
-                        f"safety, staleness, and relevance gates."
+                        (
+                            f"Governed free-text evidence passed publication, "
+                            f"trust, safety and staleness gates, and covers "
+                            f"{coverage:.0%} of the presenting symptoms on "
+                            f"this component."
+                        )
+                        if supports
+                        else (
+                            f"Passed publication, trust, safety and staleness "
+                            f"gates and is lexically relevant to the graph "
+                            f"neighbourhood, but is not about this component "
+                            f"and this symptom ({basis}). Surfaced for a "
+                            f"human to read; contributes nothing to the "
+                            f"hypothesis."
+                        )
                     ),
                     provenance=candidate.provenance,
+                    eligibility_basis=basis,
                 )
             )
 
@@ -572,6 +615,7 @@ class EvidenceFusionAgent:
                         "trigger time and is relevant to the graph neighborhood."
                     ),
                     provenance=candidate.provenance,
+                    eligibility_basis="STRUCTURED_NEIGHBOURHOOD_RECORD",
                 )
             )
 
@@ -939,6 +983,9 @@ class EvidenceFusionAgent:
                         f"symptoms. No outcome stands behind it."
                     ),
                     provenance=f"Governed knowledge document {item.document_id}",
+                    # Admitted by the reasoner's own entity and symptom gates,
+                    # so the basis is known by construction.
+                    eligibility_basis="ENTITY_AND_SYMPTOM_MATCHED",
                 )
             )
 
@@ -1178,6 +1225,8 @@ class EvidenceFusionAgent:
         ]
 
         ledger = self._evidence_ledger(
+            case=self.fingerprinter.for_scenario(scenario_id),
+            assessed_at=trigger_time,
             retrieval=retrieval,
             telemetry=telemetry,
             leading=leading,
