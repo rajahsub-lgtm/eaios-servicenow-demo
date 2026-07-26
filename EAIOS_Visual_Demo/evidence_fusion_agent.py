@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime
 from pathlib import Path
 from statistics import mean
@@ -55,6 +55,11 @@ class HypothesisAssessment:
     outcome_history: OutcomeHistorySummary
     supporting_evidence_ids: list[str]
     uncertainty_factors: list[str]
+    # Populated when other evidence argues against this hypothesis. A retired
+    # candidate keeps its score and its reason so the record shows what was
+    # considered, not only what survived.
+    contradicting_evidence_ids: tuple[str, ...] = ()
+    rejection_reason: str = ""
 
 
 @dataclass(frozen=True)
@@ -404,6 +409,10 @@ class EvidenceFusionAgent:
     def _mark_hypothesis(
         hypothesis: HypothesisAssessment, status: str
     ) -> HypothesisAssessment:
+        # A hypothesis retired on evidence stays retired. Ranking decides which
+        # candidate leads; it does not revive one that was ruled out.
+        if hypothesis.status == "REJECTED":
+            return hypothesis
         data = asdict(hypothesis)
         data["status"] = status
         data["outcome_history"] = hypothesis.outcome_history
@@ -416,8 +425,11 @@ class EvidenceFusionAgent:
         telemetry,
         leading: HypothesisAssessment,
         recent_changes: list[dict],
+        vendor_health: dict | None = None,
     ) -> list[EvidenceContribution]:
-        ledger: list[EvidenceContribution] = []
+        ledger: list[EvidenceContribution] = list(
+            self._vendor_contributions(vendor_health)
+        )
 
         ledger.append(
             EvidenceContribution(
@@ -524,7 +536,92 @@ class EvidenceFusionAgent:
 
         return ledger
 
-    def analyze(self, scenario_id: str) -> EvidenceFusionAssessment:
+    def _vendor_contributions(
+        self, vendor_health: dict | None
+    ) -> list[EvidenceContribution]:
+        """Vendor findings entered as evidence in their own right.
+
+        A vendor establishing its own health does not identify an internal
+        cause, but it does argue against the external explanation, which is a
+        contribution to the reasoning and belongs in the ledger.
+        """
+        if not vendor_health:
+            return []
+        contributions = []
+        for finding in vendor_health.get("findings", []) or []:
+            if not finding.get("eliminates_external_hypothesis"):
+                continue
+            vendor = finding.get("vendor", "")
+            contributions.append(
+                EvidenceContribution(
+                    evidence_id=finding.get("advisory_id", ""),
+                    evidence_type="VENDOR_HEALTH",
+                    evidence_class="EXTERNAL_SERVICE_ATTESTATION",
+                    role="CONTRADICTS",
+                    reliability=float(finding.get("confidence", 0.0)),
+                    contribution=0.08,
+                    rationale=(
+                        f"{vendor} reports {finding.get('service', 'its service')} "
+                        f"operating normally on evidence {finding.get('freshness_minutes', 0)} "
+                        f"minutes old from {finding.get('source_authority', 'an authority')}. "
+                        "This argues against an external outage; it does not identify "
+                        "an internal cause."
+                    ),
+                    provenance=finding.get("source_reference", ""),
+                )
+            )
+        return contributions
+
+    def _retire_external_hypotheses(
+        self,
+        candidates: list[HypothesisAssessment],
+        vendor_health: dict | None,
+    ) -> list[HypothesisAssessment]:
+        """Retire external-outage candidates the vendor evidence rules out.
+
+        Retirement requires every vendor the hypothesis covers to be
+        established healthy. Partial coverage leaves the candidate standing,
+        for the same reason partial coverage cannot clear the hard flag.
+        """
+        if not vendor_health:
+            return candidates
+        healthy = set(vendor_health.get("vendors_reporting_healthy", []) or [])
+        required = set(vendor_health.get("required_vendor_dependencies", []) or [])
+        if not required or not required.issubset(healthy):
+            return candidates
+
+        evidence_ids = tuple(
+            finding.get("advisory_id", "")
+            for finding in vendor_health.get("findings", []) or []
+            if finding.get("eliminates_external_hypothesis")
+        )
+        retired = []
+        for candidate in candidates:
+            known_error = self.known_error_by_id.get(candidate.hypothesis_id, {})
+            if known_error.get("hypothesis_class") != "EXTERNAL_VENDOR_OUTAGE":
+                retired.append(candidate)
+                continue
+            retired.append(
+                replace(
+                    candidate,
+                    score=round(candidate.score * 0.25, 3),
+                    status="REJECTED",
+                    contradicting_evidence_ids=evidence_ids,
+                    rejection_reason=(
+                        "Every external vendor this hypothesis depends on reports its "
+                        f"own services healthy on fresh authoritative evidence: "
+                        f"{', '.join(sorted(healthy))}."
+                    ),
+                )
+            )
+        return retired
+
+    def analyze(
+        self,
+        scenario_id: str,
+        *,
+        vendor_health: dict | None = None,
+    ) -> EvidenceFusionAssessment:
         try:
             scenario = self.scenario_by_id[scenario_id]
         except KeyError as exc:
@@ -544,6 +641,10 @@ class EvidenceFusionAgent:
             raise RuntimeError(
                 f"No governed known-error candidate found for {scenario_id}"
             )
+
+        known_error_candidates = self._retire_external_hypotheses(
+            known_error_candidates, vendor_health
+        )
 
         change_candidates = self._change_hypotheses(
             retrieval=retrieval,
@@ -635,6 +736,7 @@ class EvidenceFusionAgent:
             telemetry=telemetry,
             leading=leading,
             recent_changes=recent_changes,
+            vendor_health=vendor_health,
         )
 
         rejected_ids = sorted(

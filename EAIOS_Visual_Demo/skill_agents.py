@@ -153,7 +153,13 @@ class AdaptiveRecommendationAgent:
         confidence: OperationalConfidenceAssessment,
         completed_outputs: dict[str, dict],
     ) -> SkillExecutionResult:
-        fusion = self.fusion.analyze(scenario_id)
+        # Vendor findings are another agent's governed output, not a re-read of
+        # the source. Fusion weighs what the vendor agent actually established,
+        # including its freshness and authority judgements.
+        fusion = self.fusion.analyze(
+            scenario_id,
+            vendor_health=completed_outputs.get("external_service_health"),
+        )
 
         retrieval = completed_outputs.get("governed_knowledge_retrieval", {})
         limited = retrieval.get("accepted_with_limitations", [])
@@ -237,6 +243,21 @@ class AdaptiveRecommendationAgent:
                     )
                     | set(alternative_ids)
                 ),
+                # Retired candidates are reported with their reason. A record
+                # that shows only what survived cannot be audited.
+                "retired_hypotheses": [
+                    {
+                        "hypothesis_id": item.hypothesis_id,
+                        "title": item.title,
+                        "score": item.score,
+                        "rejection_reason": item.rejection_reason,
+                        "contradicting_evidence_ids": list(
+                            item.contradicting_evidence_ids
+                        ),
+                    }
+                    for item in fusion.alternative_hypotheses
+                    if item.status == "REJECTED"
+                ],
                 "selected_strategy": plan_name,
                 "confidence_level": confidence.confidence_level,
                 "confidence_score": confidence.confidence_score,
