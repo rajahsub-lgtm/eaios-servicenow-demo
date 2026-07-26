@@ -59,6 +59,11 @@ class DocumentSelectionTests(unittest.TestCase):
         self.assertEqual(ranked[0].document_id, "RB-SEARCH-001")
         self.assertEqual(ranked[1].document_id, "WIKI-SEARCH-014")
 
+    def test_a_document_written_later_is_not_offered_earlier(self):
+        """The August post-incident review must not inform the July case."""
+        _, ranked = proposals(DOCUMENTED)
+        self.assertNotIn("PIR-SEARCH-021", {item.document_id for item in ranked})
+
     def test_the_ceiling_scales_rather_than_clips(self):
         """Clipping would hand both documents the same confidence the moment
         each cleared the ceiling, discarding the ranking just established."""

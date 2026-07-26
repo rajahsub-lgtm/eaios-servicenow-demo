@@ -325,3 +325,130 @@ class LayersAgreeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WeakRecallReopensTheSearchTests(unittest.TestCase):
+    """A recalled pattern used to end the search.
+
+    That is right when the pattern is strong and wrong when it is not. Thin
+    experience is exactly the case where the written record is most likely to
+    know something the system does not — including material published since,
+    which a run that consults documentation only when it remembers nothing
+    would never find.
+    """
+
+    def _second(self, directory: str):
+        loop = Loop(directory)
+        first = loop.run()
+        pattern = loop.validate(first, CONFIRMED)
+        loop.record(first, pattern.known_error_id, worked=True)
+        return loop, loop.run(RECURRENCE)
+
+    def test_a_weak_pattern_does_not_end_the_search(self):
+        with TemporaryDirectory() as directory:
+            loop, _ = self._second(directory)
+            assessment = loop.engine().assess(RECURRENCE)
+            self.assertLess(
+                assessment.confidence_score,
+                loop.engine().documentation.reconsult_below,
+            )
+            self.assertIn(
+                "WEAK_PATTERN_DOCUMENTATION_RECONSULTED", assessment.hard_flags
+            )
+
+    def test_the_documentation_is_carried_as_alternatives_to_investigate(self):
+        with TemporaryDirectory() as directory:
+            _, second = self._second(directory)
+            alternatives = set(
+                second.recommendation["alternative_hypothesis_ids"]
+            )
+            self.assertIn("RB-SEARCH-001", alternatives)
+            self.assertIn("PIR-SEARCH-021", alternatives)
+
+    def test_knowledge_published_since_is_found_and_named(self):
+        """The review written after the first occurrence is the material most
+        likely to change the second response."""
+        with TemporaryDirectory() as directory:
+            loop, second = self._second(directory)
+            self.assertIn(
+                "NEWER_DOCUMENTATION_AVAILABLE",
+                loop.engine().assess(RECURRENCE).hard_flags,
+            )
+            action = second.recommendation["recommended_action"]
+            self.assertIn("PIR-SEARCH-021", action)
+            self.assertIn("published since", action)
+
+    def test_the_disclosure_survives_the_recommendation_agent(self):
+        """Twice now a generic restatement has dropped exactly this kind of
+        qualification on the way through."""
+        with TemporaryDirectory() as directory:
+            _, second = self._second(directory)
+            self.assertIn(
+                "Read it before acting on recorded experience alone",
+                second.recommendation["recommended_action"],
+            )
+
+    def test_the_disclosure_is_not_duplicated(self):
+        with TemporaryDirectory() as directory:
+            _, second = self._second(directory)
+            action = second.recommendation["recommended_action"]
+            self.assertEqual(action.count("PIR-SEARCH-021"), 1)
+
+    def test_documentation_never_displaces_experience_as_the_lead(self):
+        """A documented score and an experience score are not the same
+        measurement, so the higher number must not win on comparison."""
+        with TemporaryDirectory() as directory:
+            loop, second = self._second(directory)
+            assessment = loop.engine().assess(RECURRENCE)
+            leading = assessment.candidate_assessments[0]
+            self.assertEqual(leading.experience_class, "DIRECT")
+            documented = [
+                c
+                for c in assessment.candidate_assessments
+                if c.experience_class == "DOCUMENTED"
+            ]
+            self.assertTrue(documented)
+            self.assertGreater(
+                max(c.confidence_score for c in documented),
+                leading.confidence_score,
+            )
+            self.assertEqual(
+                assessment.selected_known_error_id, leading.known_error_id
+            )
+
+    def test_the_plan_stays_wide_and_runs_the_knowledge_search(self):
+        with TemporaryDirectory() as directory:
+            _, second = self._second(directory)
+            self.assertEqual(second.final_plan_mode, "FULL_INVESTIGATION")
+            self.assertIn(
+                "governed_knowledge_retrieval", second.completed_skills
+            )
+
+    def test_a_strong_pattern_does_not_reopen_the_search(self):
+        """Reconsultation is for thin evidence, not a blanket second pass."""
+        engine = OperationalConfidenceEngine(
+            ROOT / "json", ROOT / "config" / "confidence_policy.json"
+        )
+        assessment = engine.assess("SCN-PAY-001")
+        self.assertGreater(
+            assessment.confidence_score, engine.documentation.reconsult_below
+        )
+        self.assertNotIn(
+            "WEAK_PATTERN_DOCUMENTATION_RECONSULTED", assessment.hard_flags
+        )
+
+
+class FusionSeesWhatTheEngineSeesTests(unittest.TestCase):
+    def test_runtime_outcomes_count_as_history_in_both_layers(self):
+        """Fusion read only the shipped history, so the two layers were
+        reasoning from different pasts: a pattern could accumulate cases that
+        only one of them could see."""
+        with TemporaryDirectory() as directory:
+            loop = Loop(directory)
+            first = loop.run()
+            pattern = loop.validate(first, CONFIRMED)
+            loop.record(first, pattern.known_error_id, worked=True, count=4)
+            fusion = EvidenceFusionAgent(loop.json_dir).analyze(RECURRENCE)
+            self.assertEqual(
+                fusion.leading_hypothesis.outcome_history.occurrences, 4
+            )

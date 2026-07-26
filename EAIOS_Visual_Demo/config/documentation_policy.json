@@ -47,5 +47,11 @@
     "minimum_retained_support": 0.15,
     "disclose_prior_rejection": true,
     "notes": "A human rejecting a proposed cause is evidence that it did not hold here, and it is weighed as evidence. It is not a ban. A human can reject correctly and a human can reject wrongly, and a system that treats one rejection as final has made that person's error unfalsifiable. Support therefore decays with each rejection but never reaches zero: if nothing better accounts for the presentation, the account is offered again, ranked lower, with the prior rejection and the name of the person who made it disclosed so the next reviewer can weigh it themselves."
+  },
+  "reconsultation": {
+    "reconsult_below_confidence": 0.45,
+    "flag_documentation_newer_than_experience": true,
+    "notes": "A recalled pattern used to end the search. That is right when the pattern is strong and wrong when it is not: a thinly evidenced pattern is exactly the case where the written record is most likely to know something the system does not. Below this threshold the documentation reasoner runs anyway and its proposals are carried as alternatives, so the weak recall is put beside the current procedure rather than in place of it.",
+    "recency_notes": "Knowledge is not static. A post-incident review written after the first occurrence, or a runbook revised since, is precisely the material that should change the second response — and a system that consults documentation only when it remembers nothing would never see it. Documentation validated more recently than the pattern's last recorded case is surfaced explicitly."
   }
 }

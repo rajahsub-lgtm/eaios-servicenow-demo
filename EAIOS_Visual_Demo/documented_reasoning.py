@@ -39,6 +39,7 @@ class DocumentedHypothesis:
     symptom_coverage: float
     freshness_credit: float
     days_since_validation: int
+    validated_at: datetime | None
     dimensions: dict[str, float]
     reasons: tuple[str, ...]
 
@@ -97,24 +98,60 @@ class DocumentationReasoner:
     def maximum_confidence(self) -> float:
         return float(self.ceiling["maximum_documented_confidence"])
 
-    def _freshness(self, document: dict, assessed_at: datetime) -> tuple[float, int]:
+    @property
+    def reconsult_below(self) -> float:
+        """Confidence under which documentation is consulted despite a recall.
+
+        A recalled pattern used to end the search. That is right when the
+        pattern is strong and wrong when it is not: thin experience is exactly
+        the case where the written record is most likely to know something the
+        system does not.
+        """
+        return float(
+            self.policy.get("reconsultation", {}).get(
+                "reconsult_below_confidence", 0.0
+            )
+        )
+
+    def newer_than(
+        self, proposals: list[DocumentedHypothesis], *, since: datetime | None
+    ) -> list[DocumentedHypothesis]:
+        """Proposals whose document was validated after the given date.
+
+        Knowledge is not static. A post-incident review written after the
+        first occurrence is precisely the material that should change the
+        second response, and it can only be found by looking again.
+        """
+        if since is None:
+            return []
+        return [
+            item
+            for item in proposals
+            if item.validated_at is not None and item.validated_at > since
+        ]
+
+    def _freshness(
+        self, document: dict, assessed_at: datetime
+    ) -> tuple[float, int, datetime | None]:
         raw = str(document.get("last_validated_at", "")).strip()
         if not raw:
-            return 0.0, -1
+            return 0.0, -1, None
         try:
             validated = datetime.strptime(raw[:10], "%Y-%m-%d")
         except ValueError:
-            return 0.0, -1
+            return 0.0, -1, None
         days = max(0, (assessed_at - validated).days)
         full = float(self.policy["freshness"]["full_credit_days"])
         none = float(self.policy["freshness"]["no_credit_days"])
         if days <= full:
-            return 1.0, days
+            return 1.0, days, validated
         if days >= none:
-            return 0.0, days
-        return round(1.0 - (days - full) / (none - full), 3), days
+            return 0.0, days, validated
+        return round(1.0 - (days - full) / (none - full), 3), days, validated
 
-    def _eligible(self, document: dict, case: CaseFingerprint) -> bool:
+    def _eligible(
+        self, document: dict, case: CaseFingerprint, assessed_at: datetime
+    ) -> bool:
         if document.get("status") != self.eligibility["required_status"]:
             return False
         if (
@@ -125,6 +162,16 @@ class DocumentationReasoner:
         if self.eligibility.get("require_entity_match", True):
             if case.entity_id not in set(_split(document.get("entity_ids"))):
                 return False
+        # A document cannot inform a decision taken before it was written.
+        # Without this the second encounter's post-incident review would be
+        # offered at the first, which would make the whole arc a fiction.
+        published = str(document.get("published_at", "")).strip()
+        if published:
+            try:
+                if datetime.strptime(published[:10], "%Y-%m-%d") > assessed_at:
+                    return False
+            except ValueError:
+                pass
         return True
 
     def _symptom_coverage(self, document: dict, case: CaseFingerprint) -> float:
@@ -140,7 +187,7 @@ class DocumentationReasoner:
         """Rank the documents that could account for this presentation."""
         proposals: list[DocumentedHypothesis] = []
         for document in self.documents:
-            if not self._eligible(document, case):
+            if not self._eligible(document, case, assessed_at):
                 continue
             coverage = self._symptom_coverage(document, case)
             if coverage < float(self.eligibility["minimum_symptom_coverage"]):
@@ -156,7 +203,9 @@ class DocumentationReasoner:
                     document.get("document_type", "WIKI"), 0.3
                 )
             )
-            freshness, days = self._freshness(document, assessed_at)
+            freshness, days, validated_at = self._freshness(
+                document, assessed_at
+            )
             dimensions = {
                 "symptom_coverage": coverage,
                 "document_trust": trust,
@@ -240,6 +289,7 @@ class DocumentationReasoner:
                     symptom_coverage=round(coverage, 3),
                     freshness_credit=freshness,
                     days_since_validation=days,
+                    validated_at=validated_at,
                     dimensions={k: round(v, 3) for k, v in dimensions.items()},
                     reasons=tuple(reasons),
                 )

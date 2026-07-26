@@ -292,6 +292,45 @@ class OperationalConfidenceEngine:
             )
 
         selected = assessed_candidates[0]
+
+        # A weak recall must not end the search. Thin experience is exactly
+        # where the written record is most likely to know something the system
+        # does not — including material published since, which a system that
+        # reads documentation only when it remembers nothing would never see.
+        documented_alternatives: list[DocumentedHypothesis] = []
+        newer_documentation: list[DocumentedHypothesis] = []
+        reconsult_flags: list[str] = []
+        if selected.confidence_score < self.documentation.reconsult_below:
+            documented_alternatives = self.documentation.propose(
+                self.fingerprinter.for_scenario(scenario_id),
+                assessed_at=assessed_at,
+            )
+            if documented_alternatives:
+                reconsult_flags.append("WEAK_PATTERN_DOCUMENTATION_RECONSULTED")
+                newer_documentation = self.documentation.newer_than(
+                    documented_alternatives,
+                    since=self._latest_case_at(
+                        selected.known_error_id, assessed_at
+                    ),
+                )
+                if newer_documentation:
+                    reconsult_flags.append("NEWER_DOCUMENTATION_AVAILABLE")
+                # Appended after the leader is chosen, never sorted into
+                # contention with it. A documented score and an experience
+                # score are not the same measurement: the first is capped
+                # confidence in someone's written account, the second is what
+                # this system has actually observed. Letting a manual outrank
+                # recalled experience on a numeric comparison would undo the
+                # separation the ceiling exists to enforce. They are carried
+                # as alternatives so the investigation covers them.
+                assessed_candidates = assessed_candidates + [
+                    self._documented_candidate(
+                        item,
+                        observed_entity_id=observed_entity_id,
+                        assessed_at=assessed_at,
+                    )
+                    for item in documented_alternatives
+                ]
         candidate_margin = (
             selected.confidence_score - assessed_candidates[1].confidence_score
             if len(assessed_candidates) > 1
@@ -332,7 +371,8 @@ class OperationalConfidenceEngine:
             contradiction_level=selected.contradiction_level,
             candidate_margin=round(max(0.0, candidate_margin), 3),
             hard_flags=sorted(
-                set(selected.hard_flags)
+                set(reconsult_flags)
+                | set(selected.hard_flags)
                 | set(self._vendor_status_flags(observed_entity_id))
                 # Recognising a pattern by analogy is not the same as having
                 # treated it here. Borrowed confidence may justify a
@@ -396,6 +436,51 @@ class OperationalConfidenceEngine:
 
         matches.sort(key=lambda pair: pair[1].score, reverse=True)
         return matches
+
+    def _latest_case_at(
+        self, known_error_id: str | None, assessed_at: datetime
+    ) -> datetime | None:
+        """When this pattern was last actually applied."""
+        if not known_error_id:
+            return None
+        dates = [
+            self._dt(row["recorded_at"])
+            for row in self.outcomes
+            if row.get("known_error_id") == known_error_id
+            and self._dt(row["recorded_at"]) <= assessed_at
+        ]
+        return max(dates) if dates else None
+
+    def _documented_candidate(
+        self,
+        item: DocumentedHypothesis,
+        *,
+        observed_entity_id: str,
+        assessed_at: datetime,
+    ) -> ConfidenceCandidate:
+        """A documented proposal expressed as a candidate, so it can be ranked
+        beside recalled experience rather than reported separately."""
+        return ConfidenceCandidate(
+            known_error_id=item.document_id,
+            title=item.title,
+            applies_to_entity_id=observed_entity_id,
+            symptom_category="",
+            confidence_score=self.documentation.confidence_for(item),
+            confidence_level="LOW",
+            factor_scores=dict(item.dimensions),
+            penalty_scores={},
+            evidence_coverage=item.symptom_coverage,
+            contradiction_level=round(1.0 - item.support, 3),
+            hard_flags=["HYPOTHESIS_FROM_DOCUMENTATION_ONLY"],
+            outcome_profile=self._outcome_profile(
+                known_error_id=item.document_id, assessed_at=assessed_at
+            ),
+            governed_knowledge_ids=[item.document_id],
+            recent_high_risk_change_ids=[],
+            similarity=item.support,
+            experience_class="DOCUMENTED",
+            similarity_reasons=item.reasons,
+        )
 
     def _documented_assessment(
         self,

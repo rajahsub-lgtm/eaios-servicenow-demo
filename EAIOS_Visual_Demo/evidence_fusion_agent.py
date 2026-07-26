@@ -88,6 +88,11 @@ class EvidenceFusionAssessment:
     uncertainty_factors: list[str]
     guardrail_reasons: list[str]
     reasoning_summary: str
+    # Disclosure that the written record has moved on since this pattern was
+    # last applied. Carried as a field because the recommendation agent
+    # restates the action text and has twice dropped exactly this kind of
+    # qualification on the way through.
+    newer_knowledge_note: str = ""
 
 
 class EvidenceFusionAgent:
@@ -114,6 +119,14 @@ class EvidenceFusionAgent:
             with open(learned_path, encoding="utf-8") as f:
                 self.known_errors.extend(json.load(f))
         self.outcomes = self._load("outcome_history.json")
+        # Outcomes recorded at runtime count as history here too. The
+        # confidence engine has always read these and fusion did not, so the
+        # two layers were reasoning from different pasts — a pattern could
+        # accumulate cases that only one of them could see.
+        feedback_path = self.json_dir / "runtime_outcome_feedback.json"
+        if feedback_path.exists():
+            with open(feedback_path, encoding="utf-8") as f:
+                self.outcomes.extend(json.load(f))
         self.changes = self._load("changes.json")
 
         self.scenario_by_id = {row["scenario_id"]: row for row in self.scenarios}
@@ -140,10 +153,16 @@ class EvidenceFusionAgent:
     def _outcome_summary(
         self, known_error_id: str, scenario_pattern: str
     ) -> OutcomeHistorySummary:
+        # Matched on the pattern's identity alone. The secondary filter on
+        # scenario_pattern was redundant for the shipped fixtures, where the
+        # two always agree, and silently wrong for anything recorded at
+        # runtime, where the feedback writer records the pattern id and this
+        # lookup expected the symptom category. The confidence engine has
+        # always matched on identity, so requiring more here meant the two
+        # layers counted different numbers of cases for the same pattern.
         rows = [
             row for row in self.outcomes
             if row["known_error_id"] == known_error_id
-            and row["scenario_pattern"] == scenario_pattern
         ]
 
         if not rows:
@@ -784,6 +803,61 @@ class EvidenceFusionAgent:
             f"overruled; weigh it before confirming."
         )
 
+    def _latest_case_at(self, known_error_id: str, assessed_at):
+        """When this pattern was last actually applied."""
+        dates = [
+            self._dt(row["recorded_at"])
+            for row in self.outcomes
+            if row.get("known_error_id") == known_error_id
+            and self._dt(row["recorded_at"]) <= assessed_at
+        ]
+        return max(dates) if dates else None
+
+    def _documented_alternative(self, item) -> HypothesisAssessment:
+        """A reconsulted procedure, carried as an alternative to investigate."""
+        empty_history = OutcomeHistorySummary(
+            known_error_id="", scenario_pattern="", occurrences=0,
+            successful_outcomes=0, failed_outcomes=0, success_rate=0.0,
+            recurrence_rate=0.0, average_recovery_minutes=0.0,
+            average_evidence_usefulness=0.0, dominant_prior_confidence="LOW",
+        )
+        return HypothesisAssessment(
+            hypothesis_id=item.document_id,
+            hypothesis_type="DOCUMENTED_NOT_EXPERIENCED",
+            title=item.title,
+            applies_to_entity_id="",
+            score=self.documentation.confidence_for(item),
+            confidence_level="LOW",
+            status="ALTERNATIVE",
+            historical_success_rate=0.0,
+            recent_failure_signal="NOT_APPLICABLE",
+            outcome_history=empty_history,
+            supporting_evidence_ids=[item.document_id],
+            uncertainty_factors=["CAUSE_PROPOSED_FROM_DOCUMENTATION_ONLY"],
+        )
+
+    @staticmethod
+    def _newer_knowledge_note(newer) -> str:
+        """Say plainly that the written record has moved on.
+
+        The point of looking again is that knowledge is not static; a review
+        written after the last occurrence is the material most likely to
+        change this response, and it is worth nothing if the human is not
+        told it exists.
+        """
+        if not newer:
+            return ""
+        listed = ", ".join(
+            f"{item.document_id} ({item.document_type}, validated "
+            f"{item.days_since_validation} days ago)"
+            for item in newer[:3]
+        )
+        return (
+            f" Knowledge published since this pattern was last applied has "
+            f"not been reflected in it: {listed}. Read it before acting on "
+            f"recorded experience alone."
+        )
+
     def _documented_diagnosis(
         self,
         *,
@@ -924,7 +998,17 @@ class EvidenceFusionAgent:
         scenario_id: str,
         *,
         vendor_health: dict | None = None,
+        reconsult_documentation: bool = False,
     ) -> EvidenceFusionAssessment:
+        """Fuse the governed evidence for a scenario.
+
+        ``reconsult_documentation`` is decided by the confidence engine, which
+        owns operational confidence, and passed in rather than re-derived
+        here. Fusion scores hypotheses on its own scale; when it also judged
+        weakness independently the two layers reached different answers about
+        the same pattern, and a plan chosen on one premise was then served by
+        a stage acting on another.
+        """
         try:
             scenario = self.scenario_by_id[scenario_id]
         except KeyError as exc:
@@ -982,10 +1066,32 @@ class EvidenceFusionAgent:
             reverse=True,
         )
 
+        # A weak recall must not end the search. Thin experience is exactly
+        # where the written record is most likely to know something the system
+        # does not — including material published since the pattern was
+        # learned, which a run that reads documentation only when it remembers
+        # nothing would never find. Whether the recall is weak is the
+        # confidence engine's call, not one made again here.
+        reconsulted: list = []
+        newer_documentation: list = []
+        if reconsult_documentation:
+            reconsulted = self.documentation.propose(
+                self.fingerprinter.for_scenario(scenario_id),
+                assessed_at=trigger_time,
+            )
+            newer_documentation = self.documentation.newer_than(
+                reconsulted,
+                since=self._latest_case_at(
+                    all_candidates[0].hypothesis_id, trigger_time
+                ),
+            )
+
         leading = self._mark_hypothesis(all_candidates[0], "LEADING")
         alternatives = [
             self._mark_hypothesis(item, "ALTERNATIVE")
             for item in all_candidates[1:]
+        ] + [
+            self._documented_alternative(item) for item in reconsulted
         ]
 
         uncertainty = sorted(
@@ -1096,11 +1202,20 @@ class EvidenceFusionAgent:
             human_approval_required=human_approval_required,
             leading_hypothesis=leading,
             alternative_hypotheses=alternatives,
-            recommended_action=recommended_action,
+            recommended_action=(
+                recommended_action
+                + self._newer_knowledge_note(newer_documentation)
+            ),
+            newer_knowledge_note=self._newer_knowledge_note(
+                newer_documentation
+            ),
             validation_steps=validation_steps,
             evidence_ledger=ledger,
             rejected_evidence_ids=rejected_ids,
-            uncertainty_factors=uncertainty,
+            uncertainty_factors=sorted(
+                set(uncertainty)
+                | ({"NEWER_DOCUMENTATION_NOT_YET_REFLECTED"} if newer_documentation else set())
+            ),
             guardrail_reasons=guardrails,
             reasoning_summary=reasoning_summary,
         )

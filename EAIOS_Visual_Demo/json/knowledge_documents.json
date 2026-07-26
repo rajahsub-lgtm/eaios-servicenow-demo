@@ -309,5 +309,21 @@
     "recommended_action": "Just restart the indexer, usually clears it.",
     "body": "Someone said restarting the indexer fixes this. Has not been checked against the current platform version.",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "document_id": "PIR-SEARCH-021",
+    "document_type": "PIR",
+    "title": "Post-Incident Review: Search Index Refresh Stall, July",
+    "entity_ids": "COMP-SEARCH-INDEXER",
+    "symptom_categories": "INDEX_REFRESH_STALL",
+    "status": "Published",
+    "trust_level": "Trusted",
+    "content_safety_status": "SAFE",
+    "published_at": "2026-08-05",
+    "last_validated_at": "2026-08-05",
+    "owner": "Knowledge Platform Team",
+    "recommended_action": "Check the upstream document source for back-pressure before treating the merge as the cause. In the July occurrence the stalled merge was a symptom of ingest back-pressure, not its origin.",
+    "body": "Review of the July stall found the segment merge had stalled because the document source was replaying a backlog after a connector restart upstream. Clearing the merge resolved the lag and the backlog re-created it the following week. Establish upstream state first.",
+    "data_classification": "SYNTHETIC"
   }
 ]

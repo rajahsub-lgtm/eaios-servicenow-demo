@@ -159,6 +159,13 @@ class AdaptiveRecommendationAgent:
         fusion = self.fusion.analyze(
             scenario_id,
             vendor_health=completed_outputs.get("external_service_health"),
+            # The confidence engine decides whether the recall was thin enough
+            # to reopen the documentation search. Fusion is told, not asked:
+            # two layers judging the same weakness on different scales is how
+            # they end up serving different premises in one run.
+            reconsult_documentation=(
+                "WEAK_PATTERN_DOCUMENTATION_RECONSULTED" in confidence.hard_flags
+            ),
         )
 
         retrieval = completed_outputs.get("governed_knowledge_retrieval", {})
@@ -209,6 +216,13 @@ class AdaptiveRecommendationAgent:
                 f"change/dependency, and graph evidence. Obtain human approval "
                 f"before rollback, restart, scaling, or traffic changes."
             )
+
+        # Every branch above that rewrites the action must still carry this.
+        # It has been lost twice already by restating fusion's wording in a
+        # generic form, and a human who is not told the written record has
+        # moved on cannot act on the fact that it has.
+        if fusion.newer_knowledge_note not in action:
+            action = action + fusion.newer_knowledge_note
 
         uncertainty = set(fusion.uncertainty_factors) | set(confidence.hard_flags)
         if material_conflict_ids:

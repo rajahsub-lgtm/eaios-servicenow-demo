@@ -103,10 +103,17 @@ class FlagDerivationTests(unittest.TestCase):
         self.assertEqual(e.assess("SCN-PAY-CONTRADICT-001").hard_flags, [])
         # The queue recommendation is amended by humans in nearly half its
         # recorded cases, which is now a flag in its own right rather than a
-        # field nothing read.
+        # field nothing read. Its confidence is also low enough to reopen the
+        # documentation search, which finds a post-incident review written
+        # after the pattern was last applied and never folded back into it.
         self.assertEqual(
             e.assess("SCN-QUEUE-001").hard_flags,
-            ["RECENT_HIGH_RISK_CHANGE", "RECOMMENDATION_FREQUENTLY_AMENDED"],
+            [
+                "NEWER_DOCUMENTATION_AVAILABLE",
+                "RECENT_HIGH_RISK_CHANGE",
+                "RECOMMENDATION_FREQUENTLY_AMENDED",
+                "WEAK_PATTERN_DOCUMENTATION_RECONSULTED",
+            ],
         )
 
 
