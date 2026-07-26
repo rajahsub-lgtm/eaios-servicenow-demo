@@ -1,4 +1,9 @@
-# Course correction plan
+# Course correction plan — COMPLETE
+
+> All five phases landed 2026-07-26. 435 tests, validate.ps1 green, V1
+> planning unchanged on all six scenarios. `test_layer_agreement.py` and
+> `test_architecture_invariants.py` now hold the invariant that a person was
+> holding.
 
 Agreed 2026-07-26. Findings are in `ARCHITECTURE_REVIEW.md`; this is what to
 do about them. Baseline `203b67c`, 397 tests green.
