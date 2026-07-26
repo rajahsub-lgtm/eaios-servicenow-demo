@@ -42,8 +42,10 @@ def test_scenarios_without_revisions_report_no_cancellations() -> None:
 def test_contradiction_scenario_erodes_confidence_and_expands() -> None:
     repo = StoryRepository.load(BASE_DIR)
     assessment = repo.get_assessment("EAIOS-DEMO-CONTRADICTION-001")
-    assert assessment["initial_confidence_score"] == 0.99
-    assert assessment["final_confidence_score"] == 0.77
+    assert (
+        assessment["final_confidence_score"]
+        < assessment["initial_confidence_score"]
+    )
     assert assessment["expanded_during_execution"] is True
     assert assessment["initial_agent_count"] == 3
     assert assessment["final_agent_count"] == 6

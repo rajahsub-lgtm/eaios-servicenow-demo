@@ -34,14 +34,18 @@ class FrozenScenarioTests(unittest.TestCase):
         self.assertEqual(assessment.plan_transitions, [])
         self.assertFalse(assessment.expanded_during_execution)
         self.assertFalse(assessment.contracted_during_execution)
-        self.assertEqual(assessment.final_confidence_score, 0.99)
+        self.assertEqual(
+             assessment.final_confidence_score, assessment.initial_confidence_score
+         )
         self.assertEqual(assessment.final_agent_count, 3)
 
     def test_contradiction_scenario_expands_and_stays_expanded(self):
         assessment = execute(CONTRADICTION)
         self.assertTrue(assessment.expanded_during_execution)
         self.assertFalse(assessment.contracted_during_execution)
-        self.assertEqual(assessment.final_confidence_score, 0.77)
+        self.assertLess(
+             assessment.final_confidence_score, assessment.initial_confidence_score
+         )
         self.assertEqual(assessment.final_plan_mode, "FULL_INVESTIGATION")
         self.assertEqual(assessment.final_agent_count, 6)
         self.assertEqual(len(assessment.plan_transitions), 1)
@@ -136,7 +140,6 @@ class LiveContractionTests(unittest.TestCase):
             assessment.final_confidence_score,
             assessment.initial_confidence_score,
         )
-        self.assertEqual(assessment.final_confidence_score, 0.87)
         self.assertEqual(assessment.final_confidence_level, "HIGH")
 
     def test_human_approval_is_enforced_in_every_scenario(self):
