@@ -26,8 +26,11 @@ class EvidenceFusionTests(unittest.TestCase):
         result = self.agent.analyze("SCN-PAY-001")
         history = result.leading_hypothesis.outcome_history
         self.assertEqual(history.occurrences, 50)
-        self.assertEqual(history.successful_outcomes, 49)
-        self.assertEqual(history.success_rate, 0.98)
+        # One of the fifty was declined by the approver during a change freeze
+        # and never executed. Counting a recommendation nobody carried out as
+        # a success is how a success rate stops meaning anything.
+        self.assertEqual(history.successful_outcomes, 48)
+        self.assertEqual(history.success_rate, 0.96)
         self.assertEqual(history.dominant_prior_confidence, "HIGH")
 
     def test_queue_selects_full_investigation_with_medium_confidence(self):

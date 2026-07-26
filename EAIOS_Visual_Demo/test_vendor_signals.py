@@ -101,8 +101,12 @@ class FlagDerivationTests(unittest.TestCase):
         e = engine()
         self.assertEqual(e.assess("SCN-PAY-001").hard_flags, [])
         self.assertEqual(e.assess("SCN-PAY-CONTRADICT-001").hard_flags, [])
+        # The queue recommendation is amended by humans in nearly half its
+        # recorded cases, which is now a flag in its own right rather than a
+        # field nothing read.
         self.assertEqual(
-            e.assess("SCN-QUEUE-001").hard_flags, ["RECENT_HIGH_RISK_CHANGE"]
+            e.assess("SCN-QUEUE-001").hard_flags,
+            ["RECENT_HIGH_RISK_CHANGE", "RECOMMENDATION_FREQUENTLY_AMENDED"],
         )
 
 

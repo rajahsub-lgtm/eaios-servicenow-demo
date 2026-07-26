@@ -64,6 +64,12 @@ class RuntimeConfidenceReassessor:
         credits_need_clean_flags = bool(
             limits.get("credits_require_no_unresolved_hard_flags", True)
         )
+        # Flags describing the evidence base rather than this run can never be
+        # resolved by a runtime signal, so gating credit on them would withhold
+        # it permanently rather than pending an answer.
+        standing_flags = set(
+            limits.get("standing_flags_exempt_from_credit_gate", [])
+        )
 
         penalty = 0.0
         credit = 0.0
@@ -114,7 +120,7 @@ class RuntimeConfidenceReassessor:
         # never offered credit are not reported as having lost any.
         credit_blocked = (
             credits_need_clean_flags
-            and bool(hard_flags)
+            and bool(set(hard_flags) - standing_flags)
             and applied_credit > 0.0
         )
         if credit_blocked:

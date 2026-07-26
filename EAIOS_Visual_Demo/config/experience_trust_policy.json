@@ -1,0 +1,35 @@
+{
+  "policy_version": "1.0",
+  "notes": "How much a recorded case counts, according to how it was established. Experience arrives from three places: the system's own executed outcomes, a human verifying or correcting them, and a peer agent establishing something within its remit. They are not equally informative and should not be weighted as though they were.",
+  "provenance_weights": {
+    "HUMAN_VERIFIED": 1.2,
+    "SELF_OUTCOME": 1.0,
+    "PEER_AGENT": 0.8
+  },
+  "provenance_notes": {
+    "HUMAN_VERIFIED": "A human engaged with this case and confirmed or amended it. Stronger than an unexamined success, because someone competent looked.",
+    "SELF_OUTCOME": "The system acted and observed the result. Direct but unsupervised.",
+    "PEER_AGENT": "Another agent established this within its own domain. Real evidence, second-hand, and only as good as that agent's standing."
+  },
+  "standing": {
+    "enforce_domain_standing": true,
+    "out_of_standing_weight": 0.1,
+    "notes": "Reliability is not standing. An agent may be highly reliable and still have no authority over the assertion it is making, in which case its contribution should count for almost nothing. This is the belief-side equivalent of refusing a data domain an agent is not registered for."
+  },
+  "attenuation": {
+    "maximum_peer_trust": 0.9,
+    "notes": "Trust attenuates on transfer and never amplifies. A peer's finding cannot count for more than that peer's own confidence in it, nor more than this ceiling."
+  },
+  "supervision": {
+    "modification_rate_penalty": 0.18,
+    "modification_rate_threshold": 0.25,
+    "modification_rate_saturation": 0.6,
+    "modification_rate_flag_threshold": 0.4,
+    "rejection_penalty": 0.25,
+    "notes": "A plan humans keep amending is a plan the system is not yet good at proposing unaided. Corrections are recorded already; ignoring them wastes the fastest teacher available, because supervision corrects before harm rather than after.",
+    "threshold_notes": "Amendment below a quarter is ordinary collaborative refinement and is not penalised \u2014 human-in-the-loop working as intended is not a defect. The penalty ramps from there and reaches full weight where a recommendation is amended more often than it is accepted as written. The ramp is deliberate: a cliff would make a case at 0.249 and a case at 0.251 differ by the whole penalty, which no operational reading of the evidence supports.",
+    "flag_notes": "The blocking flag raises later than the penalty. Amendment should cost confidence well before it costs plan eligibility, because a flag removes options while a penalty only narrows them.",
+    "minimum_sample_for_supervision_signal": 5,
+    "sample_notes": "Below this many recorded cases the amendment rate is not a rate \u2014 one amended case out of one reads as 100% and would attract the full penalty on the strength of a single observation. Thin evidence is already penalised as insufficient sample; charging it twice through a statistic that cannot be computed is double-counting, not caution."
+  }
+}

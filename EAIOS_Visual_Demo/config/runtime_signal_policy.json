@@ -3,7 +3,13 @@
   "limits": {
     "maximum_credit_per_reassessment": 0.1,
     "maximum_runtime_confidence": 0.95,
-    "credits_require_no_unresolved_hard_flags": true
+    "credits_require_no_unresolved_hard_flags": true,
+    "standing_flags_exempt_from_credit_gate": [
+      "RECOMMENDATION_FREQUENTLY_AMENDED",
+      "EXPERIENCE_HELD_ONLY_BY_PEER_AGENT",
+      "EXPERIENCE_TRANSFERRED_NOT_DIRECT"
+    ],
+    "standing_flag_notes": "The credit gate exists so confidence is not restored while something about this run remains unexplained. These flags describe the evidence base rather than the run: no runtime signal can ever resolve them, so gating on them would not withhold credit pending an answer, it would withhold credit permanently. They already cost confidence through their penalties and still bar the accelerated plan; that is where they belong."
   },
   "signals": {
     "RECENT_HIGH_RISK_CHANGE": {

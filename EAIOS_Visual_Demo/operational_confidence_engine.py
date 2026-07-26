@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Iterable
@@ -30,6 +30,10 @@ class OutcomeProfile:
     drift_status: str
     drift_reasons: list[str]
     reliability_score: float
+    # What supervision revealed, and where the experience came from.
+    modification_rate: float = 0.0
+    rejection_rate: float = 0.0
+    provenance_mix: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -96,6 +100,21 @@ class OperationalConfidenceEngine:
         self.graph = SemanticGraph.from_json_directory(self.json_dir)
         self.fingerprinter = CaseFingerprinter(self.json_dir)
         self.similarity = CaseSimilarity(resolve_policy(self.json_dir))
+        trust_path = Path(policy_file).parent / "experience_trust_policy.json"
+        if not trust_path.exists():
+            trust_path = (
+                Path(__file__).resolve().parent
+                / "config"
+                / "experience_trust_policy.json"
+            )
+        self.trust_policy = self._read(trust_path)
+        self.agent_registry = {}
+        registry_path = Path(policy_file).parent / "agent_registry.json"
+        if registry_path.exists():
+            self.agent_registry = {
+                row["agent_id"]: row
+                for row in self._read(registry_path).get("agents", [])
+            }
 
         self.scenarios = self._load("scenarios.json")
         self.observations = self._load("health_observations.json")
@@ -425,6 +444,46 @@ class OperationalConfidenceEngine:
             )
             hard_flags.append("MISSING_GOVERNED_KNOWLEDGE")
 
+        # Supervision is evidence about the proposer, not only the incident.
+        # A recommendation humans routinely amend or decline is one the system
+        # should be less willing to advance unaided, however often the amended
+        # version then succeeded.
+        supervision = self.trust_policy["supervision"]
+        supervised_enough = outcome_profile.sample_size >= int(
+            supervision["minimum_sample_for_supervision_signal"]
+        )
+        floor = float(supervision["modification_rate_threshold"])
+        ceiling = float(supervision["modification_rate_saturation"])
+        if supervised_enough and outcome_profile.modification_rate > floor:
+            # Ramped, not stepped. Refinement below the floor is the loop
+            # working; above it the cost rises with how far past ordinary
+            # refinement the amendment rate has gone.
+            ramp = min(
+                1.0,
+                (outcome_profile.modification_rate - floor) / (ceiling - floor),
+            )
+            penalties["frequently_amended_by_humans"] = round(
+                float(supervision["modification_rate_penalty"]) * ramp, 3
+            )
+        if supervised_enough and outcome_profile.modification_rate >= float(
+            supervision["modification_rate_flag_threshold"]
+        ):
+            hard_flags.append("RECOMMENDATION_FREQUENTLY_AMENDED")
+        if supervised_enough and outcome_profile.rejection_rate > 0.0:
+            penalties["previously_rejected_by_approver"] = round(
+                float(supervision["rejection_penalty"])
+                * outcome_profile.rejection_rate,
+                3,
+            )
+
+        # Experience held only at second hand is real but weaker, and the
+        # record should say so rather than let it pass as the system's own.
+        mix = outcome_profile.provenance_mix
+        if mix and sum(mix.values()) and not (
+            mix.get("SELF_OUTCOME", 0) or mix.get("HUMAN_VERIFIED", 0)
+        ):
+            hard_flags.append("EXPERIENCE_HELD_ONLY_BY_PEER_AGENT")
+
         factors = {
             "graph_applicability": round(graph_applicability, 3),
             "outcome_reliability": round(outcome_profile.reliability_score, 3),
@@ -461,6 +520,44 @@ class OperationalConfidenceEngine:
                 "DIRECT" if match is None or match.is_direct else "TRANSFERRED"
             ),
             similarity_reasons=tuple(match.reasons) if match else (),
+        )
+
+    def _provenance_of(self, row: dict) -> str:
+        """How this case came to be known.
+
+        Derived from what the record already holds rather than added to it: a
+        human who amended or overruled a recommendation engaged with the case,
+        which is different from one who waved it through.
+        """
+        if row.get("established_by_agent"):
+            return "PEER_AGENT"
+        if str(row.get("approval_decision", "")).lower() in {"rejected", "declined"}:
+            return "HUMAN_VERIFIED"
+        if str(row.get("human_modification", "None")).strip() not in {"", "None"}:
+            return "HUMAN_VERIFIED"
+        return "SELF_OUTCOME"
+
+    def _provenance_weight(self, row: dict) -> float:
+        """Trust in the source, attenuated by its standing over the claim."""
+        provenance = self._provenance_of(row)
+        weights = self.trust_policy["provenance_weights"]
+        weight = float(weights.get(provenance, 1.0))
+        if provenance != "PEER_AGENT":
+            return weight
+
+        standing = self.trust_policy["standing"]
+        attenuation = self.trust_policy["attenuation"]
+        agent = self.agent_registry.get(row.get("established_by_agent", ""), {})
+        reliability = float(agent.get("reliability_score", 0.5))
+        domains = set(agent.get("data_domains", []))
+        claimed = row.get("established_for_domain", "")
+        if standing.get("enforce_domain_standing", True) and claimed:
+            if claimed not in domains:
+                # Reliable, but speaking outside its remit.
+                return weight * float(standing["out_of_standing_weight"])
+        # Trust never amplifies on transfer.
+        return min(
+            weight * reliability, float(attenuation["maximum_peer_trust"])
         )
 
     def _outcome_profile(
@@ -506,7 +603,7 @@ class OperationalConfidenceEngine:
                 weight = 0.5 ** (age_days / half_life)
             else:
                 weight = 1.0
-            weights.append(weight)
+            weights.append(weight * self._provenance_weight(row))
 
         def weighted_average(values: list[float]) -> float:
             denominator = sum(weights)
@@ -607,6 +704,33 @@ class OperationalConfidenceEngine:
             drift_status=drift_status,
             drift_reasons=drift_reasons,
             reliability_score=round(max(0.0, min(1.0, reliability)), 3),
+            # What supervision revealed. A plan humans keep amending is a plan
+            # the system is not yet good at proposing unaided, and that is a
+            # fact about the system, not about the incidents.
+            modification_rate=round(
+                sum(
+                    1
+                    for row in rows
+                    if str(row.get("human_modification", "None")).strip()
+                    not in {"", "None"}
+                )
+                / len(rows),
+                3,
+            ),
+            rejection_rate=round(
+                sum(
+                    1
+                    for row in rows
+                    if str(row.get("approval_decision", "")).lower()
+                    in {"rejected", "declined"}
+                )
+                / len(rows),
+                3,
+            ),
+            provenance_mix={
+                name: sum(1 for row in rows if self._provenance_of(row) == name)
+                for name in ("SELF_OUTCOME", "HUMAN_VERIFIED", "PEER_AGENT")
+            },
         )
 
     def _governed_knowledge(
