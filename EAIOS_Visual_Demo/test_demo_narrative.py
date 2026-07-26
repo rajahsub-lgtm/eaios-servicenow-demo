@@ -125,3 +125,56 @@ class DependenciesAreInstallableTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TheScriptQuotesRealNumbersTests(unittest.TestCase):
+    """A talk track with stale numbers is worse than no talk track.
+
+    The presenter reads them aloud with the screen beside them, so a figure
+    that has drifted is contradicted in front of the audience by the demo
+    itself.
+    """
+
+    SCRIPT = ROOT / "DEMO_SCRIPT.md"
+
+    def script(self) -> str:
+        return self.SCRIPT.read_text(encoding="utf-8")
+
+    def test_every_quoted_confidence_appears_in_the_bundle(self):
+        import re
+
+        quoted = set(re.findall(r"`?(\d\.\d{3})", self.script()))
+        actual = set()
+        for row in assessments():
+            actual.add(f"{row['initial_confidence_score']:.3f}")
+            actual.add(f"{row['final_confidence_score']:.3f}")
+        # 0.341 and 0.000 come from the live learning loop, not the bundle.
+        live = {"0.341", "0.000", "0.220", "0.100", "0.950", "0.450"}
+        for number in quoted:
+            with self.subTest(number=number):
+                self.assertTrue(
+                    number in actual or number in live,
+                    f"{number} is quoted in the script and matches nothing",
+                )
+
+    def test_the_beats_named_in_the_script_are_the_beats_in_the_bundle(self):
+        script = self.script()
+        for label, _, _ in [
+            ("Payment connector — stable evidence", None, None),
+            ("Payment connector (EU) — experience by analogy", None, None),
+            ("Search indexer — nothing comparable", None, None),
+            ("Licence reconciler — nothing written either", None, None),
+        ]:
+            with self.subTest(label=label):
+                self.assertIn(label, script)
+
+    def test_the_rehearsal_command_exists(self):
+        self.assertIn("rehearse.py", self.script())
+        self.assertTrue((ROOT / "rehearse.py").exists())
+
+    def test_the_script_does_not_promise_autonomous_action(self):
+        """Every path requires approval; the script must not imply otherwise."""
+        script = self.script().lower()
+        for phrase in ("automatically remediat", "without approval", "acts on its own"):
+            with self.subTest(phrase=phrase):
+                self.assertNotIn(phrase, script)
