@@ -177,7 +177,12 @@ class AdaptiveRecommendationAgent:
             if row.get("alternative_hypothesis_id")
         })
 
-        if orchestration_mode == "ACCELERATED_VALIDATION":
+        if fusion.leading_hypothesis.hypothesis_type == "NO_DIAGNOSIS":
+            # There is no hypothesis to caveat. Phrasing this like a normal
+            # recommendation would advise restarting something the run cannot
+            # explain, which is precisely the borrowed remedy it must refuse.
+            action = fusion.recommended_action
+        elif orchestration_mode == "ACCELERATED_VALIDATION":
             action = fusion.recommended_action
         elif material_conflict_ids:
             action = (

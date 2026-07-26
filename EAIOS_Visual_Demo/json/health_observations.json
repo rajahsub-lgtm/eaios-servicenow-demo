@@ -250,5 +250,41 @@
     "threshold_breached": true,
     "observation_summary": "Meeting join attempts began failing or entering reconnect loops for users across several sites.",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "observation_id": "OBS-PAY-EU-001",
+    "scenario_id": "SCN-PAY-EU-001",
+    "source_record_id": "DT-OBS-PAY-EU-001",
+    "external_service_id": "SVC-ORDER-001",
+    "service_name": "Order Management",
+    "entity_id": "COMP-PAY-CONNECTOR-EU",
+    "metric_id": "MET-PAY-TIMEOUT",
+    "metric_name": "Payment Timeout Rate",
+    "current_value": 8.6,
+    "threshold_value": 5.0,
+    "severity": "HIGH",
+    "observed_at": "2026-07-24 10:20:00",
+    "requires_enterprise_reasoning": true,
+    "threshold_breached": true,
+    "observation_summary": "Payment timeouts rising on the EU connector, a component with no treatment history.",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "observation_id": "OBS-SEARCH-001",
+    "scenario_id": "SCN-NOVEL-INDEX-001",
+    "source_record_id": "DT-OBS-SEARCH-001",
+    "external_service_id": "SVC-SEARCH-001",
+    "service_name": "Enterprise Search",
+    "entity_id": "COMP-SEARCH-INDEXER",
+    "metric_id": "MET-INDEX-LAG",
+    "metric_name": "Search Index Refresh Lag",
+    "current_value": 84.0,
+    "threshold_value": 30.0,
+    "severity": "HIGH",
+    "observed_at": "2026-07-24 10:20:00",
+    "requires_enterprise_reasoning": true,
+    "threshold_breached": true,
+    "observation_summary": "Index refresh lag rose sharply with no comparable recorded presentation.",
+    "data_classification": "SYNTHETIC"
   }
 ]

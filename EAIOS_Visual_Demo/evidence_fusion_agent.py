@@ -6,6 +6,8 @@ from pathlib import Path
 from statistics import mean
 import json
 
+from case_fingerprint import CaseFingerprinter
+from case_similarity import CaseSimilarity, resolve_policy
 from knowledge_retrieval_agent import KnowledgeRetrievalAgent
 from telemetry_agent import TelemetryAnalysisAgent
 
@@ -95,6 +97,8 @@ class EvidenceFusionAgent:
         self.json_dir = Path(json_dir)
         self.telemetry_agent = TelemetryAnalysisAgent(self.json_dir)
         self.retrieval_agent = KnowledgeRetrievalAgent(self.json_dir)
+        self.fingerprinter = CaseFingerprinter(self.json_dir)
+        self.similarity = CaseSimilarity(resolve_policy(self.json_dir))
 
         self.scenarios = self._load("scenarios.json")
         self.known_errors = self._load("known_errors.json")
@@ -223,6 +227,9 @@ class EvidenceFusionAgent:
     ) -> list[HypothesisAssessment]:
         authoritative_ids = set(retrieval.authoritative_entity_ids)
         symptoms = set(retrieval.symptom_categories)
+        case_fingerprint = self.fingerprinter.for_observation(
+            self.retrieval_agent.observation_by_id[retrieval.trigger_observation_id]
+        )
         accepted_ids = self._accepted_evidence_ids(retrieval)
         critical_metrics = [
             summary for summary in telemetry.metric_summaries
@@ -236,9 +243,14 @@ class EvidenceFusionAgent:
                 continue
             if known_error["trust_level"] != "Trusted":
                 continue
-            if known_error["applies_to_entity_id"] not in authoritative_ids:
-                continue
-            if known_error["symptom_category"] not in symptoms:
+            # Recall by presentation, matching the confidence engine. Testing
+            # entity membership and symptom equality separately reproduces the
+            # disagreement this model exists to remove: one layer recognising a
+            # pattern the other cannot see.
+            match = self.similarity.compare(
+                case_fingerprint, self.fingerprinter.for_known_error(known_error)
+            )
+            if match.score < self.similarity.floor:
                 continue
 
             history = self._outcome_summary(
@@ -616,6 +628,124 @@ class EvidenceFusionAgent:
             )
         return retired
 
+    def _non_diagnosis(
+        self,
+        *,
+        scenario,
+        telemetry,
+        retrieval,
+        recent_changes: list[dict],
+        vendor_health: dict | None,
+    ) -> EvidenceFusionAssessment:
+        """A governed account of not knowing.
+
+        A clinician who concludes "I have not seen this before" has reached a
+        finding, not a dead end: the finding is that no recorded pattern
+        explains the presentation, and the correct next step is to gather
+        rather than to treat. Recording it this way also lets the case enter
+        outcome history, so the unexplained case becomes experience instead of
+        being lost.
+        """
+        empty_history = OutcomeHistorySummary(
+            known_error_id="", scenario_pattern="", occurrences=0,
+            successful_outcomes=0, failed_outcomes=0, success_rate=0.0,
+            recurrence_rate=0.0, average_recovery_minutes=0.0,
+            average_evidence_usefulness=0.0, dominant_prior_confidence="LOW",
+        )
+        breaching = [
+            summary.metric_id for summary in telemetry.metric_summaries
+            if summary.current_status in {"HIGH", "CRITICAL"}
+        ]
+        no_diagnosis = HypothesisAssessment(
+            hypothesis_id="NO_GOVERNED_PATTERN",
+            hypothesis_type="NO_DIAGNOSIS",
+            title="No recorded pattern accounts for this presentation",
+            applies_to_entity_id=telemetry.metric_summaries[0].entity_id
+            if telemetry.metric_summaries else "",
+            score=0.0,
+            confidence_level="LOW",
+            status="NO_DIAGNOSIS",
+            historical_success_rate=0.0,
+            recent_failure_signal="NOT_APPLICABLE",
+            outcome_history=empty_history,
+            supporting_evidence_ids=[],
+            uncertainty_factors=[
+                "NO_COMPARABLE_RECORDED_EXPERIENCE",
+                "PRESENTATION_UNMATCHED_BY_ANY_GOVERNED_PATTERN",
+            ],
+        )
+
+        steps = [
+            "Capture the full metric and dependency picture for the affected "
+            "component before proposing any change.",
+            "Confirm whether any recent change touches the component or its "
+            "declared dependencies.",
+            "Establish external service health for any vendor dependency in scope.",
+            "Record the eventual resolution as a governed outcome so this "
+            "presentation becomes recorded experience.",
+        ]
+        if recent_changes:
+            steps.insert(
+                1,
+                "A recent high-risk change is in scope: establish whether it is "
+                "correlated before treating it as causal.",
+            )
+
+        ledger = list(self._vendor_contributions(vendor_health))
+        for metric_id in breaching[:4]:
+            ledger.append(
+                EvidenceContribution(
+                    evidence_id=metric_id, evidence_type="TELEMETRY",
+                    evidence_class="OBSERVED_SIGNAL", role="CONTEXT",
+                    reliability=0.9, contribution=0.0,
+                    rationale=(
+                        "Breaching signal recorded as context. Without a "
+                        "comparable pattern it establishes that something is "
+                        "wrong, not what."
+                    ),
+                    provenance="Synthetic OpenTelemetry",
+                )
+            )
+
+        return EvidenceFusionAssessment(
+            scenario_id=scenario["scenario_id"],
+            scenario_name=scenario["name"],
+            trigger_observation_id=telemetry.trigger_observation_id,
+            trigger_observed_at=telemetry.trigger_observed_at,
+            selected_strategy="Full Investigation",
+            confidence_level="LOW",
+            confidence_score=0.0,
+            safety_status="REQUIRES_HUMAN_APPROVAL",
+            human_approval_required=True,
+            leading_hypothesis=no_diagnosis,
+            alternative_hypotheses=[],
+            recommended_action=(
+                "No governed pattern accounts for this presentation. Do not "
+                "apply a remediation drawn from an unrelated pattern. Gather "
+                "the evidence listed below and escalate to a human owner for "
+                "direction."
+            ),
+            validation_steps=steps,
+            evidence_ledger=ledger,
+            rejected_evidence_ids=sorted(
+                {c.source_id for c in retrieval.rejected_candidates}
+            ),
+            uncertainty_factors=[
+                "NO_COMPARABLE_RECORDED_EXPERIENCE",
+                "NO_LEADING_HYPOTHESIS",
+            ],
+            guardrail_reasons=[
+                "NO_GOVERNED_PATTERN_ABOVE_SIMILARITY_FLOOR",
+                "HUMAN_DIRECTION_REQUIRED",
+            ],
+            reasoning_summary=(
+                "Nothing in recorded experience resembles this presentation "
+                "closely enough to reason from. The absence of a match is "
+                "itself the finding: the next step is to gather evidence, not "
+                "to act on an analogy that does not hold."
+            ),
+        )
+
     def analyze(
         self,
         scenario_id: str,
@@ -638,8 +768,15 @@ class EvidenceFusionAgent:
             recent_high_risk_changes=recent_changes,
         )
         if not known_error_candidates:
-            raise RuntimeError(
-                f"No governed known-error candidate found for {scenario_id}"
+            # Nothing recorded resembles this closely enough to reason from.
+            # Saying so is an answer; failing is not. The run produces an
+            # investigative recommendation, holds no hypothesis, and escalates.
+            return self._non_diagnosis(
+                scenario=scenario,
+                telemetry=telemetry,
+                retrieval=retrieval,
+                recent_changes=recent_changes,
+                vendor_health=vendor_health,
             )
 
         known_error_candidates = self._retire_external_hypotheses(

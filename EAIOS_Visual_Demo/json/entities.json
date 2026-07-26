@@ -378,5 +378,33 @@
     "trust_level": "TRUSTED",
     "data_classification": "SYNTHETIC",
     "service_provider_type": "INTERNAL"
+  },
+  {
+    "entity_id": "COMP-PAY-CONNECTOR-EU",
+    "entity_type": "SERVICE_COMPONENT",
+    "name": "Payment Connector (EU)",
+    "external_service_id": "SVC-ORDER-001",
+    "environment": "Production",
+    "owner": "Order Platform Team",
+    "status": "ACTIVE",
+    "description": "Regional payment connector of the same design as the primary, serving European checkout traffic.",
+    "source_system": "Synthetic Enterprise Portfolio",
+    "trust_level": "TRUSTED",
+    "service_provider_type": "INTERNAL",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "entity_id": "COMP-SEARCH-INDEXER",
+    "entity_type": "SERVICE_COMPONENT",
+    "name": "Enterprise Search Indexer",
+    "external_service_id": "SVC-SEARCH-001",
+    "environment": "Production",
+    "owner": "Knowledge Platform Team",
+    "status": "ACTIVE",
+    "description": "Builds and refreshes the enterprise search index.",
+    "source_system": "Synthetic Enterprise Portfolio",
+    "trust_level": "TRUSTED",
+    "service_provider_type": "INTERNAL",
+    "data_classification": "SYNTHETIC"
   }
 ]

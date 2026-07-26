@@ -44,6 +44,19 @@ def _covered_by(case: tuple[str, ...], remembered: tuple[str, ...]) -> float:
     return len(presenting & set(remembered)) / len(presenting)
 
 
+def resolve_policy(json_dir: str | Path) -> Path:
+    """Find the similarity policy for a given fixture directory.
+
+    Tests copy the fixtures to a temporary location without the config tree,
+    so fall back to the policy shipped beside this module rather than failing.
+    Behaviour under a copied fixture should not depend on where it was copied.
+    """
+    candidate = Path(json_dir).parent / "config" / "similarity_policy.json"
+    if candidate.exists():
+        return candidate
+    return Path(__file__).resolve().parent / "config" / "similarity_policy.json"
+
+
 class CaseSimilarity:
     """Score how alike two cases are, by presentation rather than label.
 

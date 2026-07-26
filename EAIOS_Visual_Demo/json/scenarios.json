@@ -67,5 +67,29 @@
     "display_name": "GitHub and Teams \u2014 shared gateway dependency",
     "short_label": "Shared gateway",
     "scenario_category": "Cross-platform dependency discovery"
+  },
+  {
+    "scenario_id": "SCN-PAY-EU-001",
+    "name": "Payment timeouts on a component with no treatment history",
+    "description": "The same presentation the enterprise has resolved fifty times, on a structurally identical component nobody has declared the pattern for.",
+    "primary_service_id": "AS-ORDER-MGMT",
+    "primary_component_id": "COMP-PAY-CONNECTOR-EU",
+    "trigger_observation_id": "OBS-PAY-EU-001",
+    "display_name": "Payment connector (EU) \u2014 experience by analogy",
+    "short_label": "Transferred",
+    "scenario_category": "Experience transfer",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "scenario_id": "SCN-NOVEL-INDEX-001",
+    "name": "Search index lag with no comparable recorded experience",
+    "description": "A presentation nothing in recorded experience resembles.",
+    "primary_service_id": "AS-ORDER-MGMT",
+    "primary_component_id": "COMP-SEARCH-INDEXER",
+    "trigger_observation_id": "OBS-SEARCH-001",
+    "display_name": "Search indexer \u2014 nothing comparable",
+    "short_label": "Unseen",
+    "scenario_category": "No prior experience",
+    "data_classification": "SYNTHETIC"
   }
 ]

@@ -658,5 +658,35 @@
     "source_system": "Synthetic Enterprise Knowledge Management",
     "provenance": "Known error KE-RUNNER-POOL-001 applicability review",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "relationship_id": "REL-037",
+    "subject_entity_id": "AS-ORDER-MGMT",
+    "predicate": "DEPENDS_ON",
+    "object_entity_id": "COMP-PAY-CONNECTOR-EU",
+    "direction": "OUTBOUND",
+    "relationship_authority": "AUTHORITATIVE",
+    "confidence": 1.0,
+    "valid_from": "2026-01-01 00:00:00",
+    "valid_to": "",
+    "status": "ACTIVE",
+    "source_system": "Synthetic Enterprise Architecture",
+    "provenance": "Service decomposition recorded in the architecture repository",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "relationship_id": "REL-038",
+    "subject_entity_id": "COMP-PAY-CONNECTOR-EU",
+    "predicate": "DEPENDS_ON",
+    "object_entity_id": "AS-PAYMENT-GATEWAY",
+    "direction": "OUTBOUND",
+    "relationship_authority": "AUTHORITATIVE",
+    "confidence": 1.0,
+    "valid_from": "2026-01-01 00:00:00",
+    "valid_to": "",
+    "status": "ACTIVE",
+    "source_system": "Synthetic Enterprise Architecture",
+    "provenance": "Service decomposition recorded in the architecture repository",
+    "data_classification": "SYNTHETIC"
   }
 ]

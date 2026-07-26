@@ -8,7 +8,7 @@ import json
 import math
 
 from case_fingerprint import CaseFingerprinter
-from case_similarity import CaseSimilarity
+from case_similarity import CaseSimilarity, resolve_policy
 from graph_engine import SemanticGraph
 
 
@@ -95,9 +95,7 @@ class OperationalConfidenceEngine:
         self.policy = self._read(Path(policy_file))
         self.graph = SemanticGraph.from_json_directory(self.json_dir)
         self.fingerprinter = CaseFingerprinter(self.json_dir)
-        self.similarity = CaseSimilarity(
-            Path(policy_file).parent / "similarity_policy.json"
-        )
+        self.similarity = CaseSimilarity(resolve_policy(self.json_dir))
 
         self.scenarios = self._load("scenarios.json")
         self.observations = self._load("health_observations.json")
@@ -287,6 +285,11 @@ class OperationalConfidenceEngine:
             hard_flags=sorted(
                 set(selected.hard_flags)
                 | set(self._vendor_status_flags(observed_entity_id))
+                # Recognising a pattern by analogy is not the same as having
+                # treated it here. Borrowed confidence may justify a
+                # hypothesis; it does not justify a shortened investigation.
+                | ({"EXPERIENCE_TRANSFERRED_NOT_DIRECT"}
+                   if selected.experience_class == "TRANSFERRED" else set())
             ),
             factor_scores=selected.factor_scores,
             penalty_scores=selected.penalty_scores,

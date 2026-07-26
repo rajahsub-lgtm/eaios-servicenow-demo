@@ -219,5 +219,21 @@
     "owner": "Network Security Team",
     "source_system": "Synthetic OpenTelemetry",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "metric_id": "MET-INDEX-LAG",
+    "name": "Search Index Refresh Lag",
+    "description": "Minutes between a document changing and the index reflecting it.",
+    "unit": "minutes",
+    "aggregation": "5-minute average",
+    "warning_threshold": 10.0,
+    "critical_threshold": 30.0,
+    "higher_is_worse": true,
+    "owner": "Knowledge Platform Team",
+    "source_system": "Synthetic OpenTelemetry",
+    "symptom_categories": [
+      "INDEX_REFRESH_STALL"
+    ],
+    "data_classification": "SYNTHETIC"
   }
 ]
