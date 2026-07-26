@@ -131,7 +131,9 @@ class GatewayProfileTests(unittest.TestCase):
     def test_real_outcome_evidence_still_blocks_candidacy(self):
         """The profile describes the action; it does not vouch for the record."""
         readiness = executed_readiness("SCN-CROSS-GATEWAY-001")
-        self.assertEqual(readiness["blockers"], ["RECENT_SUCCESS", "RECURRENCE"])
+        self.assertEqual(
+            readiness["blockers"], ["CONFIDENCE", "RECENT_SUCCESS", "RECURRENCE"]
+        )
         self.assertNotEqual(readiness["status"], "CANDIDATE")
         self.assertEqual(readiness["status"], "BUILDING_EVIDENCE")
 
@@ -140,12 +142,34 @@ class GatewayProfileTests(unittest.TestCase):
         self.assertTrue(readiness["human_approval_enforced"])
         self.assertTrue(readiness["advisory_only"])
 
-    def test_confidence_still_gates_readiness_before_evidence_arrives(self):
-        """Readiness is judged twice and the answers differ for good reason."""
-        self.assertIn("CONFIDENCE", evaluate("SCN-CROSS-GATEWAY-001").blockers)
-        self.assertNotIn(
-            "CONFIDENCE", executed_readiness("SCN-CROSS-GATEWAY-001")["blockers"]
+    def test_confidence_buys_depth_but_never_permission(self):
+        """The principle, in one scenario, in numbers.
+
+        Recovered confidence clears the HIGH band, so the plan is allowed to
+        narrow. It does not clear the automation-readiness bar, so nothing may
+        run unattended. Depth changed; permission did not.
+        """
+        from adaptive_execution_orchestrator import AdaptiveExecutionOrchestrator
+
+        run = AdaptiveExecutionOrchestrator(ROOT).execute(
+            correlation_id="TEST-DEPTH-NOT-PERMISSION",
+            scenario_id="SCN-CROSS-GATEWAY-001",
         )
+        levels = json.loads(
+            (CONFIG / "confidence_policy.json").read_text(encoding="utf-8")
+        )["levels"]
+        threshold = json.loads(
+            (CONFIG / "automation_readiness_policy.json").read_text(encoding="utf-8")
+        )["thresholds"]["minimum_confidence_score"]
+
+        # Sufficient for depth: clears HIGH, so the plan contracts.
+        self.assertGreaterEqual(run.final_confidence_score, float(levels["HIGH"]))
+        self.assertTrue(run.contracted_during_execution)
+
+        # Insufficient for permission: below the readiness bar, and blocked.
+        self.assertLess(run.final_confidence_score, float(threshold))
+        self.assertIn("CONFIDENCE", run.automation_readiness["blockers"])
+        self.assertTrue(run.automation_readiness["human_approval_enforced"])
 
 
 class ExistingReadinessUnchangedTests(unittest.TestCase):

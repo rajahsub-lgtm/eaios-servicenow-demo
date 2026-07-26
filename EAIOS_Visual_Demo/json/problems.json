@@ -62,5 +62,21 @@
     "opened_at": "2026-07-15 09:52:00",
     "closed_at": "",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "problem_id": "PRB-GATEWAY-001",
+    "scenario_id": "SCN-CROSS-GATEWAY-001",
+    "entity_id": "COMP-SECURE-WEB-GATEWAY",
+    "external_service_id": "SVC-NETWORK-001",
+    "short_description": "Intermittent SaaS disruption following inspection-policy changes",
+    "state": "Known Error",
+    "priority": "2 - High",
+    "root_cause": "Widening TLS inspection scope interrupts long-lived authenticated sessions and real-time signalling to external SaaS services. Browser traffic is unaffected, so standard post-change validation does not detect the regression.",
+    "known_error_id": "KE-GATEWAY-001",
+    "workaround": "Narrow or revert the inspection scope for the affected destination categories after approval.",
+    "owner": "Network Security Team",
+    "opened_at": "2026-06-02 09:00:00",
+    "closed_at": "",
+    "data_classification": "SYNTHETIC"
   }
 ]

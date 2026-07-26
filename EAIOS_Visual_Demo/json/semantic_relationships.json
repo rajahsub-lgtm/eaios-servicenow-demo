@@ -613,5 +613,50 @@
     "source_system": "Synthetic Enterprise Knowledge Management",
     "provenance": "Known error KE-GATEWAY-001 applicability review",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "relationship_id": "REL-034",
+    "subject_entity_id": "KE-VENDOR-SAAS-001",
+    "predicate": "APPLIES_TO",
+    "object_entity_id": "COMP-GITHUB-REPO-ACCESS",
+    "direction": "OUTBOUND",
+    "relationship_authority": "AUTHORITATIVE",
+    "confidence": 0.82,
+    "valid_from": "2026-01-01 00:00:00",
+    "valid_to": "",
+    "status": "ACTIVE",
+    "source_system": "Synthetic Enterprise Knowledge Management",
+    "provenance": "Known error KE-VENDOR-SAAS-001 applicability review",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "relationship_id": "REL-035",
+    "subject_entity_id": "KE-VENDOR-SAAS-001",
+    "predicate": "APPLIES_TO",
+    "object_entity_id": "COMP-TEAMS-SIGNALING",
+    "direction": "OUTBOUND",
+    "relationship_authority": "AUTHORITATIVE",
+    "confidence": 0.82,
+    "valid_from": "2026-01-01 00:00:00",
+    "valid_to": "",
+    "status": "ACTIVE",
+    "source_system": "Synthetic Enterprise Knowledge Management",
+    "provenance": "Known error KE-VENDOR-SAAS-001 applicability review",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "relationship_id": "REL-036",
+    "subject_entity_id": "KE-RUNNER-POOL-001",
+    "predicate": "APPLIES_TO",
+    "object_entity_id": "COMP-GITHUB-REPO-ACCESS",
+    "direction": "OUTBOUND",
+    "relationship_authority": "AUTHORITATIVE",
+    "confidence": 0.82,
+    "valid_from": "2026-01-01 00:00:00",
+    "valid_to": "",
+    "status": "ACTIVE",
+    "source_system": "Synthetic Enterprise Knowledge Management",
+    "provenance": "Known error KE-RUNNER-POOL-001 applicability review",
+    "data_classification": "SYNTHETIC"
   }
 ]

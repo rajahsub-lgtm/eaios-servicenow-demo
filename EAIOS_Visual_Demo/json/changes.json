@@ -109,7 +109,7 @@
     "short_description": "Extend TLS inspection to additional outbound SaaS destination categories",
     "change_type": "Standard",
     "risk": "High",
-    "state": "Implemented",
+    "state": "Closed Successful",
     "planned_start": "2026-07-16 07:00:00",
     "planned_end": "2026-07-16 07:45:00",
     "implemented_at": "2026-07-16 07:38:00",

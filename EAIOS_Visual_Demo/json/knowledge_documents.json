@@ -229,5 +229,53 @@
     "body": "Use this article when two or more unrelated SaaS services degrade at the same time while each vendor reports its own services healthy. Establish vendor service health first, from an authoritative and current source, before considering internal causes. Then identify whether the affected services share an egress dependency. Long-lived authenticated sessions and real-time signalling are the first to fail when inspection scope widens, while ordinary browser traffic continues to work, so a healthy exempt route does not clear the gateway. Confirm a recent change against the inspection policy before proposing a rollback, and obtain human approval before changing gateway policy.",
     "recommended_action": "Confirm vendor health, identify the shared egress dependency, correlate the recent inspection policy change, then narrow or roll back the policy after approval.",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "document_id": "RB-GATEWAY-001",
+    "document_type": "RUNBOOK",
+    "title": "Runbook: Cross-Platform SaaS Access Degradation",
+    "entity_ids": "COMP-SECURE-WEB-GATEWAY,COMP-GATEWAY-TLS-POLICY,COMP-GITHUB-REPO-ACCESS,COMP-TEAMS-SIGNALING",
+    "symptom_categories": "SAAS_ACCESS_FAILURE,GATEWAY_SESSION_DISRUPTION",
+    "status": "Published",
+    "trust_level": "Trusted",
+    "content_safety_status": "SAFE",
+    "published_at": "2026-06-05",
+    "last_validated_at": "2026-06-28",
+    "owner": "Network Security Team",
+    "body": "Step 1: establish vendor service health from an authoritative and current source before considering internal causes. Step 2: confirm whether the affected services share an egress path. Step 3: compare pre-change and post-change TLS handshake behaviour on that path. Step 4: roll back one inspection policy at a time; never batch policy reverts. Step 5: verify GitHub and Teams recovery independently, because a single platform recovering does not establish that the shared dependency is healthy. Human approval is required before any gateway policy change.",
+    "recommended_action": "Validate vendor health, confirm the shared path, revert one policy, verify both platforms independently.",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "document_id": "PIR-GATEWAY-014",
+    "document_type": "POST_INCIDENT_REVIEW",
+    "title": "Post-Incident Review: Simultaneous Developer and Meeting Disruption (June)",
+    "entity_ids": "COMP-SECURE-WEB-GATEWAY,COMP-GATEWAY-TLS-POLICY,COMP-GITHUB-REPO-ACCESS,COMP-TEAMS-SIGNALING",
+    "symptom_categories": "SAAS_ACCESS_FAILURE,GATEWAY_SESSION_DISRUPTION",
+    "status": "Published",
+    "trust_level": "Trusted",
+    "content_safety_status": "SAFE",
+    "published_at": "2026-06-12",
+    "last_validated_at": "2026-06-28",
+    "owner": "Service Management Office",
+    "body": "Two platforms degraded within the same twenty-minute window. Each was investigated independently by its own support group for over an hour because no shared service appeared in either incident record. The shared egress dependency was found only after someone compared the two timelines by hand. Recovery followed a single policy revert. Preventive action: record egress routing as an explicit dependency so shared paths are discoverable rather than remembered.",
+    "recommended_action": "Record shared egress dependencies explicitly so cross-platform correlation does not depend on individual recall.",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "document_id": "BIG-PRODUCTIVITY-001",
+    "document_type": "BUSINESS_IMPACT_GUIDE",
+    "title": "Business Impact: Engineering Delivery and Collaboration",
+    "entity_ids": "COMP-SECURE-WEB-GATEWAY,COMP-GATEWAY-TLS-POLICY,COMP-GITHUB-REPO-ACCESS,COMP-TEAMS-SIGNALING",
+    "symptom_categories": "SAAS_ACCESS_FAILURE,GATEWAY_SESSION_DISRUPTION",
+    "status": "Published",
+    "trust_level": "Trusted",
+    "content_safety_status": "SAFE",
+    "published_at": "2026-05-20",
+    "last_validated_at": "2026-06-28",
+    "owner": "VP Digital Operations",
+    "body": "Loss of authenticated repository access halts code review and release activity across engineering teams. Loss of meeting join affects scheduled customer and internal sessions. When both occur together the organisation loses both delivery and coordination capacity at once, which is materially worse than either alone and should raise incident priority regardless of individual platform severity.",
+    "recommended_action": "Treat concurrent delivery and collaboration loss as higher priority than either platform alone.",
+    "data_classification": "SYNTHETIC"
   }
 ]

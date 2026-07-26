@@ -117,7 +117,7 @@ Workplace Technology Support.
 ### Then the investigation
 
 ```
-confidence  0.823 MEDIUM -> 0.923 HIGH
+confidence  0.798 MEDIUM -> 0.898 HIGH
 plan width  6 -> 4 (peak 6) · 7 agents contributed
 path        FULL_INVESTIGATION -> ACCELERATED_VALIDATION
 readiness   BUILDING_EVIDENCE · approval REQUESTED
@@ -151,8 +151,12 @@ the gateway appears nowhere in the scenario definition. A test asserts this:
 
 ### Governance close
 
-Readiness is BUILDING_EVIDENCE with two blockers, and both are real: recent
-success 0.90 against a 0.95 threshold, recurrence 0.10 against 0.05. The
+Readiness is BUILDING_EVIDENCE with three blockers, and all three are real.
+Confidence recovered to 0.898 — enough to clear the HIGH band and narrow the
+plan, still short of the 0.90 automation bar. Recent success is 0.90 against a
+0.95 threshold and recurrence 0.10 against 0.05.
+
+**Depth changed; permission did not.** That is the principle in one number. The
 control profile is complete — the rollback is reversible, its blast radius
 bounded but cross-platform, and three controls are required including
 cross-platform verification.
