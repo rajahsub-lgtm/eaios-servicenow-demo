@@ -9,6 +9,7 @@ import math
 
 from case_fingerprint import CaseFingerprinter
 from case_similarity import CaseSimilarity, resolve_policy
+from experience_ledger import ExperienceLedger
 from documented_reasoning import (
     DocumentationReasoner,
     DocumentedHypothesis,
@@ -124,22 +125,17 @@ class OperationalConfidenceEngine:
                 for row in self._read(registry_path).get("agents", [])
             }
 
+        self.experience = ExperienceLedger(
+            self.json_dir,
+            confidence_policy=self.policy,
+            trust_policy=self.trust_policy,
+            agent_registry=self.agent_registry,
+        )
+
         self.scenarios = self._load("scenarios.json")
         self.observations = self._load("health_observations.json")
-        self.known_errors = self._load("known_errors.json")
-        # Patterns the system arrived at rather than was given. Loaded here so
-        # the next encounter meets them through ordinary recall; a learned
-        # pattern that needed a special lookup would not have been learned.
-        learned_path = self.json_dir / "learned_patterns.json"
-        if learned_path.exists():
-            self.known_errors.extend(self._read(learned_path))
-        self.outcomes = self._load("outcome_history.json")
-        feedback_path = self.json_dir / "runtime_outcome_feedback.json"
-        if feedback_path.exists():
-            feedback_rows = self._read(feedback_path)
-            if not isinstance(feedback_rows, list):
-                raise ValueError("runtime_outcome_feedback.json must contain a JSON array.")
-            self.outcomes.extend(feedback_rows)
+        self.known_errors = ExperienceLedger.load_patterns(self.json_dir)
+        self.outcomes = ExperienceLedger.load_outcomes(self.json_dir)
         self.changes = self._load("changes.json")
         self.knowledge = self._load("knowledge_documents.json")
 
@@ -408,27 +404,11 @@ class OperationalConfidenceEngine:
         observation = self.observation_by_id[trigger_observation_id]
         case = self.fingerprinter.for_observation(observation)
 
-        maturity = self.trust_policy["pattern_maturity"]
-        statuses = set(maturity["admissible_knowledge_statuses"])
-        trust_levels = set(maturity["admissible_trust_levels"])
-
         matches: list[tuple[dict, object]] = []
-        for known_error in self.known_errors:
-            # Provisional patterns are admitted and then discounted. Excluding
-            # them made a learned pattern unrecallable, so it could never
-            # accumulate the outcomes that would establish it — recorded but
-            # inert, which is not learning.
-            if known_error.get("knowledge_status") not in statuses:
-                continue
-            if known_error.get("trust_level") not in trust_levels:
-                continue
-            valid_from = datetime.strptime(known_error["valid_from"], "%Y-%m-%d")
-            if valid_from > assessed_at:
-                continue
-            valid_to = known_error.get("valid_to", "")
-            if valid_to and datetime.strptime(valid_to, "%Y-%m-%d") < assessed_at:
-                continue
-
+        # Admissibility is the ledger's judgement, not one made again here.
+        for known_error in self.experience.admissible(
+            self.known_errors, assessed_at
+        ):
             remembered = self.fingerprinter.for_known_error(known_error)
             match = self.similarity.compare(case, remembered)
             if match.score >= self.similarity.floor:
@@ -769,42 +749,10 @@ class OperationalConfidenceEngine:
         )
 
     def _provenance_of(self, row: dict) -> str:
-        """How this case came to be known.
-
-        Derived from what the record already holds rather than added to it: a
-        human who amended or overruled a recommendation engaged with the case,
-        which is different from one who waved it through.
-        """
-        if row.get("established_by_agent"):
-            return "PEER_AGENT"
-        if str(row.get("approval_decision", "")).lower() in {"rejected", "declined"}:
-            return "HUMAN_VERIFIED"
-        if str(row.get("human_modification", "None")).strip() not in {"", "None"}:
-            return "HUMAN_VERIFIED"
-        return "SELF_OUTCOME"
+        return self.experience.provenance_of(row)
 
     def _provenance_weight(self, row: dict) -> float:
-        """Trust in the source, attenuated by its standing over the claim."""
-        provenance = self._provenance_of(row)
-        weights = self.trust_policy["provenance_weights"]
-        weight = float(weights.get(provenance, 1.0))
-        if provenance != "PEER_AGENT":
-            return weight
-
-        standing = self.trust_policy["standing"]
-        attenuation = self.trust_policy["attenuation"]
-        agent = self.agent_registry.get(row.get("established_by_agent", ""), {})
-        reliability = float(agent.get("reliability_score", 0.5))
-        domains = set(agent.get("data_domains", []))
-        claimed = row.get("established_for_domain", "")
-        if standing.get("enforce_domain_standing", True) and claimed:
-            if claimed not in domains:
-                # Reliable, but speaking outside its remit.
-                return weight * float(standing["out_of_standing_weight"])
-        # Trust never amplifies on transfer.
-        return min(
-            weight * reliability, float(attenuation["maximum_peer_trust"])
-        )
+        return self.experience.provenance_weight(row)
 
     def _outcome_profile(
         self,
@@ -812,12 +760,9 @@ class OperationalConfidenceEngine:
         known_error_id: str,
         assessed_at: datetime,
     ) -> OutcomeProfile:
-        rows = [
-            row for row in self.outcomes
-            if row["known_error_id"] == known_error_id
-            and self._dt(row["recorded_at"]) <= assessed_at
-        ]
-        rows.sort(key=lambda row: self._dt(row["recorded_at"]))
+        rows = self.experience.rows_for(
+            self.outcomes, known_error_id, assessed_at
+        )
 
         if not rows:
             return OutcomeProfile(
@@ -836,29 +781,10 @@ class OperationalConfidenceEngine:
                 reliability_score=0.0,
             )
 
-        weighting = self.policy["recency_weighting"]
-        half_life = float(weighting["half_life_days"])
-        weights = []
-        for row in rows:
-            if weighting.get("enabled", True):
-                age_days = max(
-                    0.0,
-                    (assessed_at - self._dt(row["recorded_at"])).total_seconds()
-                    / 86400,
-                )
-                weight = 0.5 ** (age_days / half_life)
-            else:
-                weight = 1.0
-            weights.append(weight * self._provenance_weight(row))
+        weights = self.experience.weights_for(rows, assessed_at)
 
         def weighted_average(values: list[float]) -> float:
-            denominator = sum(weights)
-            return (
-                sum(value * weight for value, weight in zip(values, weights))
-                / denominator
-                if denominator
-                else 0.0
-            )
+            return self.experience.weighted_average(values, weights)
 
         confidence_value = {"HIGH": 1.0, "MEDIUM": 0.65, "LOW": 0.30}
         weighted_success = weighted_average(
@@ -973,10 +899,7 @@ class OperationalConfidenceEngine:
                 / len(rows),
                 3,
             ),
-            provenance_mix={
-                name: sum(1 for row in rows if self._provenance_of(row) == name)
-                for name in ("SELF_OUTCOME", "HUMAN_VERIFIED", "PEER_AGENT")
-            },
+            provenance_mix=self.experience.provenance_mix(rows),
         )
 
     def _governed_knowledge(

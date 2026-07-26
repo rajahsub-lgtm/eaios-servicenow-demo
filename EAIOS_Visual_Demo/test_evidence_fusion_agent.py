@@ -30,7 +30,10 @@ class EvidenceFusionTests(unittest.TestCase):
         # and never executed. Counting a recommendation nobody carried out as
         # a success is how a success rate stops meaning anything.
         self.assertEqual(history.successful_outcomes, 48)
-        self.assertEqual(history.success_rate, 0.96)
+        # Weighted by recency and provenance, from the shared ledger. The raw
+        # 0.96 was fusion's own arithmetic over the same rows, and it was not
+        # the figure the plan was chosen on.
+        self.assertEqual(history.success_rate, 0.954)
         self.assertEqual(history.dominant_prior_confidence, "HIGH")
 
     def test_queue_selects_full_investigation_with_medium_confidence(self):

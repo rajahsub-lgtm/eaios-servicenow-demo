@@ -8,6 +8,7 @@ import json
 
 from case_fingerprint import CaseFingerprinter
 from case_similarity import CaseSimilarity, resolve_policy
+from experience_ledger import ExperienceLedger
 from documented_reasoning import (
     DocumentationReasoner,
     resolve_documentation_policy,
@@ -113,26 +114,37 @@ class EvidenceFusionAgent:
         )
 
         self.scenarios = self._load("scenarios.json")
-        self.known_errors = self._load("known_errors.json")
-        learned_path = self.json_dir / "learned_patterns.json"
-        if learned_path.exists():
-            with open(learned_path, encoding="utf-8") as f:
-                self.known_errors.extend(json.load(f))
-        self.outcomes = self._load("outcome_history.json")
-        # Outcomes recorded at runtime count as history here too. The
-        # confidence engine has always read these and fusion did not, so the
-        # two layers were reasoning from different pasts — a pattern could
-        # accumulate cases that only one of them could see.
-        feedback_path = self.json_dir / "runtime_outcome_feedback.json"
-        if feedback_path.exists():
-            with open(feedback_path, encoding="utf-8") as f:
-                self.outcomes.extend(json.load(f))
+        # Patterns, history and weighting all come from the ledger, so the
+        # explanation quotes the figures the plan was chosen on.
+        config_dir = Path(__file__).resolve().parent / "config"
+        self.experience = ExperienceLedger(
+            self.json_dir,
+            confidence_policy=self._read_config(
+                config_dir / "confidence_policy.json"
+            ),
+            trust_policy=self._read_config(
+                config_dir / "experience_trust_policy.json"
+            ),
+            agent_registry={
+                row["agent_id"]: row
+                for row in self._read_config(
+                    config_dir / "agent_registry.json"
+                ).get("agents", [])
+            },
+        )
+        self.known_errors = ExperienceLedger.load_patterns(self.json_dir)
+        self.outcomes = ExperienceLedger.load_outcomes(self.json_dir)
         self.changes = self._load("changes.json")
 
         self.scenario_by_id = {row["scenario_id"]: row for row in self.scenarios}
         self.known_error_by_id = {
             row["known_error_id"]: row for row in self.known_errors
         }
+
+    @staticmethod
+    def _read_config(path) -> dict:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
 
     def _load(self, filename: str) -> list[dict]:
         with open(self.json_dir / filename, encoding="utf-8") as f:
@@ -151,19 +163,14 @@ class EvidenceFusionAgent:
         return "LOW"
 
     def _outcome_summary(
-        self, known_error_id: str, scenario_pattern: str
+        self,
+        known_error_id: str,
+        scenario_pattern: str,
+        assessed_at: datetime,
     ) -> OutcomeHistorySummary:
-        # Matched on the pattern's identity alone. The secondary filter on
-        # scenario_pattern was redundant for the shipped fixtures, where the
-        # two always agree, and silently wrong for anything recorded at
-        # runtime, where the feedback writer records the pattern id and this
-        # lookup expected the symptom category. The confidence engine has
-        # always matched on identity, so requiring more here meant the two
-        # layers counted different numbers of cases for the same pattern.
-        rows = [
-            row for row in self.outcomes
-            if row["known_error_id"] == known_error_id
-        ]
+        rows = self.experience.rows_for(
+            self.outcomes, known_error_id, assessed_at
+        )
 
         if not rows:
             return OutcomeHistorySummary(
@@ -201,8 +208,13 @@ class EvidenceFusionAgent:
             occurrences=len(rows),
             successful_outcomes=successes,
             failed_outcomes=failures,
-            success_rate=round(successes / len(rows), 3),
-            recurrence_rate=round(recurrences / len(rows), 3),
+            # Weighted by recency and provenance, from the ledger. Raw
+            # counts here meant fusion explained a success rate the engine
+            # had not used: 0.55 against 0.47 over the same twenty cases.
+            success_rate=self.experience.success_rate(rows, assessed_at),
+            recurrence_rate=self.experience.recurrence_rate(
+                rows, assessed_at
+            ),
             average_recovery_minutes=round(
                 mean(float(row["recovery_minutes"]) for row in rows), 2
             ),
@@ -254,6 +266,7 @@ class EvidenceFusionAgent:
         retrieval,
         telemetry,
         recent_high_risk_changes: list[dict],
+        assessed_at: datetime,
     ) -> list[HypothesisAssessment]:
         authoritative_ids = set(retrieval.authoritative_entity_ids)
         symptoms = set(retrieval.symptom_categories)
@@ -269,12 +282,11 @@ class EvidenceFusionAgent:
 
         candidates: list[HypothesisAssessment] = []
         for known_error in self.known_errors:
-            # Mirrors the confidence engine's admissibility. The layers
-            # disagreeing about what is recallable is how a plan gets chosen
-            # on a premise the next stage refuses.
-            if known_error["knowledge_status"] not in {"Active", "Provisional"}:
-                continue
-            if known_error["trust_level"] not in {"Trusted", "Provisional"}:
+            # The ledger decides what is recallable; deciding again here is
+            # how the layers came to disagree about the same pattern.
+            if not self.experience.is_admissible(
+                known_error, assessed_at
+            ):
                 continue
             # Recall by presentation, matching the confidence engine. Testing
             # entity membership and symptom equality separately reproduces the
@@ -289,6 +301,7 @@ class EvidenceFusionAgent:
             history = self._outcome_summary(
                 known_error["known_error_id"],
                 known_error["symptom_category"],
+                assessed_at,
             )
 
             direct_applicability = 1.0
@@ -1023,6 +1036,7 @@ class EvidenceFusionAgent:
             retrieval=retrieval,
             telemetry=telemetry,
             recent_high_risk_changes=recent_changes,
+            assessed_at=trigger_time,
         )
         if not known_error_candidates:
             # Nothing recorded resembles this closely enough to reason from.
