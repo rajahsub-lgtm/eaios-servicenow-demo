@@ -1,15 +1,25 @@
 from __future__ import annotations
 
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 import html
+import shutil
 
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+from adaptive_execution_orchestrator import AdaptiveExecutionOrchestrator
+from case_fingerprint import CaseFingerprinter
 from eaios_story_data import StoryDataError, StoryRepository, format_identifier
+from outcome_feedback import (
+    OutcomeFeedbackStore,
+    OutcomeInput,
+    feedback_from_assessment,
+)
+from pattern_learning import PatternLearner, ValidationDecision
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -835,6 +845,133 @@ def readiness_status(assessment: dict[str, Any]) -> str:
     return str(assessment.get("automation_readiness", {}).get("status", ""))
 
 
+def render_learning_loop() -> None:
+    """The arc from never-seen to seen-before, run live.
+
+    Every row here is a real governed run against a scratch copy of the
+    fixtures, not a recorded transcript. The three columns differ only in what
+    the system had recorded when each started.
+    """
+    st.subheader("Learning from a new incident")
+    st.caption(
+        "A presentation nothing resembles, the human validation that follows, "
+        "and the same presentation three weeks later. What the system does the "
+        "second time depends on what happened the first."
+    )
+
+    root = BASE_DIR
+
+    @st.cache_data(show_spinner="Running the learning loop...")
+    def arc(worked: bool) -> dict:
+        with TemporaryDirectory() as directory:
+            json_dir = Path(directory) / "json"
+            shutil.copytree(root / "json", json_dir)
+            def orchestrate(correlation_id: str, scenario_id: str):
+                return AdaptiveExecutionOrchestrator(
+                    root, json_dir=json_dir
+                ).execute(
+                    correlation_id=correlation_id, scenario_id=scenario_id
+                )
+
+            first = orchestrate("UI-1", "SCN-NOVEL-INDEX-001")
+            recommendation = first.recommendation
+            pattern = PatternLearner(json_dir).learn(
+                assessment=first,
+                decision=ValidationDecision(
+                    decision="CORRECTED",
+                    validated_by="k.osei@example.com",
+                    decided_at="2026-07-24 16:30:00",
+                    corrected_cause=(
+                        "A stalled segment merge held the write lock."
+                    ),
+                    corrected_action=(
+                        "Clear the stalled merge before any restart."
+                    ),
+                ),
+                fingerprint=CaseFingerprinter(json_dir).for_scenario(
+                    "SCN-NOVEL-INDEX-001"
+                ),
+                document_id=recommendation["leading_hypothesis_id"],
+                proposed_cause=recommendation["leading_hypothesis_title"],
+                proposed_action=recommendation["recommended_action"],
+                trigger_metric_id="MET-INDEX-LAG",
+                external_service_id="SVC-SEARCH-001",
+            )
+            OutcomeFeedbackStore(
+                json_dir / "runtime_outcome_feedback.json"
+            ).append(
+                feedback_from_assessment(
+                    first,
+                    OutcomeInput(
+                        approval_decision="Approved",
+                        human_modification="None",
+                        action_performed="Validated remedy applied",
+                        outcome="Successful" if worked else "Unsuccessful",
+                        recovery_minutes=22.0 if worked else 95.0,
+                        recurrence_within_24h=not worked,
+                        evidence_usefulness_score=88.0 if worked else 30.0,
+                        recorded_at="2026-07-25 09:00:00",
+                    ),
+                    outcome_id="OUT-UI-001",
+                    known_error_id=pattern.known_error_id,
+                )
+            )
+            second = orchestrate("UI-2", "SCN-INDEX-RECUR-001")
+            return {
+                "first_score": first.initial_confidence_score,
+                "first_hypothesis": recommendation["leading_hypothesis_id"],
+                "first_action": recommendation["recommended_action"],
+                "pattern_id": pattern.known_error_id,
+                "pattern_status": pattern.knowledge_status,
+                "pattern_cause": pattern.probable_cause,
+                "second_score": second.initial_confidence_score,
+                "second_hypothesis": second.recommendation[
+                    "leading_hypothesis_id"
+                ],
+                "second_flags": second.recommendation["uncertainty_factors"],
+                "second_plan": second.final_plan_mode,
+            }
+
+    good = arc(True)
+    bad = arc(False)
+
+    first_col, validate_col, second_col = st.columns(3)
+    with first_col:
+        st.markdown("**1 · Never seen**")
+        st.metric("Confidence", f"{good['first_score']:.3f}")
+        st.caption(f"From `{good['first_hypothesis']}` — a runbook, not experience.")
+        st.info(good["first_action"][:400])
+    with validate_col:
+        st.markdown("**2 · Human validates**")
+        st.caption("k.osei@example.com corrected the proposed cause.")
+        st.code(good["pattern_id"], language=None)
+        st.caption(
+            f"Status **{good['pattern_status']}** · {good['pattern_cause']}"
+        )
+    with second_col:
+        st.markdown("**3 · Seen once before**")
+        st.metric(
+            "If the remedy worked",
+            f"{good['second_score']:.3f}",
+            delta=f"{good['second_score'] - bad['second_score']:+.3f} vs failed",
+        )
+        st.metric("If it did not", f"{bad['second_score']:.3f}")
+        st.caption(f"Now recalls `{good['second_hypothesis']}`.")
+
+    st.divider()
+    st.markdown("**What the failed remedy is remembered as**")
+    st.write(
+        "A remedy that was applied here and did not help is not merely a "
+        "lower average. It is carried forward as a specific fact, which is "
+        "what stops the second encounter repeating the first."
+    )
+    st.code("\n".join(bad["second_flags"]), language=None)
+    st.caption(
+        f"Both branches still run {good['second_plan']}: one case, however it "
+        f"went, does not earn a narrower plan."
+    )
+
+
 def main() -> None:
     inject_css()
     try:
@@ -937,6 +1074,7 @@ def main() -> None:
             "Scenario comparison",
             "Evidence & trust",
             "Automation readiness",
+            "Learning loop",
             "ServiceNow control",
         ]
     )
@@ -951,6 +1089,8 @@ def main() -> None:
     with tabs[3]:
         render_readiness(repo, assessment, selected)
     with tabs[4]:
+        render_learning_loop()
+    with tabs[5]:
         render_servicenow_boundary(repo, assessment, selected, preview)
 
     st.markdown(

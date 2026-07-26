@@ -9,8 +9,8 @@
     "notes": "A document must actually be about this component and this symptom. Lexical relevance is enough to surface a document for a human to read; it is not enough to propose a cause from it."
   },
   "support_weights": {
-    "symptom_coverage": 0.40,
-    "document_trust": 0.30,
+    "symptom_coverage": 0.4,
+    "document_trust": 0.3,
     "document_type": 0.18,
     "freshness": 0.12
   },
@@ -41,5 +41,11 @@
     "name_the_source": true,
     "state_the_absence_of_experience": true,
     "notes": "The recommendation must say which document it came from and that nothing comparable has been resolved before. A proposal a human cannot trace is a proposal a human cannot validate, and validation is the entire purpose of making it."
+  },
+  "refutation": {
+    "penalty_per_rejection": 0.3,
+    "minimum_retained_support": 0.15,
+    "disclose_prior_rejection": true,
+    "notes": "A human rejecting a proposed cause is evidence that it did not hold here, and it is weighed as evidence. It is not a ban. A human can reject correctly and a human can reject wrongly, and a system that treats one rejection as final has made that person's error unfalsifiable. Support therefore decays with each rejection but never reaches zero: if nothing better accounts for the presentation, the account is offered again, ranked lower, with the prior rejection and the name of the person who made it disclosed so the next reviewer can weigh it themselves."
   }
 }

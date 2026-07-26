@@ -103,5 +103,17 @@
     "short_label": "Undocumented",
     "scenario_category": "No prior experience",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "scenario_id": "SCN-INDEX-RECUR-001",
+    "name": "Search index lag returns after a validated first encounter",
+    "description": "The same presentation, three weeks after a human validated a cause and an outcome was recorded. What the system does now depends on what that outcome was.",
+    "primary_service_id": "AS-ORDER-MGMT",
+    "primary_component_id": "COMP-SEARCH-INDEXER",
+    "trigger_observation_id": "OBS-SEARCH-002",
+    "display_name": "Search indexer — seen once before",
+    "short_label": "Recurrence",
+    "scenario_category": "Learned from experience",
+    "data_classification": "SYNTHETIC"
   }
 ]

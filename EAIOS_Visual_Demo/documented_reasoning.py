@@ -31,6 +31,8 @@ class DocumentedHypothesis:
     document_type: str
     owner: str
     trust_level: str
+    prior_rejections: int
+    rejected_by: tuple[str, ...]
     probable_cause: str
     recommended_action: str
     support: float
@@ -76,6 +78,16 @@ class DocumentationReasoner:
         self.eligibility = self.policy["eligibility"]
         self.weights = self.policy["support_weights"]
         self.ceiling = self.policy["ceiling"]
+        self.refutation = self.policy.get(
+            "refutation",
+            {"penalty_per_rejection": 0.0, "minimum_retained_support": 0.0},
+        )
+        ledger = self.json_dir / "refutation_ledger.json"
+        self.refutations = (
+            json.loads(ledger.read_text(encoding="utf-8"))
+            if ledger.exists()
+            else []
+        )
         with open(
             self.json_dir / "knowledge_documents.json", encoding="utf-8"
         ) as f:
@@ -151,13 +163,29 @@ class DocumentationReasoner:
                 "document_type": kind,
                 "freshness": freshness,
             }
-            support = round(
-                sum(
-                    value * float(self.weights.get(name, 0.0))
-                    for name, value in dimensions.items()
-                ),
-                3,
+            support = sum(
+                value * float(self.weights.get(name, 0.0))
+                for name, value in dimensions.items()
             )
+            # A rejection is evidence this account did not hold here, weighed
+            # as evidence rather than enforced as a ban. Support decays and
+            # keeps a floor, so the account stays offerable when nothing else
+            # explains the presentation.
+            rejections = [
+                row
+                for row in self.refutations
+                if row.get("hypothesis_id") == document["document_id"]
+                and row.get("entity_id") == case.entity_id
+            ]
+            if rejections:
+                decayed = support * (
+                    (1.0 - float(self.refutation["penalty_per_rejection"]))
+                    ** len(rejections)
+                )
+                support = max(
+                    decayed, float(self.refutation["minimum_retained_support"])
+                )
+            support = round(support, 3)
             if trust <= 0.0:
                 # A deprecated procedure is not a weak basis for a proposal,
                 # it is a withdrawn one.
@@ -178,6 +206,8 @@ class DocumentationReasoner:
             else:
                 reasons.append("VALIDATION_AGEING")
             reasons.append("NO_RECORDED_EXPERIENCE")
+            if rejections:
+                reasons.append("PREVIOUSLY_REJECTED_BY_A_HUMAN")
 
             proposals.append(
                 DocumentedHypothesis(
@@ -186,6 +216,16 @@ class DocumentationReasoner:
                     document_type=document.get("document_type", ""),
                     owner=document.get("owner", "Unassigned"),
                     trust_level=document.get("trust_level", "Unverified"),
+                    prior_rejections=len(rejections),
+                    rejected_by=tuple(
+                        sorted(
+                            {
+                                str(row.get("rejected_by", "")).strip()
+                                for row in rejections
+                                if str(row.get("rejected_by", "")).strip()
+                            }
+                        )
+                    ),
                     # The document's own words. Nothing is invented here; a
                     # proposal a human cannot trace to a source is a proposal
                     # they cannot validate.

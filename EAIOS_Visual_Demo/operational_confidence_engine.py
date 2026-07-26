@@ -127,6 +127,12 @@ class OperationalConfidenceEngine:
         self.scenarios = self._load("scenarios.json")
         self.observations = self._load("health_observations.json")
         self.known_errors = self._load("known_errors.json")
+        # Patterns the system arrived at rather than was given. Loaded here so
+        # the next encounter meets them through ordinary recall; a learned
+        # pattern that needed a special lookup would not have been learned.
+        learned_path = self.json_dir / "learned_patterns.json"
+        if learned_path.exists():
+            self.known_errors.extend(self._read(learned_path))
         self.outcomes = self._load("outcome_history.json")
         feedback_path = self.json_dir / "runtime_outcome_feedback.json"
         if feedback_path.exists():
@@ -362,11 +368,19 @@ class OperationalConfidenceEngine:
         observation = self.observation_by_id[trigger_observation_id]
         case = self.fingerprinter.for_observation(observation)
 
+        maturity = self.trust_policy["pattern_maturity"]
+        statuses = set(maturity["admissible_knowledge_statuses"])
+        trust_levels = set(maturity["admissible_trust_levels"])
+
         matches: list[tuple[dict, object]] = []
         for known_error in self.known_errors:
-            if known_error.get("knowledge_status") != "Active":
+            # Provisional patterns are admitted and then discounted. Excluding
+            # them made a learned pattern unrecallable, so it could never
+            # accumulate the outcomes that would establish it — recorded but
+            # inert, which is not learning.
+            if known_error.get("knowledge_status") not in statuses:
                 continue
-            if known_error.get("trust_level") != "Trusted":
+            if known_error.get("trust_level") not in trust_levels:
                 continue
             valid_from = datetime.strptime(known_error["valid_from"], "%Y-%m-%d")
             if valid_from > assessed_at:
@@ -555,6 +569,41 @@ class OperationalConfidenceEngine:
                 penalty_policy["stale_or_missing_governed_knowledge"]
             )
             hard_flags.append("MISSING_GOVERNED_KNOWLEDGE")
+
+        maturity = self.trust_policy["pattern_maturity"]
+        promotion = maturity["promotion"]
+        # Evaluated from the record rather than written back, so a pattern
+        # whose success rate later falls loses the promotion on its own. A
+        # status that had to be demoted by someone would eventually be wrong.
+        established = (
+            outcome_profile.sample_size
+            >= int(promotion["minimum_successful_cases"])
+            and outcome_profile.weighted_success_rate
+            >= float(promotion["minimum_success_rate"])
+        )
+        if known_error.get("knowledge_status") == "Provisional" and not established:
+            # Being provisional and having a thin sample are the same fact —
+            # this pattern is new — so they are charged once, at the larger of
+            # the two, not summed. Stacking them made the system less
+            # confident after learning something than it was reading a manual,
+            # which inverts the whole point of recording the case.
+            penalties["provisional_pattern"] = max(
+                float(maturity["provisional_pattern_penalty"]),
+                penalties.pop("insufficient_outcome_sample", 0.0),
+            )
+            hard_flags.append("PATTERN_PROVISIONAL_NOT_ESTABLISHED")
+
+        # A remedy applied here that did not help is a specific thing known,
+        # not just a lower average. Without it the second encounter repeats
+        # the first.
+        if (
+            outcome_profile.sample_size > 0
+            and outcome_profile.weighted_success_rate <= 0.0
+        ):
+            penalties["remedy_previously_ineffective"] = float(
+                maturity["ineffective_remedy_penalty"]
+            )
+            hard_flags.append("REMEDY_PREVIOUSLY_INEFFECTIVE")
 
         # Supervision is evidence about the proposer, not only the incident.
         # A recommendation humans routinely amend or decline is one the system

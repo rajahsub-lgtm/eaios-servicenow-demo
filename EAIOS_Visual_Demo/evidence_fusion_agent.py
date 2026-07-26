@@ -109,6 +109,10 @@ class EvidenceFusionAgent:
 
         self.scenarios = self._load("scenarios.json")
         self.known_errors = self._load("known_errors.json")
+        learned_path = self.json_dir / "learned_patterns.json"
+        if learned_path.exists():
+            with open(learned_path, encoding="utf-8") as f:
+                self.known_errors.extend(json.load(f))
         self.outcomes = self._load("outcome_history.json")
         self.changes = self._load("changes.json")
 
@@ -246,9 +250,12 @@ class EvidenceFusionAgent:
 
         candidates: list[HypothesisAssessment] = []
         for known_error in self.known_errors:
-            if known_error["knowledge_status"] != "Active":
+            # Mirrors the confidence engine's admissibility. The layers
+            # disagreeing about what is recallable is how a plan gets chosen
+            # on a premise the next stage refuses.
+            if known_error["knowledge_status"] not in {"Active", "Provisional"}:
                 continue
-            if known_error["trust_level"] != "Trusted":
+            if known_error["trust_level"] not in {"Trusted", "Provisional"}:
                 continue
             # Recall by presentation, matching the confidence engine. Testing
             # entity membership and symptom equality separately reproduces the
@@ -753,6 +760,30 @@ class EvidenceFusionAgent:
             ),
         )
 
+    @staticmethod
+    def _rejection_disclosure(proposal) -> str:
+        """State that a human rejected this before, and who.
+
+        A prior rejection lowers what the account is worth; it does not remove
+        it. Whoever sees this proposal next is entitled to know it has been
+        put up and turned down, so they can weigh that judgement rather than
+        unknowingly repeat or unknowingly defer to it.
+        """
+        if not proposal.prior_rejections:
+            return ""
+        who = ", ".join(proposal.rejected_by) or "a reviewer"
+        times = (
+            "once"
+            if proposal.prior_rejections == 1
+            else f"{proposal.prior_rejections} times"
+        )
+        return (
+            f" This account has been rejected {times} before for this "
+            f"component, by {who}. It is offered again because nothing else "
+            f"accounts for the presentation, not because that judgement was "
+            f"overruled; weigh it before confirming."
+        )
+
     def _documented_diagnosis(
         self,
         *,
@@ -863,6 +894,7 @@ class EvidenceFusionAgent:
                 f"diagnosis. Confirm the account against the live component "
                 f"before any change, and record the decision so the next "
                 f"occurrence is met with experience rather than a manual."
+                + self._rejection_disclosure(leading)
             ),
             validation_steps=steps,
             evidence_ledger=ledger,

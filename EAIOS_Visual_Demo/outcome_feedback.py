@@ -66,14 +66,24 @@ def feedback_from_assessment(
     outcome: OutcomeInput,
     *,
     outcome_id: str | None = None,
+    known_error_id: str | None = None,
 ) -> OutcomeFeedback:
+    """Record what happened, against the pattern it happened to.
+
+    ``known_error_id`` overrides the hypothesis the run led with. It is needed
+    whenever a human validation has minted a pattern between the run and the
+    outcome: the run led with the document that proposed the cause, and
+    attaching the result to that document would leave the new pattern with no
+    recorded cases — recorded but unable to mature, which is not learning.
+    """
     recommendation = assessment.recommendation
     context = assessment.skill_outputs["semantic_context"]
+    pattern_id = known_error_id or recommendation["leading_hypothesis_id"]
     return OutcomeFeedback(
         outcome_id=outcome_id or f"OUT-FEEDBACK-{uuid.uuid4().hex[:12].upper()}",
         correlation_id=assessment.correlation_id,
-        known_error_id=recommendation["leading_hypothesis_id"],
-        scenario_pattern=recommendation["leading_hypothesis_id"],
+        known_error_id=pattern_id,
+        scenario_pattern=pattern_id,
         entity_id=context["primary_component_id"],
         recommendation=recommendation["recommended_action"],
         approval_decision=outcome.approval_decision,

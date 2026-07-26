@@ -27,9 +27,28 @@
     "modification_rate_flag_threshold": 0.4,
     "rejection_penalty": 0.25,
     "notes": "A plan humans keep amending is a plan the system is not yet good at proposing unaided. Corrections are recorded already; ignoring them wastes the fastest teacher available, because supervision corrects before harm rather than after.",
-    "threshold_notes": "Amendment below a quarter is ordinary collaborative refinement and is not penalised \u2014 human-in-the-loop working as intended is not a defect. The penalty ramps from there and reaches full weight where a recommendation is amended more often than it is accepted as written. The ramp is deliberate: a cliff would make a case at 0.249 and a case at 0.251 differ by the whole penalty, which no operational reading of the evidence supports.",
+    "threshold_notes": "Amendment below a quarter is ordinary collaborative refinement and is not penalised — human-in-the-loop working as intended is not a defect. The penalty ramps from there and reaches full weight where a recommendation is amended more often than it is accepted as written. The ramp is deliberate: a cliff would make a case at 0.249 and a case at 0.251 differ by the whole penalty, which no operational reading of the evidence supports.",
     "flag_notes": "The blocking flag raises later than the penalty. Amendment should cost confidence well before it costs plan eligibility, because a flag removes options while a penalty only narrows them.",
     "minimum_sample_for_supervision_signal": 5,
-    "sample_notes": "Below this many recorded cases the amendment rate is not a rate \u2014 one amended case out of one reads as 100% and would attract the full penalty on the strength of a single observation. Thin evidence is already penalised as insufficient sample; charging it twice through a statistic that cannot be computed is double-counting, not caution."
+    "sample_notes": "Below this many recorded cases the amendment rate is not a rate — one amended case out of one reads as 100% and would attract the full penalty on the strength of a single observation. Thin evidence is already penalised as insufficient sample; charging it twice through a statistic that cannot be computed is double-counting, not caution."
+  },
+  "pattern_maturity": {
+    "admissible_knowledge_statuses": [
+      "Active",
+      "Provisional"
+    ],
+    "admissible_trust_levels": [
+      "Trusted",
+      "Provisional"
+    ],
+    "provisional_pattern_penalty": 0.22,
+    "ineffective_remedy_penalty": 0.3,
+    "notes": "Admissibility and worth are different questions, and the retrieval filter used to answer both at once by admitting only Active and Trusted patterns. That made a learned pattern unreachable and so unable to mature: it could be recorded and never recalled, which is not learning. Provisional patterns are now recalled and then discounted, the same shape as grading similarity rather than gating on it.",
+    "ineffective_notes": "A remedy that was applied here and did not help is not merely a lower success rate. It is a specific thing the system knows: this was tried on this component and the problem returned. Carrying that forward is what stops the second encounter repeating the first.",
+    "promotion": {
+      "minimum_successful_cases": 10,
+      "minimum_success_rate": 0.8,
+      "notes": "A provisional pattern that has been applied enough times, with a success rate that holds, has stopped being provisional. Without a promotion rule the discount is permanent and the system can never finish learning anything — it would carry a beginner's penalty on a pattern it has resolved a dozen times. Promotion is evaluated from the outcome record at read time rather than written back, so it reverses on its own if the success rate later falls: nothing has to remember to demote it."
+    }
   }
 }
