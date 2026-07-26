@@ -10,7 +10,7 @@
     "expected_confidence": "HIGH",
     "expected_safety_status": "REQUIRES_HUMAN_APPROVAL",
     "data_classification": "SYNTHETIC",
-    "display_name": "Payment connector \u2014 stable evidence",
+    "display_name": "Payment connector — stable evidence",
     "short_label": "Stable evidence",
     "scenario_category": "Baseline behaviour"
   },
@@ -25,7 +25,7 @@
     "expected_confidence": "MEDIUM",
     "expected_safety_status": "REQUIRES_HUMAN_APPROVAL",
     "data_classification": "SYNTHETIC",
-    "display_name": "Order queue \u2014 consumer lag under recent change",
+    "display_name": "Order queue — consumer lag under recent change",
     "short_label": "Queue lag",
     "scenario_category": "Baseline behaviour"
   },
@@ -37,7 +37,7 @@
     "primary_component_id": "COMP-PAY-CONNECTOR",
     "trigger_observation_id": "OBS-PAY-006",
     "data_classification": "SYNTHETIC",
-    "display_name": "Payment connector \u2014 contradictory knowledge",
+    "display_name": "Payment connector — contradictory knowledge",
     "short_label": "Contradiction",
     "scenario_category": "Confidence erosion"
   },
@@ -49,7 +49,7 @@
     "primary_component_id": "COMP-PAY-CONNECTOR",
     "trigger_observation_id": "OBS-PAY-006",
     "data_classification": "SYNTHETIC",
-    "display_name": "Payment connector \u2014 contradiction resolved",
+    "display_name": "Payment connector — contradiction resolved",
     "short_label": "Resolution",
     "scenario_category": "Confidence recovery"
   },
@@ -64,7 +64,7 @@
       "external_service_health"
     ],
     "data_classification": "SYNTHETIC",
-    "display_name": "GitHub and Teams \u2014 shared gateway dependency",
+    "display_name": "GitHub and Teams — shared gateway dependency",
     "short_label": "Shared gateway",
     "scenario_category": "Cross-platform dependency discovery"
   },
@@ -75,7 +75,7 @@
     "primary_service_id": "AS-ORDER-MGMT",
     "primary_component_id": "COMP-PAY-CONNECTOR-EU",
     "trigger_observation_id": "OBS-PAY-EU-001",
-    "display_name": "Payment connector (EU) \u2014 experience by analogy",
+    "display_name": "Payment connector (EU) — experience by analogy",
     "short_label": "Transferred",
     "scenario_category": "Experience transfer",
     "data_classification": "SYNTHETIC"
@@ -87,8 +87,20 @@
     "primary_service_id": "AS-ORDER-MGMT",
     "primary_component_id": "COMP-SEARCH-INDEXER",
     "trigger_observation_id": "OBS-SEARCH-001",
-    "display_name": "Search indexer \u2014 nothing comparable",
+    "display_name": "Search indexer — nothing comparable",
     "short_label": "Unseen",
+    "scenario_category": "No prior experience",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "scenario_id": "SCN-UNDOCUMENTED-001",
+    "name": "Reconciliation drift with neither experience nor documentation",
+    "description": "Nothing has been tried here and nothing has been written. The governed non-diagnosis is the only honest answer.",
+    "primary_service_id": "AS-ORDER-MGMT",
+    "primary_component_id": "COMP-LICENCE-RECONCILER",
+    "trigger_observation_id": "OBS-LICENCE-001",
+    "display_name": "Licence reconciler — nothing written either",
+    "short_label": "Undocumented",
     "scenario_category": "No prior experience",
     "data_classification": "SYNTHETIC"
   }

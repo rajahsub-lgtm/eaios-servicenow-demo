@@ -18,7 +18,11 @@
     "CREDIBLE_KNOWLEDGE_CONTRADICTION",
     "RECENT_HIGH_RISK_CHANGE",
     "KNOWLEDGE_VALIDATION_FAILED",
-    "OBSERVABILITY_COVERAGE_LOW"
+    "OBSERVABILITY_COVERAGE_LOW",
+    "HYPOTHESIS_FROM_DOCUMENTATION_ONLY",
+    "NO_RECORDED_EXPERIENCE",
+    "EXPERIENCE_TRANSFERRED_NOT_DIRECT",
+    "EXPERIENCE_HELD_ONLY_BY_PEER_AGENT"
   ],
   "control_profiles": {
     "KE-PAY-001": {
@@ -58,5 +62,6 @@
     }
   },
   "automation_exempt_known_errors": {},
-  "profile_coverage_note": "Every known error a scenario can select needs a control profile or an explicit exemption. Absent both, the evaluator reports reversibility, blast radius, and policy as failed purely because nobody described the action."
+  "profile_coverage_note": "Every known error a scenario can select needs a control profile or an explicit exemption. Absent both, the evaluator reports reversibility, blast radius, and policy as failed purely because nobody described the action.",
+  "suspension_note": "Automation readiness is suspended categorically for any hypothesis not backed by the system's own recorded outcomes. A documented procedure, an analogy from a sibling component, and a peer agent's finding are all legitimate bases for proposing a cause to a human and none of them is evidence that an action works here. Readiness asks whether this system has earned the right to act unattended, and only its own outcome history can answer that."
 }

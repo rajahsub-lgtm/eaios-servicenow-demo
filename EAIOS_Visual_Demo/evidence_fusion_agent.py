@@ -8,6 +8,10 @@ import json
 
 from case_fingerprint import CaseFingerprinter
 from case_similarity import CaseSimilarity, resolve_policy
+from documented_reasoning import (
+    DocumentationReasoner,
+    resolve_documentation_policy,
+)
 from knowledge_retrieval_agent import KnowledgeRetrievalAgent
 from telemetry_agent import TelemetryAnalysisAgent
 
@@ -99,6 +103,9 @@ class EvidenceFusionAgent:
         self.retrieval_agent = KnowledgeRetrievalAgent(self.json_dir)
         self.fingerprinter = CaseFingerprinter(self.json_dir)
         self.similarity = CaseSimilarity(resolve_policy(self.json_dir))
+        self.documentation = DocumentationReasoner(
+            self.json_dir, resolve_documentation_policy(self.json_dir)
+        )
 
         self.scenarios = self._load("scenarios.json")
         self.known_errors = self._load("known_errors.json")
@@ -746,6 +753,140 @@ class EvidenceFusionAgent:
             ),
         )
 
+    def _documented_diagnosis(
+        self,
+        *,
+        scenario,
+        telemetry,
+        retrieval,
+        recent_changes: list[dict],
+        vendor_health: dict | None,
+        proposals,
+    ) -> EvidenceFusionAssessment:
+        """A cause proposed from the written procedure, put up for validation.
+
+        This is weaker than every other hypothesis path and says so in every
+        field it fills: the score is held under the documentation ceiling, the
+        status is PROPOSED rather than LEADING, and the action asks a human to
+        confirm the account before anything is done to the system.
+        """
+        leading = proposals[0]
+        score = self.documentation.confidence_for(leading)
+        empty_history = OutcomeHistorySummary(
+            known_error_id="", scenario_pattern="", occurrences=0,
+            successful_outcomes=0, failed_outcomes=0, success_rate=0.0,
+            recurrence_rate=0.0, average_recovery_minutes=0.0,
+            average_evidence_usefulness=0.0, dominant_prior_confidence="LOW",
+        )
+        entity_id = (
+            telemetry.metric_summaries[0].entity_id
+            if telemetry.metric_summaries
+            else ""
+        )
+
+        def hypothesis(item, status: str) -> HypothesisAssessment:
+            return HypothesisAssessment(
+                hypothesis_id=item.document_id,
+                hypothesis_type="DOCUMENTED_NOT_EXPERIENCED",
+                title=item.title,
+                applies_to_entity_id=entity_id,
+                score=self.documentation.confidence_for(item),
+                confidence_level="LOW",
+                status=status,
+                historical_success_rate=0.0,
+                recent_failure_signal="NOT_APPLICABLE",
+                outcome_history=empty_history,
+                supporting_evidence_ids=[item.document_id],
+                uncertainty_factors=[
+                    "NO_COMPARABLE_RECORDED_EXPERIENCE",
+                    "CAUSE_PROPOSED_FROM_DOCUMENTATION_ONLY",
+                ],
+            )
+
+        ledger = list(self._vendor_contributions(vendor_health))
+        for item in proposals:
+            ledger.append(
+                EvidenceContribution(
+                    evidence_id=item.document_id,
+                    evidence_type="GOVERNED_KNOWLEDGE",
+                    evidence_class="DOCUMENTED_PROCEDURE",
+                    role="PROPOSES_CAUSE" if item is leading else "ALTERNATIVE",
+                    reliability=item.dimensions.get("document_trust", 0.0),
+                    contribution=item.support,
+                    rationale=(
+                        f"{item.document_type} owned by {item.owner}, trust "
+                        f"{item.trust_level}, last validated "
+                        f"{item.days_since_validation} days ago; covers "
+                        f"{item.symptom_coverage:.0%} of the presenting "
+                        f"symptoms. No outcome stands behind it."
+                    ),
+                    provenance=f"Governed knowledge document {item.document_id}",
+                )
+            )
+
+        steps = [
+            f"Validate the cause proposed by {leading.document_id} against the "
+            f"live component before acting on it.",
+            "Confirm whether any recent change touches the component or its "
+            "declared dependencies.",
+            "Record the human validation decision and the eventual resolution "
+            "as a governed outcome, so this presentation becomes recorded "
+            "experience rather than being read from the manual again.",
+        ]
+        if recent_changes:
+            steps.insert(
+                1,
+                "A recent high-risk change is in scope: establish whether it "
+                "is correlated before treating it as causal.",
+            )
+
+        return EvidenceFusionAssessment(
+            scenario_id=scenario["scenario_id"],
+            scenario_name=scenario["name"],
+            trigger_observation_id=telemetry.trigger_observation_id,
+            trigger_observed_at=telemetry.trigger_observed_at,
+            selected_strategy="Full Investigation",
+            confidence_level="LOW",
+            confidence_score=score,
+            safety_status="REQUIRES_HUMAN_APPROVAL",
+            human_approval_required=True,
+            leading_hypothesis=hypothesis(leading, "PROPOSED"),
+            alternative_hypotheses=[
+                hypothesis(item, "ALTERNATIVE") for item in proposals[1:]
+            ],
+            recommended_action=(
+                f"Nothing comparable has been resolved on this system, so no "
+                f"cause is drawn from experience. {leading.document_id} "
+                f"({leading.document_type}, owned by {leading.owner}) covers "
+                f"this presentation and proposes: {leading.recommended_action} "
+                f"Treat this as a proposal for human validation, not a "
+                f"diagnosis. Confirm the account against the live component "
+                f"before any change, and record the decision so the next "
+                f"occurrence is met with experience rather than a manual."
+            ),
+            validation_steps=steps,
+            evidence_ledger=ledger,
+            rejected_evidence_ids=sorted(
+                {c.source_id for c in retrieval.rejected_candidates}
+            ),
+            uncertainty_factors=[
+                "CAUSE_PROPOSED_FROM_DOCUMENTATION_ONLY",
+                "NO_COMPARABLE_RECORDED_EXPERIENCE",
+            ],
+            guardrail_reasons=[
+                "DOCUMENTED_HYPOTHESIS_REQUIRES_HUMAN_VALIDATION",
+                "NO_GOVERNED_PATTERN_ABOVE_SIMILARITY_FLOOR",
+            ],
+            reasoning_summary=(
+                f"No recorded case resembles this presentation, so the written "
+                f"procedure was consulted instead. {leading.document_id} "
+                f"covers {leading.symptom_coverage:.0%} of the presenting "
+                f"symptoms at trust {leading.trust_level}. Confidence is held "
+                f"at {score:.3f} by the documentation ceiling, because a "
+                f"procedure describes what should work, not what has."
+            ),
+        )
+
     def analyze(
         self,
         scenario_id: str,
@@ -769,6 +910,22 @@ class EvidenceFusionAgent:
         )
         if not known_error_candidates:
             # Nothing recorded resembles this closely enough to reason from.
+            # Before conceding that nothing is known, read what has been
+            # written: a procedure is a basis for a proposal a human can
+            # validate, which is how a first encounter becomes a second one.
+            documented = self.documentation.propose(
+                self.fingerprinter.for_scenario(scenario_id),
+                assessed_at=trigger_time,
+            )
+            if documented:
+                return self._documented_diagnosis(
+                    scenario=scenario,
+                    telemetry=telemetry,
+                    retrieval=retrieval,
+                    recent_changes=recent_changes,
+                    vendor_health=vendor_health,
+                    proposals=documented,
+                )
             # Saying so is an answer; failing is not. The run produces an
             # investigative recommendation, holds no hypothesis, and escalates.
             return self._non_diagnosis(

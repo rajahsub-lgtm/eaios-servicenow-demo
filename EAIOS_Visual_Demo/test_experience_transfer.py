@@ -4,6 +4,10 @@ A presentation it has resolved fifty times elsewhere should be recognised —
 and recognised *as an analogy*, which is weaker evidence than having treated
 it here. A presentation nothing resembles should produce a governed account
 of not knowing, not an exception.
+
+The non-diagnosis case is now a component with neither recorded experience nor
+written procedure. Where documentation exists, the system reads it instead;
+that path is asserted in test_documented_reasoning.py.
 """
 
 from pathlib import Path
@@ -16,7 +20,8 @@ ROOT = Path(__file__).resolve().parent
 
 DIRECT = "SCN-PAY-001"
 SIBLING = "SCN-PAY-EU-001"
-UNSEEN = "SCN-NOVEL-INDEX-001"
+UNSEEN = "SCN-UNDOCUMENTED-001"
+DOCUMENTED = "SCN-NOVEL-INDEX-001"
 
 _runs: dict = {}
 

@@ -177,10 +177,16 @@ class AdaptiveRecommendationAgent:
             if row.get("alternative_hypothesis_id")
         })
 
-        if fusion.leading_hypothesis.hypothesis_type == "NO_DIAGNOSIS":
-            # There is no hypothesis to caveat. Phrasing this like a normal
-            # recommendation would advise restarting something the run cannot
-            # explain, which is precisely the borrowed remedy it must refuse.
+        # Some findings carry their own wording because the wording is the
+        # finding. Restating them in the generic form loses exactly what makes
+        # them safe: a non-diagnosis becomes advice to restart something the
+        # run cannot explain, and a documented proposal becomes a "leading
+        # hypothesis" with neither its source named nor the absence of
+        # experience disclosed.
+        if fusion.leading_hypothesis.hypothesis_type in {
+            "NO_DIAGNOSIS",
+            "DOCUMENTED_NOT_EXPERIENCED",
+        }:
             action = fusion.recommended_action
         elif orchestration_mode == "ACCELERATED_VALIDATION":
             action = fusion.recommended_action

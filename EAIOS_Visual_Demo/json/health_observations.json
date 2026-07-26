@@ -286,5 +286,23 @@
     "threshold_breached": true,
     "observation_summary": "Index refresh lag rose sharply with no comparable recorded presentation.",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "observation_id": "OBS-LICENCE-001",
+    "scenario_id": "SCN-UNDOCUMENTED-001",
+    "source_record_id": "DT-OBS-LICENCE-001",
+    "external_service_id": "SVC-LICENCE-001",
+    "service_name": "Licence Reconciliation",
+    "entity_id": "COMP-LICENCE-RECONCILER",
+    "metric_id": "MET-LICENCE-DRIFT",
+    "metric_name": "Entitlement Reconciliation Drift",
+    "current_value": 412.0,
+    "threshold_value": 200.0,
+    "severity": "HIGH",
+    "observed_at": "2026-07-24 11:40:00",
+    "requires_enterprise_reasoning": true,
+    "threshold_breached": true,
+    "observation_summary": "Reconciliation drift rose sharply. No procedure covers this component and nothing comparable has been resolved.",
+    "data_classification": "SYNTHETIC"
   }
 ]

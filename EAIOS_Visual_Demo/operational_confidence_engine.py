@@ -9,6 +9,11 @@ import math
 
 from case_fingerprint import CaseFingerprinter
 from case_similarity import CaseSimilarity, resolve_policy
+from documented_reasoning import (
+    DocumentationReasoner,
+    DocumentedHypothesis,
+    resolve_documentation_policy,
+)
 from graph_engine import SemanticGraph
 
 
@@ -100,6 +105,9 @@ class OperationalConfidenceEngine:
         self.graph = SemanticGraph.from_json_directory(self.json_dir)
         self.fingerprinter = CaseFingerprinter(self.json_dir)
         self.similarity = CaseSimilarity(resolve_policy(self.json_dir))
+        self.documentation = DocumentationReasoner(
+            self.json_dir, resolve_documentation_policy(self.json_dir)
+        )
         trust_path = Path(policy_file).parent / "experience_trust_policy.json"
         if not trust_path.exists():
             trust_path = (
@@ -236,6 +244,22 @@ class OperationalConfidenceEngine:
             hard_flags = ["NO_APPLICABLE_KNOWN_ERROR"] + self._vendor_status_flags(
                 observed_entity_id
             )
+            # Nothing has been tried here. That is a reason to read the written
+            # procedure, not a reason to stop: a first encounter that cannot
+            # produce anything can never become a second one.
+            documented = self.documentation.propose(
+                self.fingerprinter.for_scenario(scenario_id),
+                assessed_at=assessed_at,
+            )
+            if documented:
+                return self._documented_assessment(
+                    scenario=scenario,
+                    trigger_id=trigger_id,
+                    assessed_at=assessed_at,
+                    observed_entity_id=observed_entity_id,
+                    proposals=documented,
+                    hard_flags=hard_flags,
+                )
             return OperationalConfidenceAssessment(
                 scenario_id=scenario_id,
                 scenario_name=scenario["name"],
@@ -358,6 +382,94 @@ class OperationalConfidenceEngine:
 
         matches.sort(key=lambda pair: pair[1].score, reverse=True)
         return matches
+
+    def _documented_assessment(
+        self,
+        *,
+        scenario: dict,
+        trigger_id: str,
+        assessed_at: datetime,
+        observed_entity_id: str,
+        proposals: list[DocumentedHypothesis],
+        hard_flags: list[str],
+    ) -> OperationalConfidenceAssessment:
+        """A cause proposed from the manual, held short of a diagnosis.
+
+        Everything here is deliberately weaker than the experience path. The
+        confidence is capped by policy, the plan cannot narrow, and the flags
+        say plainly that no outcome stands behind any of it.
+        """
+        leading = proposals[0]
+        score = self.documentation.confidence_for(leading)
+        flags = sorted(
+            set(hard_flags)
+            | {"HYPOTHESIS_FROM_DOCUMENTATION_ONLY", "NO_RECORDED_EXPERIENCE"}
+        )
+        if leading.freshness_credit <= 0.0:
+            flags.append("DOCUMENTATION_VALIDATION_LAPSED")
+        candidates = [
+            ConfidenceCandidate(
+                known_error_id=item.document_id,
+                title=item.title,
+                applies_to_entity_id=observed_entity_id,
+                symptom_category="",
+                confidence_score=self.documentation.confidence_for(item),
+                confidence_level="LOW",
+                factor_scores=dict(item.dimensions),
+                penalty_scores={},
+                evidence_coverage=item.symptom_coverage,
+                contradiction_level=1.0 - item.support,
+                hard_flags=["HYPOTHESIS_FROM_DOCUMENTATION_ONLY"],
+                outcome_profile=self._outcome_profile(
+                    known_error_id=item.document_id, assessed_at=assessed_at
+                ),
+                governed_knowledge_ids=[item.document_id],
+                recent_high_risk_change_ids=[],
+                similarity=item.support,
+                experience_class="DOCUMENTED",
+                similarity_reasons=item.reasons,
+            )
+            for item in proposals
+        ]
+        return OperationalConfidenceAssessment(
+            scenario_id=scenario["scenario_id"],
+            scenario_name=scenario["name"],
+            trigger_observation_id=trigger_id,
+            assessed_at=assessed_at.strftime(DATETIME_FORMAT),
+            observed_entity_id=observed_entity_id,
+            selected_known_error_id=leading.document_id,
+            selected_known_error_title=leading.title,
+            confidence_score=score,
+            confidence_level="LOW",
+            confidence_trend="ERODING",
+            drift_status="NONE",
+            evidence_coverage=leading.symptom_coverage,
+            contradiction_level=round(1.0 - leading.support, 3),
+            candidate_margin=round(
+                score
+                - (
+                    self.documentation.confidence_for(proposals[1])
+                    if len(proposals) > 1
+                    else 0.0
+                ),
+                3,
+            ),
+            hard_flags=sorted(set(flags)),
+            factor_scores=dict(leading.dimensions),
+            penalty_scores={},
+            candidate_assessments=candidates,
+            explanation=(
+                f"No comparable case has been resolved on this system, so no "
+                f"confidence was drawn from experience. A cause is proposed "
+                f"from {leading.document_id} ({leading.document_type}, trust "
+                f"{leading.trust_level}, last validated "
+                f"{leading.days_since_validation} days ago), owned by "
+                f"{leading.owner}. Confidence is held at {score:.3f} by the "
+                f"documentation ceiling: a written procedure is a basis for a "
+                f"proposal, not evidence that it works here. Full "
+                f"investigation and human validation are required."
+            ),
+        )
 
     def _assess_candidate(
         self,

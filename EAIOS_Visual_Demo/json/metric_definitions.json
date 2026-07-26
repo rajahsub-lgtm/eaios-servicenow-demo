@@ -235,5 +235,21 @@
       "INDEX_REFRESH_STALL"
     ],
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "metric_id": "MET-LICENCE-DRIFT",
+    "name": "Entitlement Reconciliation Drift",
+    "description": "Count of entitlements that failed to reconcile in a cycle.",
+    "unit": "records",
+    "aggregation": "per cycle",
+    "warning_threshold": 50.0,
+    "critical_threshold": 200.0,
+    "higher_is_worse": true,
+    "owner": "IT Asset Management",
+    "source_system": "Synthetic OpenTelemetry",
+    "symptom_categories": [
+      "ENTITLEMENT_RECONCILIATION_DRIFT"
+    ],
+    "data_classification": "SYNTHETIC"
   }
 ]

@@ -277,5 +277,37 @@
     "body": "Loss of authenticated repository access halts code review and release activity across engineering teams. Loss of meeting join affects scheduled customer and internal sessions. When both occur together the organisation loses both delivery and coordination capacity at once, which is materially worse than either alone and should raise incident priority regardless of individual platform severity.",
     "recommended_action": "Treat concurrent delivery and collaboration loss as higher priority than either platform alone.",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "document_id": "RB-SEARCH-001",
+    "document_type": "RUNBOOK",
+    "title": "Runbook: Search Index Refresh Stall",
+    "entity_ids": "COMP-SEARCH-INDEXER",
+    "symptom_categories": "INDEX_REFRESH_STALL",
+    "status": "Published",
+    "trust_level": "Trusted",
+    "content_safety_status": "SAFE",
+    "published_at": "2026-04-18",
+    "last_validated_at": "2026-06-30",
+    "owner": "Knowledge Platform Team",
+    "recommended_action": "Confirm the indexing queue is draining, check for a stuck segment merge, and verify the commit interval against the configured refresh policy before restarting the indexer.",
+    "body": "Refresh lag rises when the indexer cannot commit segments as fast as documents change. The usual causes are a stalled segment merge holding a write lock, a commit interval misaligned with ingest volume, or back-pressure from the document source. Establish which of the three applies before acting: restarting the indexer clears a stuck merge but hides a back-pressure problem, which then returns.",
+    "data_classification": "SYNTHETIC"
+  },
+  {
+    "document_id": "WIKI-SEARCH-014",
+    "document_type": "WIKI",
+    "title": "Search feels slow — things to try",
+    "entity_ids": "COMP-SEARCH-INDEXER",
+    "symptom_categories": "INDEX_REFRESH_STALL",
+    "status": "Published",
+    "trust_level": "Unverified",
+    "content_safety_status": "SAFE",
+    "published_at": "2025-02-11",
+    "last_validated_at": "2025-02-11",
+    "owner": "Unassigned",
+    "recommended_action": "Just restart the indexer, usually clears it.",
+    "body": "Someone said restarting the indexer fixes this. Has not been checked against the current platform version.",
+    "data_classification": "SYNTHETIC"
   }
 ]

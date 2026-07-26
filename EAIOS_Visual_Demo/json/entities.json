@@ -406,5 +406,19 @@
     "trust_level": "TRUSTED",
     "service_provider_type": "INTERNAL",
     "data_classification": "SYNTHETIC"
+  },
+  {
+    "entity_id": "COMP-LICENCE-RECONCILER",
+    "entity_type": "SERVICE_COMPONENT",
+    "name": "Licence Reconciliation Worker",
+    "external_service_id": "SVC-LICENCE-001",
+    "environment": "Production",
+    "owner": "IT Asset Management",
+    "status": "ACTIVE",
+    "description": "Reconciles software entitlements against observed installs.",
+    "source_system": "Synthetic Enterprise Portfolio",
+    "trust_level": "TRUSTED",
+    "service_provider_type": "INTERNAL",
+    "data_classification": "SYNTHETIC"
   }
 ]

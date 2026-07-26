@@ -1,0 +1,45 @@
+{
+  "policy_version": "1.0",
+  "notes": "What a written procedure is worth when nothing has ever been tried. Documentation is how an experienced practitioner starts on a case they have never seen: it is a real basis for a proposal and it is not experience. This policy keeps those two things apart.",
+  "eligibility": {
+    "required_status": "Published",
+    "required_content_safety_status": "SAFE",
+    "minimum_symptom_coverage": 0.5,
+    "require_entity_match": true,
+    "notes": "A document must actually be about this component and this symptom. Lexical relevance is enough to surface a document for a human to read; it is not enough to propose a cause from it."
+  },
+  "support_weights": {
+    "symptom_coverage": 0.40,
+    "document_trust": 0.30,
+    "document_type": 0.18,
+    "freshness": 0.12
+  },
+  "trust_weights": {
+    "Trusted": 1.0,
+    "Provisional": 0.6,
+    "Unverified": 0.25,
+    "Deprecated": 0.0
+  },
+  "document_type_weights": {
+    "RUNBOOK": 1.0,
+    "KB": 0.9,
+    "PIR": 0.8,
+    "CHG_NOTE": 0.5,
+    "WIKI": 0.3
+  },
+  "freshness": {
+    "full_credit_days": 90,
+    "no_credit_days": 540,
+    "notes": "A procedure validated last month and one validated eighteen months ago are not equally reliable descriptions of a system that has changed since. Credit decays linearly between the two bounds rather than expiring on a date, because nothing about a document changes on its anniversary."
+  },
+  "ceiling": {
+    "maximum_documented_confidence": 0.45,
+    "never_narrows_the_plan": true,
+    "notes": "A documented hypothesis can never reach the accelerated plan and can never clear the approval requirement, however trusted and current the document is. Trust in a document is trust in its author; it is not evidence that the remedy works on this system. The ceiling sits below the MEDIUM confidence band deliberately, so a documented proposal cannot be mistaken for a validated one at a glance."
+  },
+  "disclosure": {
+    "name_the_source": true,
+    "state_the_absence_of_experience": true,
+    "notes": "The recommendation must say which document it came from and that nothing comparable has been resolved before. A proposal a human cannot trace is a proposal a human cannot validate, and validation is the entire purpose of making it."
+  }
+}

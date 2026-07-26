@@ -62,10 +62,18 @@ class ProfileCoverageTests(unittest.TestCase):
     def test_every_reachable_known_error_is_described_or_exempt(self):
         described = set(policy()["control_profiles"])
         exempt = set(policy().get("automation_exempt_known_errors", {}))
+        suspended = set(policy()["suspension_hard_flags"])
         e = engine()
         for scenario_id in scenario_ids():
-            known_error = e.assess(scenario_id).selected_known_error_id
+            assessment = e.assess(scenario_id)
+            known_error = assessment.selected_known_error_id
             if known_error is None:
+                continue
+            if suspended & set(assessment.hard_flags):
+                # Readiness is already suspended for a stated governance
+                # reason. This test guards against readiness being blocked
+                # merely because nobody described the action, which is the
+                # opposite situation.
                 continue
             with self.subTest(scenario=scenario_id, known_error=known_error):
                 self.assertIn(
