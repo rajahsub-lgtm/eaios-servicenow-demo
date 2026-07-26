@@ -642,7 +642,7 @@ class OperationalConfidenceEngine:
         # status that had to be demoted by someone would eventually be wrong.
         established = (
             outcome_profile.sample_size
-            >= int(promotion["minimum_successful_cases"])
+            >= int(thresholds["minimum_outcome_sample"])
             and outcome_profile.weighted_success_rate
             >= float(promotion["minimum_success_rate"])
         )
@@ -669,6 +669,25 @@ class OperationalConfidenceEngine:
                 maturity["ineffective_remedy_penalty"]
             )
             hard_flags.append("REMEDY_PREVIOUSLY_INEFFECTIVE")
+
+        # A human rejected this account for this component. That is evidence
+        # it did not hold, weighed as evidence — the pattern stays recallable
+        # and costs confidence, because a human can reject wrongly and a
+        # system that treats one rejection as final makes their error
+        # unfalsifiable.
+        rejections = self.experience.refutations_against(known_error)
+        if rejections:
+            penalties["account_previously_rejected"] = round(
+                min(
+                    0.30,
+                    float(
+                        self.trust_policy["supervision"]["rejection_penalty"]
+                    )
+                    * len(rejections),
+                ),
+                3,
+            )
+            hard_flags.append("PATTERN_ACCOUNT_PREVIOUSLY_REJECTED")
 
         # Supervision is evidence about the proposer, not only the incident.
         # A recommendation humans routinely amend or decline is one the system

@@ -108,6 +108,12 @@ class SemanticGraph:
 
         add_operational_nodes("health_observations.json", "observation_id", "HEALTH_OBSERVATION", "observation_summary")
         add_operational_nodes("known_errors.json", "known_error_id", "KNOWN_ERROR", "title")
+        # Patterns the system arrived at itself are nodes too. Without
+        # this a learned pattern cannot be the object of an APPLIES_TO
+        # edge, so no expert could ever declare it applicable to a
+        # component — not because it has not earned the declaration but
+        # because there is nothing to attach one to.
+        add_operational_nodes("learned_patterns.json", "known_error_id", "KNOWN_ERROR", "title")
         add_operational_nodes("changes.json", "change_id", "CHANGE", "short_description")
         add_operational_nodes("knowledge_documents.json", "document_id", "KNOWLEDGE_DOCUMENT", "title")
         return cls(entities_by_id.values(), relationships)

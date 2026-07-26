@@ -46,9 +46,9 @@
     "notes": "Admissibility and worth are different questions, and the retrieval filter used to answer both at once by admitting only Active and Trusted patterns. That made a learned pattern unreachable and so unable to mature: it could be recorded and never recalled, which is not learning. Provisional patterns are now recalled and then discounted, the same shape as grading similarity rather than gating on it.",
     "ineffective_notes": "A remedy that was applied here and did not help is not merely a lower success rate. It is a specific thing the system knows: this was tried on this component and the problem returned. Carrying that forward is what stops the second encounter repeating the first.",
     "promotion": {
-      "minimum_successful_cases": 10,
       "minimum_success_rate": 0.8,
-      "notes": "A provisional pattern that has been applied enough times, with a success rate that holds, has stopped being provisional. Without a promotion rule the discount is permanent and the system can never finish learning anything — it would carry a beginner's penalty on a pattern it has resolved a dozen times. Promotion is evaluated from the outcome record at read time rather than written back, so it reverses on its own if the success rate later falls: nothing has to remember to demote it."
+      "notes": "A provisional pattern that has been applied enough times, with a success rate that holds, has stopped being provisional. How many is enough is not defined here: it is the same question confidence_policy already answers with minimum_outcome_sample, and answering it twice let a pattern shed its provisional penalty at ten cases while still being flagged as insufficiently evidenced until fifteen. Promotion is evaluated from the outcome record at read time rather than written back, so it reverses on its own if the success rate later falls.",
+      "sample_source": "confidence_policy.thresholds.minimum_outcome_sample"
     }
   }
 }

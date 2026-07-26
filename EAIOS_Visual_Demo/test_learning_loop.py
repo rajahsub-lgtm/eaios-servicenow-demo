@@ -216,12 +216,18 @@ class MaturityTests(unittest.TestCase):
 
     def test_an_established_pattern_sheds_the_provisional_penalty(self):
         """Without promotion the discount is permanent and the system can
-        never finish learning anything."""
+        never finish learning anything.
+
+        Fifteen cases, not twelve: promotion no longer carries its own
+        sufficiency threshold and reads minimum_outcome_sample instead, so a
+        pattern can no longer shed its provisional penalty while still being
+        flagged as insufficiently evidenced.
+        """
         with TemporaryDirectory() as directory:
             loop = Loop(directory)
             first = loop.run()
             pattern = loop.validate(first, CONFIRMED)
-            loop.record(first, pattern.known_error_id, worked=True, count=12)
+            loop.record(first, pattern.known_error_id, worked=True, count=15)
             assessment = loop.engine().assess(RECURRENCE)
             self.assertNotIn(
                 "PATTERN_PROVISIONAL_NOT_ESTABLISHED", assessment.hard_flags
@@ -233,7 +239,7 @@ class MaturityTests(unittest.TestCase):
             loop = Loop(directory)
             first = loop.run()
             pattern = loop.validate(first, CONFIRMED)
-            loop.record(first, pattern.known_error_id, worked=False, count=12)
+            loop.record(first, pattern.known_error_id, worked=False, count=15)
             self.assertIn(
                 "PATTERN_PROVISIONAL_NOT_ESTABLISHED",
                 loop.engine().assess(RECURRENCE).hard_flags,

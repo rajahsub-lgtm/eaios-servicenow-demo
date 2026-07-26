@@ -44,6 +44,7 @@ class ExperienceLedger:
         self.trust_policy = trust_policy
         self.agent_registry = agent_registry or {}
         self.maturity = trust_policy["pattern_maturity"]
+        self.refutations = self.load_refutations(self.json_dir)
 
     # -- loading -----------------------------------------------------------
 
@@ -68,6 +69,15 @@ class ExperienceLedger:
                 )
             rows.extend(extra)
         return rows
+
+    @staticmethod
+    def load_refutations(json_dir: str | Path) -> list[dict]:
+        """Accounts a human has rejected, and for which component."""
+        ledger = Path(json_dir) / "refutation_ledger.json"
+        if not ledger.exists():
+            return []
+        with open(ledger, encoding="utf-8") as f:
+            return json.load(f)
 
     @staticmethod
     def load_patterns(json_dir: str | Path) -> list[dict]:
@@ -113,6 +123,27 @@ class ExperienceLedger:
             pattern
             for pattern in patterns
             if self.is_admissible(pattern, assessed_at)
+        ]
+
+    def refutations_against(self, pattern: dict) -> list[dict]:
+        """Rejections recorded against this pattern or the account it came from.
+
+        A refutation names the account and the component, not the record that
+        happens to hold it. Rejecting a cause read from a runbook and then
+        learning a pattern from that same runbook must not launder the
+        rejection away — until this, it did: the document was attenuated and
+        the pattern built from it was untouched.
+        """
+        entity_id = pattern.get("applies_to_entity_id", "")
+        accounts = {
+            pattern.get("known_error_id", ""),
+            pattern.get("learned_from_document_id", ""),
+        } - {""}
+        return [
+            row
+            for row in self.refutations
+            if row.get("entity_id") == entity_id
+            and row.get("hypothesis_id") in accounts
         ]
 
     # -- history -----------------------------------------------------------

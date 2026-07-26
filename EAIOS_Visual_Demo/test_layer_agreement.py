@@ -216,47 +216,56 @@ class TheyReadTheSamePastTests(unittest.TestCase):
                 )
 
     def test_refutations_are_not_read_by_documentation_alone(self):
-        """A rejection lowers a document's support while a learned pattern
-        built from that same cause is untouched."""
-        readers = [
+        """A rejection must reach the pattern, not only the document.
+
+        Rejecting a cause read from a runbook and then learning a pattern from
+        that same runbook laundered the rejection away: the document was
+        attenuated and the pattern built from it was untouched.
+
+        The reader is the shared ledger rather than either layer directly,
+        which is the point — both layers get the same answer because neither
+        looks it up itself.
+        """
+        readers = {
             path.name
             for path in ROOT.glob("*.py")
             if not path.name.startswith(("test_", "demo_"))
             and "refutation_ledger" in path.read_text(encoding="utf-8")
-        ]
+        }
         self.assertIn("documented_reasoning.py", readers)
-        self.assertTrue(
-            {"operational_confidence_engine.py", "evidence_fusion_agent.py"}
-            & set(readers),
-            "refutations attenuate documents but not learned patterns",
+        self.assertIn("experience_ledger.py", readers)
+        engine = (ROOT / "operational_confidence_engine.py").read_text(
+            encoding="utf-8"
         )
+        self.assertIn("refutations_against", engine)
 
 
 class ThresholdsAreStatedOnceTests(unittest.TestCase):
     def test_experience_sufficiency_has_one_definition(self):
-        """Promotion fires at ten successful cases while
-        minimum_outcome_sample is fifteen, so a pattern sheds its provisional
-        penalty while still flagged as insufficiently evidenced."""
+        """How many cases is enough is answered in one place.
+
+        Promotion used to carry its own number: a pattern shed its provisional
+        penalty at ten cases while still being flagged as insufficiently
+        evidenced until fifteen. The fix is not to make two numbers agree —
+        two numbers that must agree will eventually stop agreeing — but for
+        promotion to read the one confidence_policy already defines.
+        """
         import json
 
-        confidence = json.loads(
-            (ROOT / "config" / "confidence_policy.json").read_text(
-                encoding="utf-8"
-            )
-        )
         trust = json.loads(
             (ROOT / "config" / "experience_trust_policy.json").read_text(
                 encoding="utf-8"
             )
         )
+        promotion = trust["pattern_maturity"]["promotion"]
+        self.assertNotIn(
+            "minimum_successful_cases",
+            promotion,
+            "promotion defines its own sufficiency threshold again",
+        )
         self.assertEqual(
-            int(confidence["thresholds"]["minimum_outcome_sample"]),
-            int(
-                trust["pattern_maturity"]["promotion"][
-                    "minimum_successful_cases"
-                ]
-            ),
-            "two policies disagree about when experience is enough",
+            promotion["sample_source"],
+            "confidence_policy.thresholds.minimum_outcome_sample",
         )
 
 
