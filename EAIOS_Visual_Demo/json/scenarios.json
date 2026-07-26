@@ -12,7 +12,9 @@
     "data_classification": "SYNTHETIC",
     "display_name": "Payment connector — stable evidence",
     "short_label": "Stable evidence",
-    "scenario_category": "Baseline behaviour"
+    "scenario_category": "Baseline behaviour",
+    "narrative_beat": 1,
+    "narrative_claim": "It has seen this 49 times"
   },
   {
     "scenario_id": "SCN-QUEUE-001",
@@ -39,7 +41,9 @@
     "data_classification": "SYNTHETIC",
     "display_name": "Payment connector — contradictory knowledge",
     "short_label": "Contradiction",
-    "scenario_category": "Confidence erosion"
+    "scenario_category": "Confidence erosion",
+    "narrative_beat": 2,
+    "narrative_claim": "Confidence is earned, and can be lost mid-run"
   },
   {
     "scenario_id": "SCN-PAY-RESOLVED-001",
@@ -51,7 +55,9 @@
     "data_classification": "SYNTHETIC",
     "display_name": "Payment connector — contradiction resolved",
     "short_label": "Resolution",
-    "scenario_category": "Confidence recovery"
+    "scenario_category": "Confidence recovery",
+    "narrative_beat": 2,
+    "narrative_claim": "Recovery is capped below the loss"
   },
   {
     "scenario_id": "SCN-CROSS-GATEWAY-001",
@@ -66,7 +72,9 @@
     "data_classification": "SYNTHETIC",
     "display_name": "GitHub and Teams — shared gateway dependency",
     "short_label": "Shared gateway",
-    "scenario_category": "Cross-platform dependency discovery"
+    "scenario_category": "Cross-platform dependency discovery",
+    "narrative_beat": 3,
+    "narrative_claim": "One cause, two platforms, found by traversal"
   },
   {
     "scenario_id": "SCN-PAY-EU-001",
@@ -78,7 +86,9 @@
     "display_name": "Payment connector (EU) — experience by analogy",
     "short_label": "Transferred",
     "scenario_category": "Experience transfer",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "narrative_beat": 4,
+    "narrative_claim": "Never here, but fifty times next door"
   },
   {
     "scenario_id": "SCN-NOVEL-INDEX-001",
@@ -90,7 +100,9 @@
     "display_name": "Search indexer — nothing comparable",
     "short_label": "Unseen",
     "scenario_category": "No prior experience",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "narrative_beat": 5,
+    "narrative_claim": "Never seen: read the manual, propose, do not diagnose"
   },
   {
     "scenario_id": "SCN-UNDOCUMENTED-001",
@@ -102,7 +114,9 @@
     "display_name": "Licence reconciler — nothing written either",
     "short_label": "Undocumented",
     "scenario_category": "No prior experience",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "narrative_beat": 5,
+    "narrative_claim": "Nothing written either: say so"
   },
   {
     "scenario_id": "SCN-INDEX-RECUR-001",
@@ -114,6 +128,8 @@
     "display_name": "Search indexer — seen once before",
     "short_label": "Recurrence",
     "scenario_category": "Learned from experience",
-    "data_classification": "SYNTHETIC"
+    "data_classification": "SYNTHETIC",
+    "narrative_beat": 6,
+    "narrative_claim": "Seen once before, and it matters how that went"
   }
 ]

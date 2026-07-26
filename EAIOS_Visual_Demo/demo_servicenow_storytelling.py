@@ -259,23 +259,29 @@ def main() -> None:
         ROOT / "config" / "servicenow_field_mapping.json"
     )
 
-    stable = orchestrator.execute(
-        correlation_id="EAIOS-DEMO-STABLE-001",
-        scenario_id="SCN-PAY-001",
-    )
-    contradiction = orchestrator.execute(
-        correlation_id="EAIOS-DEMO-CONTRADICTION-001",
-        scenario_id="SCN-PAY-CONTRADICT-001",
-    )
-    resolved = orchestrator.execute(
-        correlation_id="EAIOS-DEMO-RESOLVED-001",
-        scenario_id="SCN-PAY-RESOLVED-001",
-    )
-    cross_platform = orchestrator.execute(
-        correlation_id="EAIOS-DEMO-CROSS-GATEWAY-001",
-        scenario_id="SCN-CROSS-GATEWAY-001",
-    )
-    assessments = [stable, contradiction, resolved, cross_platform]
+    # Generated in narrative order: the selector follows this list, so the
+    # order here is the order a panel meets the argument. Each beat raises the
+    # question the next one answers.
+    #
+    # The recurrence is deliberately absent. It only exists after a human has
+    # validated a proposal and an outcome has been recorded, so a static
+    # bundle entry would show it falling back to documentation and quietly
+    # misrepresent the thing it exists to demonstrate. It runs live in its
+    # own tab instead.
+    story = [
+        ("EAIOS-DEMO-STABLE-001", "SCN-PAY-001"),
+        ("EAIOS-DEMO-CONTRADICTION-001", "SCN-PAY-CONTRADICT-001"),
+        ("EAIOS-DEMO-RESOLVED-001", "SCN-PAY-RESOLVED-001"),
+        ("EAIOS-DEMO-CROSS-GATEWAY-001", "SCN-CROSS-GATEWAY-001"),
+        ("EAIOS-DEMO-TRANSFERRED-001", "SCN-PAY-EU-001"),
+        ("EAIOS-DEMO-UNSEEN-001", "SCN-NOVEL-INDEX-001"),
+        ("EAIOS-DEMO-UNDOCUMENTED-001", "SCN-UNDOCUMENTED-001"),
+    ]
+    assessments = [
+        orchestrator.execute(correlation_id=correlation_id, scenario_id=scenario_id)
+        for correlation_id, scenario_id in story
+    ]
+    stable, contradiction, resolved, cross_platform = assessments[:4]
 
     bundle = {
         "demo_version": "V1 ServiceNow Storytelling",

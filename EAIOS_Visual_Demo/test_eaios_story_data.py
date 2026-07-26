@@ -9,13 +9,19 @@ BASE_DIR = Path(__file__).resolve().parent
 def test_repository_loads_every_demonstration_assessment() -> None:
     repo = StoryRepository.load(BASE_DIR)
     labels = repo.assessment_labels()
-    assert len(repo.assessments) == 4
-    assert set(labels) == {
+    # The seven beats of the demonstration arc, in the order a panel meets
+    # them. The count is asserted through the set rather than separately, so
+    # adding a beat cannot pass by updating a number and forgetting the story.
+    assert list(labels) == [
         "EAIOS-DEMO-STABLE-001",
         "EAIOS-DEMO-CONTRADICTION-001",
         "EAIOS-DEMO-RESOLVED-001",
         "EAIOS-DEMO-CROSS-GATEWAY-001",
-    }
+        "EAIOS-DEMO-TRANSFERRED-001",
+        "EAIOS-DEMO-UNSEEN-001",
+        "EAIOS-DEMO-UNDOCUMENTED-001",
+    ]
+    assert len(repo.assessments) == len(labels)
 
 
 def test_each_scenario_gets_a_distinct_label() -> None:

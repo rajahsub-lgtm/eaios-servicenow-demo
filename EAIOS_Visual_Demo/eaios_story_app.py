@@ -241,24 +241,7 @@ def plan_transition_html(assessment: dict[str, Any], delta: dict[str, Any]) -> s
             + "</div>"
         )
 
-    return f"""
-    <div class="eaios-section-label">Adaptive plan revision</div>
-    <div style="display:grid;grid-template-columns:1fr 80px 1fr;gap:.75rem;align-items:stretch;">
-      <div class="eaios-plan">
-        <div class="eaios-plan-title">Initial · {safe_text(format_identifier(assessment['initial_plan_mode']))}</div>
-        <div>{chips(delta['initial'])}</div>
-        <div style="margin-top:.8rem;opacity:.72;">{assessment['initial_agent_count']} qualified agents selected</div>
-      </div>
-      <div class="eaios-arrow">→</div>
-      <div class="eaios-plan">
-        <div class="eaios-plan-title">Final · {safe_text(format_identifier(assessment['final_plan_mode']))}</div>
-        <div>{chips(delta['preserved'])}</div>
-        <div style="margin-top:.45rem;">{chips(delta['added'], 'added')}</div>
-        {cancelled_block}
-        <div style="margin-top:.8rem;opacity:.72;">{assessment['final_agent_count']} qualified agents executed</div>
-      </div>
-    </div>
-    """
+    return f"""<div class="eaios-section-label">Adaptive plan revision</div><div style="display:grid;grid-template-columns:1fr 80px 1fr;gap:.75rem;align-items:stretch;"><div class="eaios-plan"><div class="eaios-plan-title">Initial · {safe_text(format_identifier(assessment['initial_plan_mode']))}</div><div>{chips(delta['initial'])}</div><div style="margin-top:.8rem;opacity:.72;">{assessment['initial_agent_count']} qualified agents selected</div></div><div class="eaios-arrow">→</div><div class="eaios-plan"><div class="eaios-plan-title">Final · {safe_text(format_identifier(assessment['final_plan_mode']))}</div><div>{chips(delta['preserved'])}</div><div style="margin-top:.45rem;">{chips(delta['added'], 'added')}</div>{cancelled_block}<div style="margin-top:.8rem;opacity:.72;">{assessment['final_agent_count']} qualified agents executed</div></div></div>"""
 
 
 def render_timeline(events: pd.DataFrame) -> None:
@@ -283,6 +266,54 @@ def render_timeline(events: pd.DataFrame) -> None:
             after = row.get("confidence_after")
             if pd.notna(before) or pd.notna(after):
                 st.caption(f"Confidence: {before if pd.notna(before) else '—'} → {after if pd.notna(after) else '—'}")
+
+
+def _steady_plan_callout(assessment: dict[str, Any]) -> str:
+    """What a run that never changed plan actually demonstrated.
+
+    A plan that did not move can mean two opposite things: confidence was high
+    enough that the narrow plan was always right, or it was low enough that the
+    wide plan was always right. This branch used to assume the first and said
+    so on every scenario that reached it, which meant the most prominent text
+    on screen claimed "confidence stayed high" over a 0.45 LOW assessment
+    running the full investigation. A blank panel is a smaller problem than a
+    confident false statement.
+    """
+    factors = set(assessment.get("recommendation", {}).get("uncertainty_factors", []))
+    hypothesis = assessment.get("recommendation", {}).get("leading_hypothesis_id", "")
+
+    if assessment.get("final_plan_mode") == "ACCELERATED_VALIDATION":
+        return (
+            "<b>Efficient behavior demonstrated:</b> trusted evidence remained coherent, "
+            "confidence stayed high, and EAIOS retained the smallest governed skill plan "
+            "needed for a recommendation."
+        )
+    if hypothesis == "NO_GOVERNED_PATTERN":
+        return (
+            "<b>Governed non-diagnosis demonstrated:</b> nothing in recorded experience or "
+            "written procedure accounts for this presentation, so no cause is proposed. The "
+            "plan stays wide and the case escalates for direction rather than borrowing a "
+            "remedy from an unrelated pattern."
+        )
+    if "HYPOTHESIS_FROM_DOCUMENTATION_ONLY" in factors:
+        return (
+            "<b>Reasoning from documentation demonstrated:</b> nothing comparable has been "
+            "resolved here, so a cause is proposed from the written procedure and named as "
+            "its source. Confidence is held below the level any experience would earn, the "
+            "full plan runs, and a human validates before anything is done."
+        )
+    if "EXPERIENCE_TRANSFERRED_NOT_DIRECT" in factors:
+        return (
+            "<b>Transferred experience demonstrated:</b> a pattern resolved many times on a "
+            "sibling component is recognised here and recorded as an analogy. It raises "
+            "confidence and is explicitly not allowed to buy the shortened plan that "
+            "firsthand experience earns."
+        )
+    return (
+        "<b>Held-wide plan demonstrated:</b> confidence never reached the level that would "
+        "justify narrowing, so the full governed investigation ran throughout and human "
+        "approval remains mandatory."
+    )
 
 
 def render_adaptive_story(
@@ -982,10 +1013,11 @@ def main() -> None:
 
     labels = repo.assessment_labels()
     correlation_ids = list(labels)
-    default_index = next(
-        (index for index, cid in enumerate(correlation_ids) if "CONTRADICTION" in cid),
-        0,
-    )
+    # The bundle is generated in narrative order, so the arc opens where the
+    # story does. It used to open on the contradiction, which was the most
+    # interesting scenario when there were four; with seven it drops a panel
+    # into the middle of an argument whose first move they have not seen.
+    default_index = 0
 
     with st.sidebar:
         st.markdown("## EAIOS Story Controls")
@@ -1058,11 +1090,7 @@ def main() -> None:
             "so EAIOS narrowed the governed plan and cancelled work that was no longer justified."
         )
     else:
-        callout = (
-            "<b>Efficient behavior demonstrated:</b> trusted evidence remained coherent, confidence "
-            "stayed high, and EAIOS retained the smallest governed skill plan needed for a "
-            "recommendation."
-        )
+        callout = _steady_plan_callout(assessment)
     st.markdown(
         f'<div class="eaios-callout">{callout}</div>',
         unsafe_allow_html=True,
