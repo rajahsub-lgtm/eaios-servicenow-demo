@@ -2,12 +2,13 @@
   "policy_version": "1.0",
   "notes": "How alike two cases must be before recorded experience is allowed to inform a new one. These are operational judgements, not engineering constants. Symptom overlap outweighs entity identity deliberately: what is happening is more diagnostic than where it is happening. Weighting them the other way reproduces anchoring bias, where a familiar component presenting an unfamiliar symptom attracts the familiar diagnosis.",
   "dimension_weights": {
-    "symptom_overlap": 0.34,
-    "same_entity": 0.26,
-    "structural_position": 0.2,
-    "entity_kind": 0.08,
-    "capability_overlap": 0.08,
-    "severity_band": 0.04
+    "declared_applicability": 0.28,
+    "symptom_overlap": 0.26,
+    "same_entity": 0.18,
+    "structural_position": 0.14,
+    "entity_kind": 0.06,
+    "capability_overlap": 0.05,
+    "severity_band": 0.03
   },
   "thresholds": {
     "minimum_similarity_to_consider": 0.35,

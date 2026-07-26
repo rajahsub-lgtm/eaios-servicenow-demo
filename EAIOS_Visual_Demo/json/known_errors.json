@@ -144,7 +144,11 @@
     "valid_from": "2026-06-01",
     "valid_to": "",
     "data_classification": "SYNTHETIC",
-    "hypothesis_class": "INTERNAL"
+    "hypothesis_class": "INTERNAL",
+    "symptom_categories": [
+      "GATEWAY_SESSION_DISRUPTION",
+      "SAAS_ACCESS_FAILURE"
+    ]
   },
   {
     "known_error_id": "KE-VENDOR-SAAS-001",

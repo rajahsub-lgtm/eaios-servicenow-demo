@@ -7,6 +7,8 @@ from typing import Iterable
 import json
 import math
 
+from case_fingerprint import CaseFingerprinter
+from case_similarity import CaseSimilarity
 from graph_engine import SemanticGraph
 
 
@@ -46,6 +48,11 @@ class ConfidenceCandidate:
     outcome_profile: OutcomeProfile
     governed_knowledge_ids: list[str]
     recent_high_risk_change_ids: list[str]
+    # How this pattern came to be considered. Direct experience is firsthand;
+    # transferred experience is an analogy and is discounted as one.
+    similarity: float = 1.0
+    experience_class: str = "DIRECT"
+    similarity_reasons: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -87,6 +94,10 @@ class OperationalConfidenceEngine:
         self.json_dir = Path(json_dir)
         self.policy = self._read(Path(policy_file))
         self.graph = SemanticGraph.from_json_directory(self.json_dir)
+        self.fingerprinter = CaseFingerprinter(self.json_dir)
+        self.similarity = CaseSimilarity(
+            Path(policy_file).parent / "similarity_policy.json"
+        )
 
         self.scenarios = self._load("scenarios.json")
         self.observations = self._load("health_observations.json")
@@ -191,8 +202,9 @@ class OperationalConfidenceEngine:
                 observation=observation,
                 assessed_at=assessed_at,
                 candidate_count=len(candidates),
+                match=match,
             )
-            for row in candidates
+            for row, match in candidates
         ]
         assessed_candidates.sort(
             key=lambda item: (
@@ -288,73 +300,42 @@ class OperationalConfidenceEngine:
         observed_entity_id: str,
         trigger_observation_id: str,
         assessed_at: datetime,
-    ) -> list[dict]:
-        applicable_ids: set[str] = set()
+    ) -> list[tuple[dict, object]]:
+        """Recall patterns that resemble this case, with how alike each is.
 
-        # Direct authoritative applicability to the observed entity.
-        for step in self.graph.follow(
-            observed_entity_id,
-            predicate="APPLIES_TO",
-            direction="in",
-            minimum_confidence=0.75,
-            allowed_authorities={"AUTHORITATIVE"},
-        ):
-            applicable_ids.add(step.to_entity_id)
+        Retrieval used to ask whether an APPLIES_TO edge reached the observed
+        entity, which is a question about filing rather than resemblance. It
+        answered yes for a familiar component presenting an unfamiliar symptom,
+        and no for an identical symptom on a structural sibling.
 
-        # Include applicability to bounded authoritative technical neighbors.
-        neighbors = {observed_entity_id}
-        for predicate, direction in (
-            ("DEPENDS_ON", "in"),
-            ("CALLS", "out"),
-            ("FEEDS", "out"),
-            ("IMPLEMENTS", "out"),
-        ):
-            for step in self.graph.follow(
-                observed_entity_id,
-                predicate=predicate,
-                direction=direction,
-                minimum_confidence=0.75,
-                allowed_authorities={"AUTHORITATIVE"},
-            ):
-                neighbors.add(step.to_entity_id)
+        Every active trusted pattern is now compared by presentation, and those
+        clearing the similarity floor are returned with their score. Recall is
+        graded, so the assessment can distinguish what it has seen here from
+        what it has only seen somewhere like here.
+        """
+        observation = self.observation_by_id[trigger_observation_id]
+        case = self.fingerprinter.for_observation(observation)
 
-        for entity_id in list(neighbors):
-            for step in self.graph.follow(
-                entity_id,
-                predicate="APPLIES_TO",
-                direction="in",
-                minimum_confidence=0.75,
-                allowed_authorities={"AUTHORITATIVE"},
-            ):
-                applicable_ids.add(step.to_entity_id)
-
-        # A governed known-error record also carries an explicit
-        # applies_to_entity_id. This is an approved structured-record seam and
-        # provides a generic fallback when the semantic graph has not yet
-        # materialized the equivalent APPLIES_TO edge.
-        for row in self.known_errors:
-            if row.get("applies_to_entity_id") in neighbors:
-                applicable_ids.add(row["known_error_id"])
-
-        result = []
-        for known_error_id in applicable_ids:
-            row = self.known_error_by_id.get(known_error_id)
-            if not row:
+        matches: list[tuple[dict, object]] = []
+        for known_error in self.known_errors:
+            if known_error.get("knowledge_status") != "Active":
                 continue
-            if row.get("knowledge_status") != "Active":
+            if known_error.get("trust_level") != "Trusted":
                 continue
-            if row.get("trust_level") != "Trusted":
-                continue
-            valid_from = datetime.strptime(row["valid_from"], "%Y-%m-%d")
+            valid_from = datetime.strptime(known_error["valid_from"], "%Y-%m-%d")
             if valid_from > assessed_at:
                 continue
-            valid_to_text = row.get("valid_to", "")
-            if valid_to_text:
-                valid_to = datetime.strptime(valid_to_text, "%Y-%m-%d")
-                if valid_to < assessed_at:
-                    continue
-            result.append(row)
-        return result
+            valid_to = known_error.get("valid_to", "")
+            if valid_to and datetime.strptime(valid_to, "%Y-%m-%d") < assessed_at:
+                continue
+
+            remembered = self.fingerprinter.for_known_error(known_error)
+            match = self.similarity.compare(case, remembered)
+            if match.score >= self.similarity.floor:
+                matches.append((known_error, match))
+
+        matches.sort(key=lambda pair: pair[1].score, reverse=True)
+        return matches
 
     def _assess_candidate(
         self,
@@ -363,6 +344,7 @@ class OperationalConfidenceEngine:
         observation: dict,
         assessed_at: datetime,
         candidate_count: int,
+        match=None,
     ) -> ConfidenceCandidate:
         policy_weights = self.policy["weights"]
         thresholds = self.policy["thresholds"]
@@ -381,7 +363,10 @@ class OperationalConfidenceEngine:
             assessed_at=assessed_at,
         )
 
-        graph_applicability = 1.0
+        # Applicability is how alike this case is to the remembered one, not
+        # whether an edge happens to reach it. A pattern recognised by analogy
+        # contributes proportionally less than one recognised firsthand.
+        graph_applicability = 1.0 if match is None else match.score
         trigger_support = self._trigger_support(known_error, observation)
 
         evidence_components = [
@@ -468,6 +453,11 @@ class OperationalConfidenceEngine:
             recent_high_risk_change_ids=[
                 row["change_id"] for row in recent_high_risk_changes
             ],
+            similarity=round(graph_applicability, 3),
+            experience_class=(
+                "DIRECT" if match is None or match.is_direct else "TRANSFERRED"
+            ),
+            similarity_reasons=tuple(match.reasons) if match else (),
         )
 
     def _outcome_profile(

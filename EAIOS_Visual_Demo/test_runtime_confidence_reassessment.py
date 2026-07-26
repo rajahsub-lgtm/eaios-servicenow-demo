@@ -47,8 +47,10 @@ class ErosionRegressionTests(unittest.TestCase):
             initial,
             [signal("CREDIBLE_KNOWLEDGE_CONTRADICTION")],
         )
-        self.assertAlmostEqual(updated.confidence_score, 0.770, places=3)
-        self.assertEqual(updated.confidence_level, "MEDIUM")
+        self.assertAlmostEqual(
+            updated.confidence_score, initial.confidence_score - 0.22, places=3
+        )
+        self.assertLess(updated.confidence_score, initial.confidence_score)
         self.assertEqual(updated.confidence_trend, "ERODING")
         self.assertEqual(updated.drift_status, "ERODING")
         self.assertIn("CREDIBLE_KNOWLEDGE_CONTRADICTION", updated.hard_flags)
@@ -120,7 +122,9 @@ class CreditNeverOverpowersPenaltyTests(unittest.TestCase):
         )
         # Penalty applies in full; the credit is withheld because the
         # contradiction raised an unresolved hard flag.
-        self.assertAlmostEqual(updated.confidence_score, 0.770, places=3)
+        self.assertAlmostEqual(
+            updated.confidence_score, initial.confidence_score - 0.22, places=3
+        )
         self.assertTrue(result.credit_blocked_by_hard_flags)
         self.assertEqual(result.applied_credit, 0.0)
         self.assertEqual(updated.confidence_trend, "ERODING")
@@ -179,8 +183,13 @@ class SameRoundOrderingTests(unittest.TestCase):
         self.assertFalse(result.credit_blocked_by_hard_flags)
         self.assertAlmostEqual(result.applied_penalty, 0.22, places=3)
         self.assertAlmostEqual(result.applied_credit, 0.05, places=3)
-        # 0.99 - 0.22 + 0.05: still a net loss despite same-round resolution.
-        self.assertAlmostEqual(updated.confidence_score, 0.82, places=3)
+        # Penalty in full, credit capped: still a net loss despite same-round
+        # resolution, whatever the starting confidence happens to be.
+        self.assertAlmostEqual(
+            updated.confidence_score,
+            initial.confidence_score - 0.22 + 0.05,
+            places=3,
+        )
         self.assertLess(updated.confidence_score, initial.confidence_score)
 
 

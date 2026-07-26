@@ -30,6 +30,20 @@ def _overlap(left: tuple[str, ...], right: tuple[str, ...]) -> float:
     return len(a & b) / len(union) if union else 0.0
 
 
+def _covered_by(case: tuple[str, ...], remembered: tuple[str, ...]) -> float:
+    """How much of what is presenting is accounted for by the pattern.
+
+    Deliberately asymmetric. A pattern that manifests several ways should not
+    be penalised for breadth: what matters is whether it covers the symptom in
+    front of us, not whether our vocabularies happen to match. Symmetric
+    overlap punishes exactly the well-documented patterns that are most useful.
+    """
+    presenting = set(case)
+    if not presenting:
+        return 0.0
+    return len(presenting & set(remembered)) / len(presenting)
+
+
 class CaseSimilarity:
     """Score how alike two cases are, by presentation rather than label.
 
@@ -56,8 +70,13 @@ class CaseSimilarity:
     def compare(
         self, case: CaseFingerprint, remembered: CaseFingerprint
     ) -> SimilarityAssessment:
-        same_entity = 1.0 if case.entity_id == remembered.entity_id else 0.0
-        symptom = _overlap(case.symptom_categories, remembered.symptom_categories)
+        # Curated knowledge counts as firsthand. If an expert declared this
+        # pattern covers this component, recognising it here is recall, not
+        # analogy. Inferred resemblance still has to earn its way in.
+        anchored = case.entity_id == remembered.entity_id
+        declared_here = case.entity_id in set(remembered.covered_entities)
+        same_entity = 1.0 if (anchored or declared_here) else 0.0
+        symptom = _covered_by(case.symptom_categories, remembered.symptom_categories)
         # Structural position: sharing a parent service and sharing dependencies
         # both indicate the same role in the architecture.
         structural = 0.5 * _overlap(
@@ -72,6 +91,17 @@ class CaseSimilarity:
         capability = _overlap(
             case.impacted_capabilities, remembered.impacted_capabilities
         )
+        # An expert declaring a pattern relevant here is strong evidence — but
+        # the declaration is about a pattern, and a pattern includes how it
+        # presents. A curated edge does not license a match to a case that
+        # looks nothing like it, which is where anchoring came from.
+        declared_edge = (
+            1.0
+            if set(remembered.declared_patterns) & set(case.declared_patterns)
+            else 0.0
+        )
+        declared = declared_edge * symptom
+
         severity = (
             1.0
             if case.severity_band != "NONE"
@@ -80,6 +110,7 @@ class CaseSimilarity:
         )
 
         dimensions = {
+            "declared_applicability": declared,
             "same_entity": same_entity,
             "symptom_overlap": symptom,
             "structural_position": structural,
@@ -93,10 +124,7 @@ class CaseSimilarity:
         )
         score = round(min(1.0, score), 3)
 
-        direct = (
-            same_entity == 1.0
-            and symptom >= 0.999
-        )
+        direct = same_entity == 1.0 and symptom >= 0.999
         if not direct:
             # An analogy is never allowed to count as firsthand.
             score = round(
@@ -104,6 +132,10 @@ class CaseSimilarity:
             )
 
         reasons = []
+        if declared_edge and symptom > 0:
+            reasons.append("DECLARED_APPLICABLE")
+        elif declared_edge:
+            reasons.append("DECLARED_BUT_SYMPTOM_DIVERGES")
         if same_entity:
             reasons.append("SAME_ENTITY")
         elif structural > 0.4:

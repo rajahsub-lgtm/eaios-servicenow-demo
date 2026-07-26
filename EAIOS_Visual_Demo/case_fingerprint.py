@@ -42,6 +42,12 @@ class CaseFingerprint:
     # Reach: how far the effect extends into the business.
     impacted_capabilities: tuple[str, ...] = ()
     blast_radius: int = 0
+    # Patterns the enterprise has explicitly declared relevant to this entity
+    # or its bounded neighbourhood. Curated expert knowledge, not inference.
+    declared_patterns: tuple[str, ...] = ()
+    # For a remembered pattern: every entity an expert declared it covers, not
+    # only the one it is filed under.
+    covered_entities: tuple[str, ...] = ()
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -116,6 +122,35 @@ class CaseFingerprinter:
             )
         )
 
+    def _declared_patterns(self, entity_id: str) -> tuple[str, ...]:
+        """Patterns an expert has declared relevant here or next door.
+
+        An APPLIES_TO edge is the enterprise stating that a recorded pattern
+        affects a component. That is knowledge similarity cannot infer, and
+        discarding it in favour of pure resemblance loses curation.
+        """
+        if entity_id not in self.graph.entities:
+            return ()
+        scope = {entity_id}
+        for predicate, direction in (
+            ("DEPENDS_ON", "in"), ("CALLS", "out"),
+            ("FEEDS", "out"), ("IMPLEMENTS", "out"),
+        ):
+            for step in self.graph.follow(
+                entity_id, predicate=predicate, direction=direction,
+                minimum_confidence=0.75, allowed_authorities={"AUTHORITATIVE"},
+            ):
+                scope.add(step.to_entity_id)
+
+        declared = set()
+        for node in scope:
+            for step in self.graph.follow(
+                node, predicate="APPLIES_TO", direction="in",
+                minimum_confidence=0.75, allowed_authorities={"AUTHORITATIVE"},
+            ):
+                declared.add(step.to_entity_id)
+        return tuple(sorted(declared))
+
     def for_observation(self, observation: dict) -> CaseFingerprint:
         entity_id = observation["entity_id"]
         entity = (
@@ -155,6 +190,7 @@ class CaseFingerprinter:
             severity_band=band,
             impacted_capabilities=capabilities,
             blast_radius=len(capabilities),
+            declared_patterns=self._declared_patterns(entity_id),
         )
 
     def for_scenario(self, scenario_id: str) -> CaseFingerprint:
@@ -178,10 +214,23 @@ class CaseFingerprinter:
             "threshold_value": 0.0,
         }
         fingerprint = self.for_observation(synthetic_observation)
-        declared = known_error.get("symptom_category", "")
-        if declared:
-            merged = tuple(sorted(set(fingerprint.symptom_categories) | {declared}))
-            fingerprint = CaseFingerprint(
-                **{**fingerprint.as_dict(), "symptom_categories": merged}
-            )
-        return fingerprint
+        # A pattern may present differently depending on where it surfaces, so
+        # it may declare more than one symptom vocabulary.
+        declared = set(known_error.get("symptom_categories", []) or [])
+        if known_error.get("symptom_category"):
+            declared.add(known_error["symptom_category"])
+        covered = {entity_id}
+        for step in self.graph.follow(
+            known_error["known_error_id"], predicate="APPLIES_TO", direction="out",
+            minimum_confidence=0.75, allowed_authorities={"AUTHORITATIVE"},
+        ) if known_error["known_error_id"] in self.graph.entities else []:
+            covered.add(step.to_entity_id)
+
+        return CaseFingerprint(**{
+            **fingerprint.as_dict(),
+            "symptom_categories": tuple(
+                sorted(set(fingerprint.symptom_categories) | declared)
+            ),
+            "declared_patterns": (known_error["known_error_id"],),
+            "covered_entities": tuple(sorted(covered)),
+        })
