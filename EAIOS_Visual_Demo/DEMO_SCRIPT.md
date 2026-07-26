@@ -166,6 +166,31 @@ what it knows. Both still run the full plan. One case is not experience."
 
 ---
 
+## Optional · Confidence controls tab
+
+Use this when someone challenges whether the plan really follows the evidence,
+or asks what happens if you tune the thresholds. It re-runs every scenario
+through the real orchestrator against whatever bands you set.
+
+**Drag HIGH to 0.99.** The payment connector with 49 recorded outcomes loses
+its shortcut and goes to the full plan. Say: "Confidence did not change — the
+evidence is the same. What changed is how much confidence the shortcut costs."
+
+**Now drag it down to 0.30.** Nothing gains a shortcut. Say: "Four of these
+now clear the confidence band comfortably and every one still runs the full
+investigation, because the flags against them are categorical. Confidence
+decides how much investigation is proportionate. It does not decide whether
+governance applies — and that is the difference between a threshold and a
+control."
+
+> **They will ask:** "So I could just turn governance off in config?"
+> You can move what confidence buys. You cannot move what the flags forbid
+> from here: transferred experience, documentation-only reasoning, a
+> provisional pattern and a previously ineffective remedy each bar the
+> accelerated plan and suspend automation regardless of any threshold.
+
+---
+
 ## Closing
 
 **Say:** "Five things, all governed. Confidence is derived from recorded

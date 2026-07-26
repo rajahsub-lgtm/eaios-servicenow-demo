@@ -4,6 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 import html
+import json
 import shutil
 
 import pandas as pd
@@ -20,6 +21,7 @@ from outcome_feedback import (
     feedback_from_assessment,
 )
 from pattern_learning import PatternLearner, ValidationDecision
+from threshold_explorer import run_at_thresholds, shipped_levels
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -876,6 +878,103 @@ def readiness_status(assessment: dict[str, Any]) -> str:
     return str(assessment.get("automation_readiness", {}).get("status", ""))
 
 
+@st.cache_data(show_spinner="Re-running every scenario against your thresholds...")
+def _explore(high: float, medium: float) -> list[dict[str, Any]]:
+    """Cached wrapper. The pipeline logic lives in threshold_explorer."""
+    return [
+        {
+            "Scenario": outcome.label,
+            "Confidence": outcome.confidence,
+            "Band": outcome.band,
+            "Plan": format_identifier(outcome.plan),
+            "Agents": outcome.agents,
+            "Readiness": outcome.readiness,
+            "Held wide by": ", ".join(
+                flag.replace("_", " ").lower() for flag in outcome.blocked_by
+            )
+            or "—",
+        }
+        for outcome in run_at_thresholds(BASE_DIR, high=high, medium=medium)
+    ]
+
+
+def render_confidence_controls(repo: StoryRepository) -> None:
+    """Move the thresholds and watch the orchestration follow.
+
+    The asymmetry this exposes is the point: raising the bar costs speed,
+    lowering it buys nothing, because governance is not a threshold.
+    """
+    st.subheader("Confidence thresholds and what they buy")
+    st.caption(
+        "These sliders rewrite the confidence policy and re-run every scenario "
+        "through the real orchestrator. Nothing here is a mock-up."
+    )
+
+    shipped = shipped_levels(BASE_DIR)
+    left, right = st.columns(2)
+    high = left.slider(
+        "HIGH confidence band starts at",
+        min_value=0.30,
+        max_value=0.99,
+        value=float(shipped["HIGH"]),
+        step=0.01,
+        help="Above this, a scenario may qualify for the accelerated plan.",
+    )
+    medium = right.slider(
+        "MEDIUM confidence band starts at",
+        min_value=0.10,
+        max_value=0.95,
+        value=float(shipped["MEDIUM"]),
+        step=0.01,
+    )
+    if medium >= high:
+        st.warning(
+            "MEDIUM must sit below HIGH. Showing results at the shipped bands."
+        )
+        high, medium = float(shipped["HIGH"]), float(shipped["MEDIUM"])
+
+    baseline = _explore(float(shipped["HIGH"]), float(shipped["MEDIUM"]))
+    current = _explore(high, medium)
+    st.dataframe(pd.DataFrame(current), width="stretch", hide_index=True)
+
+    changed = [
+        (before, after)
+        for before, after in zip(baseline, current)
+        if before["Plan"] != after["Plan"]
+    ]
+    if changed:
+        lines = "\n".join(
+            f"- **{after['Scenario']}**: {before['Plan']} → {after['Plan']} "
+            f"({before['Agents']} → {after['Agents']} agents)"
+            for before, after in changed
+        )
+        st.info(
+            f"**{len(changed)} scenario(s) re-planned.** Confidence did not "
+            f"change — the evidence is the same. What changed is how much "
+            f"confidence the shortcut costs.\n\n{lines}"
+        )
+    else:
+        st.info(
+            "**No scenario re-planned.** Every plan here is the one the "
+            "evidence already justified at these thresholds."
+        )
+
+    blocked = [row for row in current if row["Held wide by"] != "—"]
+    if blocked and high <= float(shipped["HIGH"]):
+        st.success(
+            f"**Lowering the bar bought nothing.** {len(blocked)} scenario(s) "
+            f"clear the confidence band and still run the full investigation, "
+            f"because the flags against them are categorical rather than "
+            f"advisory. Confidence decides how much investigation is "
+            f"proportionate. It does not decide whether governance applies."
+        )
+
+    st.caption(
+        "Try 0.99: even the scenario with 49 recorded outcomes loses its "
+        "shortcut. Then try 0.30: nothing gains one."
+    )
+
+
 def render_learning_loop() -> None:
     """The arc from never-seen to seen-before, run live.
 
@@ -1102,6 +1201,7 @@ def main() -> None:
             "Scenario comparison",
             "Evidence & trust",
             "Automation readiness",
+            "Confidence controls",
             "Learning loop",
             "ServiceNow control",
         ]
@@ -1117,8 +1217,10 @@ def main() -> None:
     with tabs[3]:
         render_readiness(repo, assessment, selected)
     with tabs[4]:
-        render_learning_loop()
+        render_confidence_controls(repo)
     with tabs[5]:
+        render_learning_loop()
+    with tabs[6]:
         render_servicenow_boundary(repo, assessment, selected, preview)
 
     st.markdown(

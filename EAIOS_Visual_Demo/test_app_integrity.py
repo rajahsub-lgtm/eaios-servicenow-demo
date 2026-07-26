@@ -11,6 +11,7 @@ repository. No Streamlit runtime is required.
 
 from pathlib import Path
 import ast
+import builtins
 import unittest
 
 import eaios_story_data
@@ -81,11 +82,11 @@ class AppCallIntegrityTests(unittest.TestCase):
             if isinstance(node, (ast.Import, ast.ImportFrom))
             for alias in node.names
         }
-        builtins_and_libs = {
-            "print", "len", "int", "float", "str", "bool", "sorted", "set",
-            "list", "dict", "min", "max", "sum", "any", "all", "zip",
-            "enumerate", "range", "isinstance", "next", "tuple", "getattr",
-        }
+        # The real builtins rather than a hand-kept list of them. The list
+        # had to be extended every time the app used a common function it did
+        # not happen to contain, which turns a genuine finding into noise the
+        # reader learns to dismiss.
+        builtins_and_libs = set(dir(builtins))
         allowed = defined | imported | builtins_and_libs
         missing = sorted(
             name for name in called_names(tree) if name not in allowed

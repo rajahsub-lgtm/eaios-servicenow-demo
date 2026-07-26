@@ -111,17 +111,25 @@ class PolicyHasOneInterpreterTests(unittest.TestCase):
             "eaios_story_data reads the penalty and credit figures to show "
             "that recovery is capped below loss. Display only."
         ),
-        "confidence_policy.json": (
-            "Fusion reads it solely to construct the shared ledger with the "
-            "same weighting the engine uses. Reading it in order to defer is "
-            "the opposite of interpreting it independently."
-        ),
         "experience_trust_policy.json": (
             "Same: both layers pass it to the ledger, which applies it once."
         ),
         "vendor_health_policy.json": (
             "The vendor agent applies it; the orchestrator names the file to "
             "construct that agent."
+        ),
+        "orchestration_policies.json": (
+            "threshold_explorer reads the accelerated mode's disallowed flags "
+            "so the controls panel can name what is holding a scenario in the "
+            "full plan. It reads them in order to report them and never "
+            "decides entry itself; reading rather than restating is what stops "
+            "the panel drifting from what actually blocks a plan."
+        ),
+        "confidence_policy.json": (
+            "Fusion reads it solely to construct the shared ledger with the "
+            "same weighting the engine uses, and threshold_explorer reads the "
+            "shipped bands to seed the sliders and rewrite them in a temporary "
+            "copy. Neither interprets it independently."
         ),
         "servicenow_field_mapping.json": (
             "Field discovery writes the mapping and sync consumes it. A "
