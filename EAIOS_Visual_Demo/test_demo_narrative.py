@@ -178,3 +178,74 @@ class TheScriptQuotesRealNumbersTests(unittest.TestCase):
         for phrase in ("automatically remediat", "without approval", "acts on its own"):
             with self.subTest(phrase=phrase):
                 self.assertNotIn(phrase, script)
+
+
+class TheDocumentationMatchesTheSystemTests(unittest.TestCase):
+    """Figures typed into prose drift. Figures in the deck are read from the
+    fixtures; the ones in the architecture note were typed, and were wrong on
+    first writing — 63 entities against an actual 30.
+    """
+
+    DOC = ROOT / "ARCHITECTURE.md"
+
+    def counts(self) -> dict:
+        return {
+            name: len(
+                json.loads(
+                    (ROOT / "json" / f"{name}.json").read_text(encoding="utf-8")
+                )
+            )
+            for name in (
+                "entities",
+                "semantic_relationships",
+                "outcome_history",
+                "knowledge_documents",
+                "scenarios",
+            )
+        }
+
+    def test_the_quoted_scale_is_the_real_scale(self):
+        import re
+
+        # Normalised, because the figure and its label are routinely split
+        # across a line break and the prose is wrapped for reading.
+        doc = re.sub(r"\s+", " ", self.DOC.read_text(encoding="utf-8"))
+        counts = self.counts()
+        for label, key in (
+            ("entities", "entities"),
+            ("governed relationships", "semantic_relationships"),
+            ("recorded outcomes", "outcome_history"),
+            ("knowledge documents", "knowledge_documents"),
+            ("scenarios", "scenarios"),
+        ):
+            with self.subTest(label=label):
+                self.assertIn(f"{counts[key]} {label}", doc)
+
+    def test_the_deck_builder_reads_rather_than_states(self):
+        """The deck must fail to build rather than misrepresent the system."""
+        source = (ROOT / "build_deck.py").read_text(encoding="utf-8")
+        self.assertIn("def facts()", source)
+        self.assertIn('F[\'entities\']', source)
+
+    def test_the_deck_exists_and_has_every_section(self):
+        from pptx import Presentation
+
+        deck = ROOT / "outputs" / "EAIOS_Architecture_and_Demo.pptx"
+        self.assertTrue(deck.exists(), "run: python build_deck.py")
+        text = " ".join(
+            shape.text_frame.text
+            for slide in Presentation(deck).slides
+            for shape in slide.shapes
+            if shape.has_text_frame
+        )
+        for concept in (
+            "OPERATIONAL CONFIDENCE",
+            "DYNAMIC PLANNING",
+            "COLLECTIVE INTELLIGENCE",
+            "GOVERNANCE",
+            "EVIDENCE FUSION",
+            "KNOWLEDGE GRAPH",
+            "LEARNING FROM OUTCOME",
+        ):
+            with self.subTest(concept=concept):
+                self.assertIn(concept, text)

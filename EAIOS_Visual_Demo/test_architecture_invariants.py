@@ -28,12 +28,26 @@ FUSION = "evidence_fusion_agent.py"
 LEDGER = "experience_ledger.py"
 
 
+# Tooling that observes the system rather than participating in a run. These
+# read policy in order to report it — the deck quotes the ceilings and weights
+# on its slides, the rehearsal prints what the demo will show — and neither
+# takes part in an assessment. Anything here that started making decisions
+# would be a defect this guard could no longer see, so the list is explicit and
+# short rather than a filename pattern that could quietly swallow a module.
+OBSERVERS = frozenset({"build_deck.py", "rehearse.py"})
+
+
 def modules() -> list[Path]:
-    """Production modules. Tests and demos may read anything they like."""
+    """Modules that participate in a run.
+
+    Tests, demos and the observers above may read anything they like; they
+    cannot cause two layers to disagree because they are not layers.
+    """
     return sorted(
         path
         for path in ROOT.glob("*.py")
         if not path.name.startswith(("test_", "demo_"))
+        and path.name not in OBSERVERS
     )
 
 
@@ -150,6 +164,20 @@ class PolicyHasOneInterpreterTests(unittest.TestCase):
                     f"deliberate, declare it here with the reason; if it is "
                     f"not, the second reader is deciding something the first "
                     f"already decided.",
+                )
+
+    def test_an_observer_never_becomes_a_participant(self):
+        """The exclusion is only safe while these modules stay read-only.
+        If one starts orchestrating, the guard stops seeing it."""
+        from test_architecture_invariants import OBSERVERS
+
+        for name in OBSERVERS:
+            source = (ROOT / name).read_text(encoding="utf-8")
+            with self.subTest(module=name):
+                self.assertNotIn(
+                    "def execute(", source,
+                    f"{name} is excluded from the guard as an observer and "
+                    f"now looks like a participant",
                 )
 
     def test_no_declaration_outlives_its_reason(self):
