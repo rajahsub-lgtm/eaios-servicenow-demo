@@ -249,3 +249,89 @@ class TheDocumentationMatchesTheSystemTests(unittest.TestCase):
         ):
             with self.subTest(concept=concept):
                 self.assertIn(concept, text)
+
+
+class TheDesignDocumentIsAccurateTests(unittest.TestCase):
+    """Design documents rot silently. This one quotes forty-odd parameters
+    that live in policy, and a reader has no way to tell a stale figure from
+    a current one.
+    """
+
+    DESIGN = ROOT / "DESIGN.md"
+
+    def doc(self) -> str:
+        return self.DESIGN.read_text(encoding="utf-8")
+
+    def policy(self, name: str) -> dict:
+        return json.loads(
+            (ROOT / "config" / f"{name}.json").read_text(encoding="utf-8")
+        )
+
+    def test_the_confidence_weights_are_current(self):
+        doc = self.doc()
+        for name, weight in self.policy("confidence_policy")["weights"].items():
+            with self.subTest(factor=name):
+                self.assertIn(f"`{name}` | {weight:.2f}", doc)
+
+    def test_the_similarity_weights_are_current(self):
+        doc = self.doc()
+        weights = self.policy("similarity_policy")["dimension_weights"]
+        for name, weight in weights.items():
+            with self.subTest(dimension=name):
+                self.assertIn(f"`{name}` | {weight:.2f}", doc)
+
+    def test_every_blocking_flag_is_documented(self):
+        """A flag that bars the narrow plan and is absent from the governance
+        section is a rule nobody reading this could discover."""
+        doc = self.doc()
+        accelerated = next(
+            mode
+            for mode in self.policy("orchestration_policies")["modes"]
+            if mode["mode_id"] == "ACCELERATED_VALIDATION"
+        )
+        for flag in accelerated["entry_conditions"]["disallowed_hard_flags"]:
+            with self.subTest(flag=flag):
+                self.assertIn(flag, doc)
+
+    def test_the_regression_baseline_matches_the_bundle(self):
+        doc = self.doc()
+        for row in assessments():
+            with self.subTest(scenario=row["scenario_id"]):
+                if row["scenario_id"] not in doc:
+                    continue
+                self.assertIn(
+                    f"{row['initial_confidence_score']:.3f} → "
+                    f"{row['final_confidence_score']:.3f}",
+                    doc,
+                )
+
+    def test_the_named_modules_exist(self):
+        import re
+
+        doc = self.doc()
+        for module in sorted(set(re.findall(r"`([a-z_]+\.py)`", doc))):
+            with self.subTest(module=module):
+                self.assertTrue(
+                    (ROOT / module).exists(), f"{module} is documented but absent"
+                )
+
+    # Written by a run rather than shipped, so they are absent until the
+    # learning loop creates them. Section 4.3 documents them as exactly that.
+    RUNTIME_WRITTEN = {
+        "runtime_outcome_feedback.json",
+        "learned_patterns.json",
+        "refutation_ledger.json",
+    }
+
+    def test_the_named_policy_files_exist(self):
+        import re
+
+        doc = self.doc()
+        named = set(re.findall(r"`([a-z_]+\.json)`", doc)) - self.RUNTIME_WRITTEN
+        for name in sorted(named):
+            with self.subTest(policy=name):
+                self.assertTrue(
+                    (ROOT / "config" / name).exists()
+                    or (ROOT / "json" / name).exists(),
+                    f"{name} is documented but absent",
+                )

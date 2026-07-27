@@ -8,7 +8,7 @@ The deck at `outputs/EAIOS_Architecture_and_Demo.pptx` walks through this for
 an audience. This document is the reference behind it.
 
 **Scale:** 30 entities, 46 governed relationships, 118 recorded outcomes, 20
-knowledge documents, 9 scenarios, 458 tests.
+knowledge documents, 9 scenarios, 468 tests.
 
 ---
 
@@ -194,7 +194,7 @@ manufacture a connection.
 
 ## How it is held together
 
-458 tests. The ones that matter architecturally:
+468 tests. The ones that matter architecturally:
 
 | Suite | Defends |
 |---|---|
