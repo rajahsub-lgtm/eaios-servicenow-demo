@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable
+import csv
 import json
 
 
@@ -46,6 +47,9 @@ OBSERVABLE = (
 # these into the observable set is a release-blocking fault, not a warning.
 GROUND_TRUTH = (
     "ground_truth_episodes",
+    "causal_lineage",
+    "ambiguity_pairs",
+    "counterfactual_pairs",
     "ground_truth_faults",
     "ground_truth_propagation",
     "ground_truth_remediation",
@@ -92,16 +96,21 @@ class Dataset:
         root = Path(root)
         dataset = cls(root=root)
 
-        # Fixtures may sit at the root or under json/, so both layouts work
-        # without the caller having to know which the generator produced.
-        search = [root, root / "json"]
+        # Three layouts are supported without the caller having to know
+        # which the generator produced: fixtures at the root, under json/,
+        # or split into observable/ and private_truth/ as the compiler emits.
+        observable_dirs = [root, root / "json", root / "observable"]
+        truth_dirs = [
+            root / "private_truth",
+            root / "ground_truth",
+            root,
+            root / "json",
+        ]
 
         for name in OBSERVABLE:
-            dataset.observable[name] = dataset._read_list(search, name)
+            dataset.observable[name] = dataset._read_list(observable_dirs, name)
         for name in GROUND_TRUTH:
-            dataset.truth[name] = dataset._read_list(
-                search + [root / "ground_truth"], name
-            )
+            dataset.truth[name] = dataset._read_list(truth_dirs, name)
 
         for candidate in (root / "manifest.json", root / "json" / "manifest.json"):
             if candidate.exists():
@@ -117,10 +126,22 @@ class Dataset:
 
     def _read_list(self, directories: Iterable[Path], name: str) -> list[dict]:
         for directory in directories:
-            for path in (directory / f"{name}.json", directory / f"{name}.jsonl"):
+            for path in (
+                directory / f"{name}.json",
+                directory / f"{name}.jsonl",
+                directory / f"{name}.csv",
+            ):
                 if not path.exists():
                     continue
                 try:
+                    if path.suffix == ".csv":
+                        # Everything arrives as a string from CSV. Validators
+                        # compare identifiers and parse timestamps themselves,
+                        # so no type coercion is attempted here — guessing
+                        # would hide exactly the malformed values worth
+                        # reporting.
+                        with open(path, newline="", encoding="utf-8") as f:
+                            return [dict(r) for r in csv.DictReader(f)]
                     text = path.read_text(encoding="utf-8")
                     if path.suffix == ".jsonl":
                         rows = [
