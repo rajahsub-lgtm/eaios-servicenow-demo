@@ -256,6 +256,134 @@ If someone responds personally, a simple *"thank you — it's why I care about
 getting the governance right"* returns the conversation to your ground without
 closing them off.
 
+
+---
+
+## Story 0B — The lab report
+
+**The most concrete thing in the package. Use it when they ask what AI is
+actually good for, or when the conversation drifts abstract.**
+
+### What happened
+
+You put your wife's lab report into an AI system. It told you which numbers
+were moving and in which direction, how her current medication related to
+those movements, what was improving and what was declining, what alternatives
+existed, what might be tapered and what could substitute.
+
+It was a better articulation of that lab result than you had received from a
+person.
+
+### The claim to make — and the one to avoid
+
+**Do not say:** *"The AI was better than the doctor."*
+
+A panel hears an unfalsifiable comparison and starts defending the doctor. If
+anyone in the room has a clinician in the family, you have lost them, and you
+will have lost them on your best material.
+
+**Say this instead:**
+
+> "It wasn't better than the physician's judgement. It was better than the
+> fifteen minutes the physician had. She has the accountability, the
+> examination and the licence. What she doesn't have is time to assemble four
+> years of labs, a medication timeline and what changed when — before the
+> appointment starts. The AI didn't out-reason her. It out-*assembled* her."
+
+That version is true, it is unarguable, and it lands on architecture instead
+of on a comparison. It is also the exact hook from your Application Health
+story:
+
+> *"We had extensive observability and service-management tooling, but during
+> major incidents teams were still manually reconstructing what was happening,
+> what depended on it, and what mattered to the business."*
+
+**The doctor is the on-call engineer at two in the morning, rebuilding context
+by hand while it matters.** That is the whole of it, and it is the same
+sentence in both domains.
+
+### The escalation — and why it is not speculation
+
+The question you actually want to ask the room:
+
+> "That was one lab result, with none of her history. Now give the same
+> reasoning her whole record — every lab, every medication, every response
+> over years. Then give it every other patient on that medication with a
+> comparable profile. Then give it the patient 360: genetics, comorbidities,
+> living conditions. What does it find that no individual clinician could?"
+
+Do not leave that as rhetoric. **That escalation is the confidence model you
+built**, and you can put it on screen:
+
+| Medical | In the demonstration | What it is worth |
+|---|---|---|
+| Guidelines and the literature | `DOCUMENTED` — reasoning from a written procedure | Capped below anything experience earns. A proposal, never a diagnosis |
+| Her own history with this drug | `DIRECT` — recorded outcomes for this exact case | The strongest evidence, and only after enough of it |
+| Comparable patients, comparable profile | `TRANSFERRED` — a pattern resolved on a structural sibling | Real, discounted, and never permitted the shortcut |
+| Patient 360: genetics, conditions, environment | The **case fingerprint** — presentation, not label | Similarity is by how the case *presents*, not by its diagnosis code |
+
+That last row is the one to dwell on. The system does not match on the label.
+It matches on what the case looks like — symptoms, structural position, blast
+radius, severity. In medicine that is the difference between matching on an
+ICD code and matching on a phenotype, and it is the entire premise of
+precision medicine.
+
+And the population effect is already visible in the numbers:
+
+```
+n= 50 comparable cases, 95% resolved   → reliability 0.956
+n= 20 comparable cases, 47% resolved   → reliability 0.557
+n= 10 comparable cases, 54% resolved   → reliability 0.377
+```
+
+> "More comparable cases with better recorded outcomes produce more
+> confidence, and thin evidence produces less — automatically, with no one
+> deciding it. Substitute patients for incidents and the arithmetic does not
+> change."
+
+### What this does to the governance argument
+
+This is where the story earns its place in a governance conversation rather
+than a human-interest one.
+
+At population scale, every governance control you built stops being abstract:
+
+| Control in the demonstration | What it becomes with patient data |
+|---|---|
+| **Standing** — an agent's authority over the claim it is making, separate from its reliability | A model reliable at imaging has no standing to assert a drug interaction |
+| **Provenance weighting** — human-verified outranks unexamined success | A clinician-confirmed outcome outweighs a chart that merely closed |
+| **Transferred experience is discounted and flagged** | Someone else's response to this drug is evidence, not your prognosis |
+| **Previously ineffective is carried as a named fact** | This was tried on this patient and it did not help — never proposed again as though new |
+| **Nothing unbacked by recorded outcome may be automated** | The literature can propose. Only outcomes can justify acting unattended — and here, nothing acts unattended at all |
+| **Mandatory human approval on every path** | Not a caveat bolted on. The architecture |
+
+> "Human-in-the-loop is not a disclaimer I add at the end of this story. It is
+> the reason there is a system to describe. Every path in what I built ends at
+> a human, and the interesting engineering is in making the recommendation
+> worth their time rather than in removing them."
+
+### The honest limit
+
+Say this before anyone asks it, because it is what separates you from someone
+selling a demo:
+
+> "Pattern-finding at that scale generates hypotheses; it does not establish
+> cause. The confounders in observational health data are severe — who gets
+> prescribed what, who stays in the study, whose data is even recorded. What
+> the collective view is genuinely good at is surfacing the question a
+> clinician should ask next. That is worth a great deal and it is not the same
+> as an answer, and a system that blurs the two is dangerous."
+
+That paragraph is the most credible thing you can say in the whole interview.
+It shows you have thought past the excitement into the failure mode.
+
+### Lesson line
+
+> **It didn't out-reason the doctor. It out-assembled her. That is the same
+> problem I spent a decade solving for applications — and the same reason it
+> has to be governed before it scales.**
+
+
 ---
 
 ## The closing line
