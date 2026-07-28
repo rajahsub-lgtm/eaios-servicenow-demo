@@ -1,0 +1,56 @@
+# Everything here is excluded from the build context — the tarball Docker
+# sends to the daemon before building. A large context slows every build even
+# when nothing in it is copied, and anything that does get copied lands in a
+# layer where it can be extracted later. Secrets do not stop being secrets
+# because the COPY was accidental.
+
+# Version control — large, and never needed at runtime.
+.git
+.gitignore
+
+# Python build noise.
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Tests and demo scripts. They belong in the repository and in CI; they do not
+# belong in a runtime image. Shipping them enlarges the image and expands what
+# an attacker can execute inside it.
+test_*.py
+demo_*.py
+smoke_test_*.py
+validate.ps1
+
+# Build tooling. These produce the deck and the PDFs on a developer machine
+# and would drag python-pptx and markdown into the image with them.
+build_deck.py
+md_to_pdf.py
+rehearse.py
+
+# Generated documents — megabytes of PDF and PowerPoint the app never reads.
+#
+# Note what is NOT excluded: outputs/servicenow_story_bundle.json and the four
+# CSVs beside it ARE the app's data. A blanket "outputs/" here builds cleanly
+# and then fails at runtime with an empty story repository — the classic
+# .dockerignore mistake, because nothing warns you at build time that you
+# excluded something the application reads.
+outputs/*.pdf
+outputs/*.html
+outputs/*.pptx
+
+# Editor and OS clutter.
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Credentials. Nothing matching these should ever exist here, and the build
+# context is the last place to find out that one does.
+*.pem
+*.key
+.env
+.env.*
+service-account*.json

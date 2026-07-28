@@ -1,0 +1,11 @@
+# What the running application needs — nothing more.
+#
+# requirements.txt is the development set. It also carries pytest (tests),
+# python-pptx (build_deck.py) and markdown (md_to_pdf.py), none of which the
+# app imports. Shipping them would enlarge the image, lengthen the build, and
+# widen the attack surface for no benefit.
+#
+# An image should contain what runs, not what you develop with.
+pandas>=2.0,<3
+plotly>=5.22,<7
+streamlit>=1.52,<2
