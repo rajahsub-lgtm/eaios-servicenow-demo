@@ -392,23 +392,37 @@ Story 0 is where you came from. This is where it lands. Use them as bookends —
 the origin is a medical records project, the close is the platform that could
 actually carry it.
 
-### First, a caution on the statistic
+### On the statistic — attribute it, do not assert it
 
-**Do not quote ServiceNow's Fortune 500 penetration back to them.**
+You have the 90%+ figure from Michael Park, ServiceNow's AI leadership. That
+makes it current and sourced, which changes how to use it — but not whether
+to be careful.
 
-Their published figure has been *85%*, not 90%+. Two risks and no upside: if
-the number is wrong you take a credibility hit in your final sentence, and if
-it is right you have told a room of ServiceNow employees something they know
-better than you do. Nobody was ever hired for reciting a company's own
-marketing.
+**The risk was never the number. It was asserting a number to the people who
+own it.** A candidate who states a company's own penetration figure is either
+correct and unremarkable, or slightly off and diminished. Neither is worth
+anything.
 
-The *consequence* of the reach is the argument. Use that instead — it is
-stronger, and it cannot be wrong.
+Attribution removes the risk and adds signal:
+
+> *"Michael Park makes the point that more than 90% of the Fortune 500 run on
+> ServiceNow. What follows from that is the part I find interesting…"*
+
+Now it is not your claim to defend, it is a shared reference point — and it
+quietly demonstrates that you follow their AI leadership rather than their
+brochure. That is worth more than the statistic.
+
+**Do not soften it to "the majority."** That is vaguer, less memorable, and
+gives up the one thing the number is good for: setting up the consequence.
+
+**And do not stop at the number.** The reach is the setup, never the point.
+Land immediately on what follows from it.
 
 ### The close
 
-> "The reason I want to be part of this at ServiceNow is not that it is a
-> large platform. It is what the platform already is.
+> "Michael Park makes the point that more than 90% of the Fortune 500 run on
+> ServiceNow. The reason that matters to me is not the scale — it is what the
+> platform already is underneath it.
 >
 > ServiceNow is already the system of record for how work actually gets done
 > in most large enterprises — the workflow, the CMDB, the change record, the
@@ -438,7 +452,9 @@ stronger, and it cannot be wrong.
 
 ### The 20-second version
 
-> "ServiceNow is already where enterprise work is recorded and approved. That
+> "More than 90% of the Fortune 500 run on ServiceNow, as Michael Park puts
+> it — but the reach is not the point. It is already where enterprise work is
+> recorded and approved. That
 > means adding reasoning to it is a different problem — and a far more
 > tractable one — than adding enterprise context to a model. It also is not
 > confined to IT, and the architecture I have built does not know it is about
@@ -446,21 +462,47 @@ stronger, and it cannot be wrong.
 > the data. That constraint is gone. What is left is governance, and this is
 > the place to work on it."
 
-### Why this version rather than the superlative
+### Say the superlative — but arm it
 
-You wanted to say the ecosystem is the best in production today. That is
-probably defensible, and it is the weakest available form of the argument:
+You believe ServiceNow is best positioned for AI transformation. That is not
+flattery, so do not hedge it. A conviction you can defend is worth more than a
+careful sentence, and hedging a belief you actually hold reads as
+uncertainty about your own judgement.
 
-- A superlative invites the panel to test it, and they know the competitive
-  landscape better than you do.
-- It reads as flattery, which costs you the credibility you spent the previous
-  hour building.
-- It says nothing about *you*.
+What a superlative needs is a **structure behind it**, so that when someone
+asks *"why do you think that?"* — and they will, because it is the most
+interesting thing you have said — you answer with four reasons rather than
+enthusiasm.
 
-**"Reasoning added to where action already happens"** is a specific
-architectural claim, it is one they will recognise as correct, and it implies
-the ranking without asserting it. Let them supply the superlative — they will,
-and it counts for more coming from them.
+> "I think ServiceNow is the best-positioned company in enterprise AI, and I
+> mean that structurally rather than as a compliment. Four things have to be
+> true for governed AI to work, and almost nobody has more than two.
+>
+> **The context has to already exist.** Every AI company is trying to acquire
+> enterprise context. ServiceNow has the CMDB, the service graph, the
+> incident, change and knowledge record. That is the hardest thing on the list
+> and it is already there.
+>
+> **The action has to already exist.** Reasoning without a workflow to act
+> through is a recommendation engine. ServiceNow is where the work actually
+> happens.
+>
+> **The approval has to already exist.** Governance needs an approval boundary
+> people already use. Bolting approval onto an AI product is a change-
+> management project; here it is the native motion.
+>
+> **And they have to be in one place.** Context, action and approval in three
+> systems is an integration problem that never quite closes. In one system it
+> is a design. That combination is what makes governed autonomy reachable
+> rather than theoretical — and I do not know of another platform where all
+> four are already true."
+
+That is defensible, specific, and it is a compliment nobody could mistake for
+one because it is entirely about architecture.
+
+**The one discipline:** having made the claim, do not stack more praise on it.
+Say the four reasons and stop. A superlative followed by silence is
+conviction; a superlative followed by more superlatives is a sales pitch.
 
 ### The two sentences to have ready if pressed
 
