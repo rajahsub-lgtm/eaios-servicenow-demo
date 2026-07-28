@@ -386,6 +386,105 @@ It shows you have thought past the excitement into the failure mode.
 
 ---
 
+## The closing statement
+
+Story 0 is where you came from. This is where it lands. Use them as bookends —
+the origin is a medical records project, the close is the platform that could
+actually carry it.
+
+### First, a caution on the statistic
+
+**Do not quote ServiceNow's Fortune 500 penetration back to them.**
+
+Their published figure has been *85%*, not 90%+. Two risks and no upside: if
+the number is wrong you take a credibility hit in your final sentence, and if
+it is right you have told a room of ServiceNow employees something they know
+better than you do. Nobody was ever hired for reciting a company's own
+marketing.
+
+The *consequence* of the reach is the argument. Use that instead — it is
+stronger, and it cannot be wrong.
+
+### The close
+
+> "The reason I want to be part of this at ServiceNow is not that it is a
+> large platform. It is what the platform already is.
+>
+> ServiceNow is already the system of record for how work actually gets done
+> in most large enterprises — the workflow, the CMDB, the change record, the
+> approval. That means ServiceNow is not adding AI to a platform. It is adding
+> reasoning to the one place where the action and the approval already live.
+> That is a fundamentally different starting position from every AI company
+> trying to acquire enterprise context, and a much better one.
+>
+> Control Tower, the agent fabric and the context layer are the pieces I
+> independently converged on from the operations side, and I converged on them
+> because the problem forces you there. Finding that a platform had built the
+> same shape — with the enterprise footprint already underneath it — is the
+> reason this is the place to do this work rather than to write about it.
+>
+> And it is not confined to IT. The architecture I have been describing does
+> not know it is about applications. Change the entities and the reasoning is
+> unchanged — patient health, financial health, operational health. ServiceNow
+> is one of very few places where that is not a thought experiment, because
+> the platform is already in providers, payers and life sciences.
+>
+> That matters to me personally. I started in electronic medical records
+> twenty years ago trying to make a machine understand a clinician's notes,
+> and the constraint that stopped us was that the data could not be connected.
+> That constraint is gone. What is left is whether we can do it safely enough
+> to be allowed to — and that is the problem I want to work on, at the company
+> best positioned to solve it."
+
+### The 20-second version
+
+> "ServiceNow is already where enterprise work is recorded and approved. That
+> means adding reasoning to it is a different problem — and a far more
+> tractable one — than adding enterprise context to a model. It also is not
+> confined to IT, and the architecture I have built does not know it is about
+> applications. I started this career in medical records and could not connect
+> the data. That constraint is gone. What is left is governance, and this is
+> the place to work on it."
+
+### Why this version rather than the superlative
+
+You wanted to say the ecosystem is the best in production today. That is
+probably defensible, and it is the weakest available form of the argument:
+
+- A superlative invites the panel to test it, and they know the competitive
+  landscape better than you do.
+- It reads as flattery, which costs you the credibility you spent the previous
+  hour building.
+- It says nothing about *you*.
+
+**"Reasoning added to where action already happens"** is a specific
+architectural claim, it is one they will recognise as correct, and it implies
+the ranking without asserting it. Let them supply the superlative — they will,
+and it counts for more coming from them.
+
+### The two sentences to have ready if pressed
+
+**If they ask what specifically appeals about the AI portfolio:**
+
+> "The combination, not any one piece. Context without governance is a
+> liability; governance without workflow is a document. Having the knowledge
+> graph, the control plane and the record of action in one place is rare, and
+> it is the only configuration where governed autonomy is actually reachable."
+
+**If they ask why not a healthcare AI company:**
+
+> "Because the hard part is not the medicine, it is the governance — and
+> governance is a horizontal problem. A platform that has already solved
+> identity, approval and audit across ninety industries is a better foundation
+> for that than a vertical that has to rebuild it. I would rather bring the
+> architecture to where the control plane already exists."
+
+That second answer is worth rehearsing. It is the most likely challenge to
+your healthcare framing, and it converts an apparent weakness in your story
+into the reason you are sitting there.
+
+---
+
 ## The closing line
 
 If you use Story 0 to end the conversation:
