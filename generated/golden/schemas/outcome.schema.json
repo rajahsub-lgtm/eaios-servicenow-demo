@@ -1,0 +1,9 @@
+{
+  "required": [
+    "outcome_id",
+    "incident_id",
+    "known_error_id",
+    "approval_decision",
+    "outcome"
+  ]
+}

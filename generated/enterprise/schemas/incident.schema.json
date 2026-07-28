@@ -1,0 +1,9 @@
+{
+  "required": [
+    "incident_id",
+    "episode_id",
+    "entity_id",
+    "opened_at",
+    "symptom_category"
+  ]
+}

@@ -1,0 +1,5 @@
+counterfactual_pair_id,factual_episode_id,counterfactual_episode_id,fixed_topology,fixed_background_stream,intervention,changed_descendants
+CF-001,EP-000789,EP-000790,True,background:AMB-001,do(cause=EXTERNAL_VENDOR_OUTAGE),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"
+CF-002,EP-000791,EP-000792,True,background:AMB-002,do(cause=CERTIFICATE_EXPIRY),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"
+CF-003,EP-000793,EP-000794,True,background:AMB-003,do(cause=EXTERNAL_VENDOR_OUTAGE),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"
+CF-004,EP-000795,EP-000796,True,background:AMB-004,do(cause=CERTIFICATE_EXPIRY),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"

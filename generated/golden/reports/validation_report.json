@@ -1,0 +1,54 @@
+{
+  "adversarial": {
+    "decision_tree_accuracy": 0.405,
+    "decision_tree_balanced_accuracy": 0.1815,
+    "feature_set": [
+      "entity_type",
+      "region",
+      "business_unit",
+      "severity",
+      "symptom_category",
+      "onset_shape",
+      "blast_radius_band",
+      "recent_change_present",
+      "vendor_status_at_onset",
+      "metric_id",
+      "breach_direction",
+      "value_band"
+    ],
+    "logistic_accuracy": 0.4,
+    "logistic_balanced_accuracy": 0.2072,
+    "majority_baseline": 0.245,
+    "note": "Observable pre-decision metadata only; identifiers, outcome fields, post-reveal evidence, and private truth are excluded.",
+    "rows": 800,
+    "target_classes": 10
+  },
+  "counts": {
+    "ambiguity_pairs": 6,
+    "counterfactual_pairs": 4,
+    "document_chunks": 480,
+    "documents": 80,
+    "entities": 120,
+    "incidents": 800,
+    "known_errors": 20,
+    "outcomes": 800,
+    "relationships": 720
+  },
+  "errors": [],
+  "experience_distribution": {
+    "fifteen_to_ninety_nine": 8,
+    "five_to_fourteen": 4,
+    "hundred_plus": 3,
+    "max_cases": 191,
+    "one_to_four": 3,
+    "zero": 2
+  },
+  "invariants": {
+    "ambiguity_prefixes_identical": true,
+    "counterfactual_background_fixed": true,
+    "hidden_truth_separate": true,
+    "prior_confidence_omitted": true
+  },
+  "status": "PASS",
+  "warnings": []
+}

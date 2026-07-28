@@ -1,0 +1,5 @@
+pandas>=2.0
+scikit-learn>=1.4
+PyYAML>=6.0
+# Optional cloud export:
+# pyarrow>=15.0

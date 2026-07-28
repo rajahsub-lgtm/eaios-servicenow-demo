@@ -1,0 +1,8 @@
+{
+  "required": [
+    "chunk_id",
+    "document_id",
+    "text",
+    "published_at"
+  ]
+}

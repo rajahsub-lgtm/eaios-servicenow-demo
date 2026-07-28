@@ -1,0 +1,13 @@
+counterfactual_pair_id,factual_episode_id,counterfactual_episode_id,fixed_topology,fixed_background_stream,intervention,changed_descendants
+CF-001,EP-049953,EP-049954,True,background:AMB-001,do(cause=EXTERNAL_VENDOR_OUTAGE),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"
+CF-002,EP-049955,EP-049956,True,background:AMB-002,do(cause=CERTIFICATE_EXPIRY),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"
+CF-003,EP-049957,EP-049958,True,background:AMB-003,do(cause=EXTERNAL_VENDOR_OUTAGE),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"
+CF-004,EP-049959,EP-049960,True,background:AMB-004,do(cause=CERTIFICATE_EXPIRY),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"
+CF-005,EP-049961,EP-049962,True,background:AMB-005,do(cause=EXTERNAL_VENDOR_OUTAGE),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"
+CF-006,EP-049963,EP-049964,True,background:AMB-006,do(cause=CERTIFICATE_EXPIRY),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"
+CF-007,EP-049965,EP-049966,True,background:AMB-007,do(cause=EXTERNAL_VENDOR_OUTAGE),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"
+CF-008,EP-049967,EP-049968,True,background:AMB-008,do(cause=CERTIFICATE_EXPIRY),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"
+CF-009,EP-049969,EP-049970,True,background:AMB-009,do(cause=EXTERNAL_VENDOR_OUTAGE),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"
+CF-010,EP-049971,EP-049972,True,background:AMB-010,do(cause=CERTIFICATE_EXPIRY),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"
+CF-011,EP-049973,EP-049974,True,background:AMB-011,do(cause=EXTERNAL_VENDOR_OUTAGE),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"
+CF-012,EP-049975,EP-049976,True,background:AMB-012,do(cause=CERTIFICATE_EXPIRY),"[""cause_dependent_telemetry"", ""distinguishing_evidence"", ""action_effectiveness"", ""outcome""]"

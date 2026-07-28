@@ -1,0 +1,1 @@
+"""EAIOS synthetic enterprise generator."""

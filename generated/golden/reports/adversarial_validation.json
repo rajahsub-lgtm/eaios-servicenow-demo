@@ -1,0 +1,24 @@
+{
+  "decision_tree_accuracy": 0.405,
+  "decision_tree_balanced_accuracy": 0.1815,
+  "feature_set": [
+    "entity_type",
+    "region",
+    "business_unit",
+    "severity",
+    "symptom_category",
+    "onset_shape",
+    "blast_radius_band",
+    "recent_change_present",
+    "vendor_status_at_onset",
+    "metric_id",
+    "breach_direction",
+    "value_band"
+  ],
+  "logistic_accuracy": 0.4,
+  "logistic_balanced_accuracy": 0.2072,
+  "majority_baseline": 0.245,
+  "note": "Observable pre-decision metadata only; identifiers, outcome fields, post-reveal evidence, and private truth are excluded.",
+  "rows": 800,
+  "target_classes": 10
+}

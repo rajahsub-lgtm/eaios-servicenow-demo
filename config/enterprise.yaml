@@ -1,0 +1,29 @@
+enterprise:
+  name: EAIOS Synthetic Enterprise
+  seed: 20260728
+  schema_version: '1.0'
+  data_classification: SYNTHETIC
+scale:
+  entities: 2000
+  relationships: 15000
+  patterns: 100
+  incidents: 50000
+  outcomes: 50000
+  source_documents: 2500
+  document_chunks: 20000
+  detailed_episodes: 240
+  ambiguity_pairs: 24
+  counterfactual_pairs: 12
+experience_distribution:
+  documentation_only_patterns: 10
+  sparse_patterns: 20
+  emerging_patterns: 20
+  developing_patterns: 20
+  established_patterns: 15
+  dominant_patterns: 15
+policy:
+  minimum_outcome_sample: 15
+  transfer_ceiling: 0.85
+  prior_confidence_strategy: OMIT
+  ambiguity_requires_identical_prefix: true
+  trivial_classifier_max_accuracy: 0.65

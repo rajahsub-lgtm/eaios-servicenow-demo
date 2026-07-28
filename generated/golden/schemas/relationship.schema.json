@@ -1,0 +1,8 @@
+{
+  "required": [
+    "relationship_id",
+    "source_entity_id",
+    "relationship_type",
+    "target_entity_id"
+  ]
+}

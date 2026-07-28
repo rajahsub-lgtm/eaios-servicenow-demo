@@ -1,0 +1,8 @@
+{
+  "required": [
+    "entity_id",
+    "entity_type",
+    "name",
+    "data_classification"
+  ]
+}
