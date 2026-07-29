@@ -96,7 +96,87 @@ def validate(dataset: Dataset) -> list[Finding]:
     findings += _validity_windows(dataset)
     findings += _episode_ordering(dataset)
     findings += _document_availability(dataset)
+    findings += _history_precedes_assessment(dataset)
     return findings
+
+
+def _history_precedes_assessment(dataset: Dataset) -> list[Finding]:
+    """Is there any experience behind the cases being assessed?
+
+    The engine counts only outcomes recorded on or before the assessment
+    moment, which is correct — a case cannot learn from its own future. A
+    generator that places its scenarios at the start of the timeline therefore
+    produces a dataset where every pattern recalls with zero history, scores
+    zero, and demonstrates nothing, while appearing to contain fifty thousand
+    outcomes.
+
+    Nothing else catches this. Referential integrity passes, every timestamp
+    parses, causal ordering inside each episode holds. The fault is only
+    visible when history and assessment time are compared across the corpus.
+    """
+    scenarios = dataset["scenarios"]
+    outcomes = dataset["outcome_history"]
+    observations = {
+        row.get("observation_id"): row for row in dataset["health_observations"]
+    }
+    if not scenarios or not outcomes or not observations:
+        return []
+
+    recorded = sorted(
+        t for t in (parse_time(r.get("recorded_at")) for r in outcomes) if t
+    )
+    if not recorded:
+        return []
+
+    starved, total = 0, 0
+    coverage: list[float] = []
+    for scenario in scenarios:
+        observation = observations.get(scenario.get("trigger_observation_id"))
+        assessed = parse_time(observation.get("observed_at")) if observation else None
+        if not assessed:
+            continue
+        total += 1
+        # recorded is sorted, so a bisect would be faster; the corpus is small
+        # enough here that clarity wins.
+        before = sum(1 for t in recorded if t <= assessed)
+        coverage.append(before / len(recorded))
+        if before == 0:
+            starved += 1
+
+    if not total:
+        return []
+
+    median = sorted(coverage)[len(coverage) // 2]
+    if starved or median < 0.10:
+        return [
+            error(
+                NAME,
+                "history_precedes_assessment",
+                f"{starved} of {total} scenarios have no recorded outcome "
+                f"before them; the median scenario has {median:.1%} of the "
+                f"corpus behind it",
+                consequence=(
+                    "The engine counts only outcomes recorded on or before "
+                    "the assessment. Scenarios placed at the start of the "
+                    "timeline recall a pattern, find no history, and score "
+                    "zero — so the dataset appears to hold the experience it "
+                    "is meant to demonstrate while none of it is reachable. "
+                    "Draw scenarios from the END of the generated period."
+                ),
+                detail={
+                    "scenarios_with_no_history": starved,
+                    "median_corpus_share_available": round(median, 4),
+                },
+            )
+        ]
+
+    return [
+        info(
+            NAME,
+            "history_precedes_assessment",
+            f"median scenario has {median:.1%} of the outcome corpus behind it",
+        )
+    ]
 
 
 def _parseable(dataset: Dataset) -> list[Finding]:
