@@ -15,11 +15,65 @@ from __future__ import annotations
 
 from collections import Counter
 
+from datetime import datetime
+
 from .dataset import Dataset, parse_time
 from .findings import Finding, error, info, warn
 
 
 NAME = "temporal"
+
+# The exact format operational_confidence_engine.DATETIME_FORMAT demands.
+# The engine calls strptime with this and nothing else; anything it cannot
+# parse raises at assessment time rather than at load.
+#
+# The validator must check THIS, not whether a human would call the value a
+# timestamp. An earlier version used the tolerant parser below and passed a
+# dataset in which every single timestamp was ISO-8601 with an offset — 240,000
+# values the engine could not read. A validator more permissive than the
+# system it guards reports success on data that cannot run.
+ENGINE_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+ENGINE_DATE_FORMAT = "%Y-%m-%d"
+
+# The engine does not use one format. It uses two, and which applies is
+# per-field — taken from the strptime call sites and confirmed against the
+# shipped fixtures, which are the working ground truth.
+#
+# The distinction is not cosmetic. experience_ledger parses a pattern's
+# validity window with the date-only format, so "2026-01-01 00:00:00" raises
+# there while being required elsewhere. A generator emitting one format
+# everywhere fails whichever half it did not choose.
+DATE_ONLY_FIELDS = {
+    ("known_errors", "valid_from"),
+    ("known_errors", "valid_to"),
+    ("learned_patterns", "valid_from"),
+    ("learned_patterns", "valid_to"),
+}
+
+# Sliced to ten characters before parsing, so either form is accepted.
+TOLERANT_FIELDS = {
+    ("knowledge_documents", "published_at"),
+    ("knowledge_documents", "last_validated_at"),
+}
+
+
+def required_format(fixture: str, field_name: str) -> str | None:
+    """The format the engine will use for this field, or None if tolerant."""
+    if (fixture, field_name) in TOLERANT_FIELDS:
+        return None
+    if (fixture, field_name) in DATE_ONLY_FIELDS:
+        return ENGINE_DATE_FORMAT
+    return ENGINE_DATETIME_FORMAT
+
+
+def engine_parseable(value, fmt: str | None) -> bool:
+    if value in (None, "") or fmt is None:
+        return True
+    try:
+        datetime.strptime(str(value), fmt)
+        return True
+    except (ValueError, TypeError):
+        return False
 
 # Orderings that must hold inside a single record.
 WITHIN_RECORD = (
@@ -58,6 +112,10 @@ def _parseable(dataset: Dataset) -> list[Finding]:
         "changes": ("implemented_at", "planned_start", "planned_end"),
         "health_observations": ("observed_at",),
         "telemetry_samples": ("observed_at",),
+        "vendor_advisories": ("observed_at", "published_at"),
+        "problems": ("opened_at", "closed_at"),
+        "known_errors": ("valid_from", "valid_to"),
+        "learned_patterns": ("valid_from", "valid_to"),
         "knowledge_documents": ("published_at", "last_validated_at"),
     }
     for fixture, names in fields.items():
@@ -65,22 +123,44 @@ def _parseable(dataset: Dataset) -> list[Finding]:
         if not rows:
             continue
         bad = Counter()
+        examples: dict[str, str] = {}
         for row in rows:
             for name in names:
                 raw = row.get(name)
-                if raw not in (None, "") and parse_time(raw) is None:
+                if raw in (None, ""):
+                    continue
+                if not engine_parseable(raw, required_format(fixture, name)):
                     bad[name] += 1
+                    examples.setdefault(name, str(raw))
         for name, count in bad.items():
+            total = sum(1 for r in rows if r.get(name))
+            readable = parse_time(examples[name]) is not None
             findings.append(
                 error(
                     NAME,
                     "timestamp_parses",
-                    f"{count} unparseable {name} in {fixture}",
+                    f"{count} of {total} {name} in {fixture} are not in the "
+                    f"format the engine requires",
                     subject=f"{fixture}.{name}",
                     consequence=(
-                        "The engine parses with a fixed format and raises — "
-                        "one bad row fails the whole assessment at runtime."
+                        "The engine calls strptime with "
+                        f"'{required_format(fixture, name)}' and raises on "
+                        "anything else. This is a runtime failure at "
+                        "assessment, not a "
+                        "load failure — the data imports cleanly and then the "
+                        "first assessment dies."
+                    )
+                    + (
+                        " The value is a valid timestamp in another format, so "
+                        "this is a serialisation choice rather than corrupt "
+                        "data."
+                        if readable
+                        else ""
                     ),
+                    detail={
+                        "example": examples[name],
+                        "required": required_format(fixture, name),
+                    },
                 )
             )
     return findings
