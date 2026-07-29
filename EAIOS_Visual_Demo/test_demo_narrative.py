@@ -335,3 +335,73 @@ class TheDesignDocumentIsAccurateTests(unittest.TestCase):
                     or (ROOT / "json" / name).exists(),
                     f"{name} is documented but absent",
                 )
+
+
+class TheApprovalBoundaryHoldsWithoutAnInstanceTests(unittest.TestCase):
+    """Human approval is the architecture, not a ServiceNow feature.
+
+    The demonstration used to deep-link into a personal developer instance.
+    Removing it must not weaken the boundary — if approval only held because a
+    particular tenant was configured, it was never a property of the system.
+    """
+
+    def test_no_tenant_specific_reference_ships(self):
+        """A developer instance name and record sys_ids are tenant identifiers
+        and have no place in a deployed image."""
+        import re
+
+        for path in list(ROOT.glob("*.py")) + list((ROOT / "config").glob("*.json")):
+            text = path.read_text(encoding="utf-8")
+            with self.subTest(file=path.name):
+                self.assertNotRegex(
+                    text,
+                    r"dev\d{6}\.service-now\.com",
+                    "a specific developer instance is referenced",
+                )
+
+    def test_the_record_panel_survives_an_unbound_instance(self):
+        config = json.loads(
+            (ROOT / "config" / "visual_demo.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(config["instance_url"], "")
+        self.assertEqual(config["records"], {})
+
+        from eaios_story_data import StoryRepository
+
+        repo = StoryRepository.load(ROOT)
+        for row in assessments():
+            with self.subTest(scenario=row["correlation_id"]):
+                # No link, and no exception — the panel falls back to the
+                # contract rather than failing.
+                self.assertIsNone(
+                    repo.servicenow_record_url(row["correlation_id"])
+                )
+                self.assertEqual(
+                    repo.servicenow_record_metadata(row["correlation_id"]), {}
+                )
+
+    def test_every_path_still_requires_a_human(self):
+        """The boundary is unconditional. Confidence, recall class and plan
+        width change what is investigated, never whether approval is needed."""
+        for row in assessments():
+            with self.subTest(scenario=row["correlation_id"]):
+                self.assertTrue(
+                    row["recommendation"]["human_approval_required"],
+                    "a path reached a recommendation without requiring approval",
+                )
+                self.assertEqual(
+                    row["safety_status"], "REQUIRES_HUMAN_APPROVAL"
+                )
+
+    def test_the_write_is_escalated_rather_than_performed(self):
+        for row in assessments():
+            escalations = [
+                d
+                for d in row.get("policy_decisions", [])
+                if d.get("decision") == "ESCALATE"
+            ]
+            with self.subTest(scenario=row["correlation_id"]):
+                self.assertTrue(
+                    escalations,
+                    "creating the assessment record was not escalated",
+                )

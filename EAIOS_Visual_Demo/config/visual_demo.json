@@ -1,14 +1,7 @@
 {
-  "instance_url": "https://dev392355.service-now.com",
+  "notes": "The approval boundary, without a bound instance. This previously deep-linked into a personal ServiceNow developer instance; that URL and its record sys_ids are removed so the deployment carries nothing tied to one tenant. With instance_url empty, the panel presents the approval contract and the mapped payload rather than a link — which is the architecture, not an artefact of where it was first demonstrated. Set instance_url and populate records to re-enable deep links against any instance.",
+  "instance_url": "",
   "assessment_table": "u_eaios_operational_assessment",
   "assessment_view": "eaios_demo",
-  "records": {
-    "EAIOS-DEMO-STABLE-001": {
-      "number": "TASK0020125"
-    },
-    "EAIOS-DEMO-CONTRADICTION-001": {
-      "number": "TASK0020126",
-      "sys_id": "eed7d4ea4782c3105b287bb4416d436b"
-    }
-  }
+  "records": {}
 }

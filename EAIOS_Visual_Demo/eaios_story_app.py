@@ -820,9 +820,16 @@ def render_servicenow_boundary(
 
     render_control_plane(repo, correlation_id)
 
-    st.subheader("ServiceNow remains the operational system of record and control")
+    st.subheader("The approval boundary — where reasoning stops and authority begins")
+    st.caption(
+        "Every path through this system ends here. The reasoning proposes and "
+        "explains; it never executes. What follows is the record a system of "
+        "record would hold, and the approval that must precede any action."
+    )
     cols = st.columns(4)
-    cols[0].metric("Record", metadata.get("number", "Find by correlation ID"))
+    cols[0].metric(
+        "Record", metadata.get("number", "By correlation ID")
+    )
     cols[1].metric("Approval", str(payload.get("approval", "requested")).title())
     cols[2].metric("Outcome", payload.get("u_outcome", "Pending"))
     cols[3].metric("Safety", conceptual.get("Safety status", assessment["safety_status"]))
@@ -830,16 +837,29 @@ def render_servicenow_boundary(
     st.markdown(
         """
         <div class="eaios-callout">
-          <b>Approval and outcome are separate.</b><br>
-          ServiceNow approval records whether a human authorized the proposed action. Operational outcome
-          remains Pending until execution later proves Successful, Failed, or Partial.
+          <b>Approval and outcome are separate, and both are required.</b><br>
+          Approval records whether a human authorised the proposed action. Outcome stays Pending until
+          execution later proves it Successful, Failed or Partial &mdash; and that outcome is what feeds
+          back into confidence. A system that recorded approval as though it were a result would learn
+          from permission rather than from consequence.
         </div>
         """,
         unsafe_allow_html=True,
     )
 
     if url:
-        st.link_button("Open the ServiceNow assessment", url, width="content")
+        st.link_button("Open the assessment record", url, width="content")
+    else:
+        # No instance is bound. The panel presents the contract instead of a
+        # link, which is the architecture rather than an artefact of where the
+        # demonstration was first shown.
+        st.info(
+            "**No instance bound.** The fields below are the contract this "
+            "assessment would write to a system of record — ServiceNow in the "
+            "original build, and platform-neutral by construction. "
+            "`live_write_blocked` stays true: the write is escalated for human "
+            "approval and never performed by the agent."
+        )
 
     boundary_rows = [
         ("Correlation ID", payload.get("u_correlation_id", correlation_id)),
@@ -857,11 +877,11 @@ def render_servicenow_boundary(
     ]
     boundary_frame = pd.DataFrame(
         [(field, str(value)) for field, value in boundary_rows],
-        columns=["ServiceNow field", "Stored value"],
+        columns=["Record field", "Stored value"],
     )
     st.dataframe(boundary_frame, hide_index=True, width="stretch")
 
-    with st.expander("Mapped ServiceNow payload"):
+    with st.expander("Mapped record payload"):
         st.json(payload)
     with st.expander("Technical mapping status"):
         st.write(
