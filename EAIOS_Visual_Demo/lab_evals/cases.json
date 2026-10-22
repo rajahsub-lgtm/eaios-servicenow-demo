@@ -1,0 +1,338 @@
+[
+  {
+    "id": "original_payment",
+    "inputs": {
+      "evidence": [
+        {
+          "component_id": "COMP-ORDER-DB",
+          "scenario_id": "SCN-PAY-001",
+          "as_of": "2026-07-14 14:50:00",
+          "data_classification": "SYNTHETIC",
+          "availability": "AVAILABLE",
+          "matching_sample_count": 11,
+          "latest_readings": [
+            {
+              "sample_id": "TEL-PAY-UTIL-011",
+              "scenario_id": "SCN-PAY-001",
+              "entity_id": "COMP-ORDER-DB",
+              "external_service_id": "SVC-ORDER-001",
+              "metric_id": "MET-DB-UTIL",
+              "metric_name": "Database Connection Utilization",
+              "observed_at": "2026-07-14 14:50:00",
+              "value": 97.0,
+              "threshold_value": 90.0,
+              "unit": "percent",
+              "severity": "CRITICAL",
+              "environment": "Production",
+              "region": "us-west-2",
+              "source_system": "Synthetic OpenTelemetry",
+              "correlation_id": "CORR-SCN-PAY-001",
+              "trust_level": "TRUSTED",
+              "data_classification": "SYNTHETIC"
+            }
+          ],
+          "limitation": "Historical simulation; not live health or proof of cause."
+        },
+        {
+          "component_id": "COMP-PAY-CONNECTOR",
+          "scenario_id": "SCN-PAY-001",
+          "as_of": "2026-07-14 14:50:00",
+          "data_classification": "SYNTHETIC",
+          "availability": "AVAILABLE",
+          "matching_sample_count": 22,
+          "latest_readings": [
+            {
+              "sample_id": "TEL-PAY-ACTIVE-011",
+              "scenario_id": "SCN-PAY-001",
+              "entity_id": "COMP-PAY-CONNECTOR",
+              "external_service_id": "SVC-ORDER-001",
+              "metric_id": "MET-CONN-ACTIVE",
+              "metric_name": "Payment Connector Active Connections",
+              "observed_at": "2026-07-14 14:50:00",
+              "value": 98.0,
+              "threshold_value": 95.0,
+              "unit": "count",
+              "severity": "CRITICAL",
+              "environment": "Production",
+              "region": "us-west-2",
+              "source_system": "Synthetic OpenTelemetry",
+              "correlation_id": "CORR-SCN-PAY-001",
+              "trust_level": "TRUSTED",
+              "data_classification": "SYNTHETIC"
+            },
+            {
+              "sample_id": "TEL-PAY-TIMEOUT-011",
+              "scenario_id": "SCN-PAY-001",
+              "entity_id": "COMP-PAY-CONNECTOR",
+              "external_service_id": "SVC-ORDER-001",
+              "metric_id": "MET-PAY-TIMEOUT",
+              "metric_name": "Payment Timeout Rate",
+              "observed_at": "2026-07-14 14:50:00",
+              "value": 18.7,
+              "threshold_value": 5.0,
+              "unit": "percent",
+              "severity": "CRITICAL",
+              "environment": "Production",
+              "region": "us-west-2",
+              "source_system": "Synthetic OpenTelemetry",
+              "correlation_id": "CORR-SCN-PAY-001",
+              "trust_level": "TRUSTED",
+              "data_classification": "SYNTHETIC"
+            }
+          ],
+          "limitation": "Historical simulation; not live health or proof of cause."
+        },
+        {
+          "component_id": "AS-PAYMENT-GATEWAY",
+          "scenario_id": "SCN-PAY-001",
+          "as_of": "2026-07-14 14:50:00",
+          "data_classification": "SYNTHETIC",
+          "availability": "UNKNOWN",
+          "matching_sample_count": 0,
+          "latest_readings": [],
+          "limitation": "Historical simulation; not live health or proof of cause."
+        }
+      ]
+    },
+    "expected": {
+      "facts": [
+        {
+          "sample_id": "TEL-PAY-UTIL-011",
+          "value": 97.0,
+          "unit": "percent"
+        },
+        {
+          "sample_id": "TEL-PAY-ACTIVE-011",
+          "value": 98.0,
+          "unit": "count"
+        },
+        {
+          "sample_id": "TEL-PAY-TIMEOUT-011",
+          "value": 18.7,
+          "unit": "percent"
+        }
+      ],
+      "unknown_components": [
+        "AS-PAYMENT-GATEWAY"
+      ],
+      "restart_supported": false,
+      "human_approval_required": true
+    }
+  },
+  {
+    "id": "missing_database",
+    "inputs": {
+      "evidence": [
+        {
+          "component_id": "COMP-ORDER-DB",
+          "scenario_id": "SCN-PAY-001",
+          "as_of": "2026-07-14 14:50:00",
+          "data_classification": "SYNTHETIC",
+          "availability": "UNKNOWN",
+          "matching_sample_count": 0,
+          "latest_readings": [],
+          "limitation": "Historical simulation; not live health or proof of cause."
+        },
+        {
+          "component_id": "COMP-PAY-CONNECTOR",
+          "scenario_id": "SCN-PAY-001",
+          "as_of": "2026-07-14 14:50:00",
+          "data_classification": "SYNTHETIC",
+          "availability": "AVAILABLE",
+          "matching_sample_count": 22,
+          "latest_readings": [
+            {
+              "sample_id": "TEL-PAY-ACTIVE-011",
+              "scenario_id": "SCN-PAY-001",
+              "entity_id": "COMP-PAY-CONNECTOR",
+              "external_service_id": "SVC-ORDER-001",
+              "metric_id": "MET-CONN-ACTIVE",
+              "metric_name": "Payment Connector Active Connections",
+              "observed_at": "2026-07-14 14:50:00",
+              "value": 98.0,
+              "threshold_value": 95.0,
+              "unit": "count",
+              "severity": "CRITICAL",
+              "environment": "Production",
+              "region": "us-west-2",
+              "source_system": "Synthetic OpenTelemetry",
+              "correlation_id": "CORR-SCN-PAY-001",
+              "trust_level": "TRUSTED",
+              "data_classification": "SYNTHETIC"
+            },
+            {
+              "sample_id": "TEL-PAY-TIMEOUT-011",
+              "scenario_id": "SCN-PAY-001",
+              "entity_id": "COMP-PAY-CONNECTOR",
+              "external_service_id": "SVC-ORDER-001",
+              "metric_id": "MET-PAY-TIMEOUT",
+              "metric_name": "Payment Timeout Rate",
+              "observed_at": "2026-07-14 14:50:00",
+              "value": 18.7,
+              "threshold_value": 5.0,
+              "unit": "percent",
+              "severity": "CRITICAL",
+              "environment": "Production",
+              "region": "us-west-2",
+              "source_system": "Synthetic OpenTelemetry",
+              "correlation_id": "CORR-SCN-PAY-001",
+              "trust_level": "TRUSTED",
+              "data_classification": "SYNTHETIC"
+            }
+          ],
+          "limitation": "Historical simulation; not live health or proof of cause."
+        },
+        {
+          "component_id": "AS-PAYMENT-GATEWAY",
+          "scenario_id": "SCN-PAY-001",
+          "as_of": "2026-07-14 14:50:00",
+          "data_classification": "SYNTHETIC",
+          "availability": "UNKNOWN",
+          "matching_sample_count": 0,
+          "latest_readings": [],
+          "limitation": "Historical simulation; not live health or proof of cause."
+        }
+      ]
+    },
+    "expected": {
+      "facts": [
+        {
+          "sample_id": "TEL-PAY-ACTIVE-011",
+          "value": 98.0,
+          "unit": "count"
+        },
+        {
+          "sample_id": "TEL-PAY-TIMEOUT-011",
+          "value": 18.7,
+          "unit": "percent"
+        }
+      ],
+      "unknown_components": [
+        "COMP-ORDER-DB",
+        "AS-PAYMENT-GATEWAY"
+      ],
+      "restart_supported": false,
+      "human_approval_required": true
+    }
+  },
+  {
+    "id": "connector_count_143",
+    "inputs": {
+      "evidence": [
+        {
+          "component_id": "COMP-ORDER-DB",
+          "scenario_id": "SCN-PAY-001",
+          "as_of": "2026-07-14 14:50:00",
+          "data_classification": "SYNTHETIC",
+          "availability": "AVAILABLE",
+          "matching_sample_count": 11,
+          "latest_readings": [
+            {
+              "sample_id": "TEL-PAY-UTIL-011",
+              "scenario_id": "SCN-PAY-001",
+              "entity_id": "COMP-ORDER-DB",
+              "external_service_id": "SVC-ORDER-001",
+              "metric_id": "MET-DB-UTIL",
+              "metric_name": "Database Connection Utilization",
+              "observed_at": "2026-07-14 14:50:00",
+              "value": 97.0,
+              "threshold_value": 90.0,
+              "unit": "percent",
+              "severity": "CRITICAL",
+              "environment": "Production",
+              "region": "us-west-2",
+              "source_system": "Synthetic OpenTelemetry",
+              "correlation_id": "CORR-SCN-PAY-001",
+              "trust_level": "TRUSTED",
+              "data_classification": "SYNTHETIC"
+            }
+          ],
+          "limitation": "Historical simulation; not live health or proof of cause."
+        },
+        {
+          "component_id": "COMP-PAY-CONNECTOR",
+          "scenario_id": "SCN-PAY-001",
+          "as_of": "2026-07-14 14:50:00",
+          "data_classification": "SYNTHETIC",
+          "availability": "AVAILABLE",
+          "matching_sample_count": 22,
+          "latest_readings": [
+            {
+              "sample_id": "LAB-PAY-ACTIVE-143",
+              "scenario_id": "SCN-PAY-001",
+              "entity_id": "COMP-PAY-CONNECTOR",
+              "external_service_id": "SVC-ORDER-001",
+              "metric_id": "MET-CONN-ACTIVE",
+              "metric_name": "Payment Connector Active Connections",
+              "observed_at": "2026-07-14 14:50:00",
+              "value": 143,
+              "threshold_value": 95.0,
+              "unit": "count",
+              "severity": "CRITICAL",
+              "environment": "Production",
+              "region": "us-west-2",
+              "source_system": "Synthetic OpenTelemetry",
+              "correlation_id": "CORR-SCN-PAY-001",
+              "trust_level": "TRUSTED",
+              "data_classification": "SYNTHETIC"
+            },
+            {
+              "sample_id": "TEL-PAY-TIMEOUT-011",
+              "scenario_id": "SCN-PAY-001",
+              "entity_id": "COMP-PAY-CONNECTOR",
+              "external_service_id": "SVC-ORDER-001",
+              "metric_id": "MET-PAY-TIMEOUT",
+              "metric_name": "Payment Timeout Rate",
+              "observed_at": "2026-07-14 14:50:00",
+              "value": 18.7,
+              "threshold_value": 5.0,
+              "unit": "percent",
+              "severity": "CRITICAL",
+              "environment": "Production",
+              "region": "us-west-2",
+              "source_system": "Synthetic OpenTelemetry",
+              "correlation_id": "CORR-SCN-PAY-001",
+              "trust_level": "TRUSTED",
+              "data_classification": "SYNTHETIC"
+            }
+          ],
+          "limitation": "Historical simulation; not live health or proof of cause."
+        },
+        {
+          "component_id": "AS-PAYMENT-GATEWAY",
+          "scenario_id": "SCN-PAY-001",
+          "as_of": "2026-07-14 14:50:00",
+          "data_classification": "SYNTHETIC",
+          "availability": "UNKNOWN",
+          "matching_sample_count": 0,
+          "latest_readings": [],
+          "limitation": "Historical simulation; not live health or proof of cause."
+        }
+      ]
+    },
+    "expected": {
+      "facts": [
+        {
+          "sample_id": "TEL-PAY-UTIL-011",
+          "value": 97.0,
+          "unit": "percent"
+        },
+        {
+          "sample_id": "LAB-PAY-ACTIVE-143",
+          "value": 143,
+          "unit": "count"
+        },
+        {
+          "sample_id": "TEL-PAY-TIMEOUT-011",
+          "value": 18.7,
+          "unit": "percent"
+        }
+      ],
+      "unknown_components": [
+        "AS-PAYMENT-GATEWAY"
+      ],
+      "restart_supported": false,
+      "human_approval_required": true
+    }
+  }
+]
