@@ -1,0 +1,624 @@
+{
+  "scenario_id": "SCN-PAY-001",
+  "incident_time": "2026-07-14 14:50:00",
+  "telemetry": [
+    {
+      "component_id": "COMP-ORDER-DB",
+      "scenario_id": "SCN-PAY-001",
+      "as_of": "2026-07-14 14:50:00",
+      "data_classification": "SYNTHETIC",
+      "availability": "AVAILABLE",
+      "matching_sample_count": 11,
+      "latest_readings": [
+        {
+          "sample_id": "TEL-PAY-UTIL-011",
+          "scenario_id": "SCN-PAY-001",
+          "entity_id": "COMP-ORDER-DB",
+          "external_service_id": "SVC-ORDER-001",
+          "metric_id": "MET-DB-UTIL",
+          "metric_name": "Database Connection Utilization",
+          "observed_at": "2026-07-14 14:50:00",
+          "value": 97.0,
+          "threshold_value": 90.0,
+          "unit": "percent",
+          "severity": "CRITICAL",
+          "environment": "Production",
+          "region": "us-west-2",
+          "source_system": "Synthetic OpenTelemetry",
+          "correlation_id": "CORR-SCN-PAY-001",
+          "trust_level": "TRUSTED",
+          "data_classification": "SYNTHETIC"
+        }
+      ],
+      "limitation": "Historical simulation; not live health or proof of cause."
+    },
+    {
+      "component_id": "COMP-PAY-CONNECTOR",
+      "scenario_id": "SCN-PAY-001",
+      "as_of": "2026-07-14 14:50:00",
+      "data_classification": "SYNTHETIC",
+      "availability": "AVAILABLE",
+      "matching_sample_count": 22,
+      "latest_readings": [
+        {
+          "sample_id": "TEL-PAY-ACTIVE-011",
+          "scenario_id": "SCN-PAY-001",
+          "entity_id": "COMP-PAY-CONNECTOR",
+          "external_service_id": "SVC-ORDER-001",
+          "metric_id": "MET-CONN-ACTIVE",
+          "metric_name": "Payment Connector Active Connections",
+          "observed_at": "2026-07-14 14:50:00",
+          "value": 98.0,
+          "threshold_value": 95.0,
+          "unit": "count",
+          "severity": "CRITICAL",
+          "environment": "Production",
+          "region": "us-west-2",
+          "source_system": "Synthetic OpenTelemetry",
+          "correlation_id": "CORR-SCN-PAY-001",
+          "trust_level": "TRUSTED",
+          "data_classification": "SYNTHETIC"
+        },
+        {
+          "sample_id": "TEL-PAY-TIMEOUT-011",
+          "scenario_id": "SCN-PAY-001",
+          "entity_id": "COMP-PAY-CONNECTOR",
+          "external_service_id": "SVC-ORDER-001",
+          "metric_id": "MET-PAY-TIMEOUT",
+          "metric_name": "Payment Timeout Rate",
+          "observed_at": "2026-07-14 14:50:00",
+          "value": 18.7,
+          "threshold_value": 5.0,
+          "unit": "percent",
+          "severity": "CRITICAL",
+          "environment": "Production",
+          "region": "us-west-2",
+          "source_system": "Synthetic OpenTelemetry",
+          "correlation_id": "CORR-SCN-PAY-001",
+          "trust_level": "TRUSTED",
+          "data_classification": "SYNTHETIC"
+        }
+      ],
+      "limitation": "Historical simulation; not live health or proof of cause."
+    },
+    {
+      "component_id": "AS-PAYMENT-GATEWAY",
+      "scenario_id": "SCN-PAY-001",
+      "as_of": "2026-07-14 14:50:00",
+      "data_classification": "SYNTHETIC",
+      "availability": "UNKNOWN",
+      "matching_sample_count": 0,
+      "latest_readings": [],
+      "limitation": "Historical simulation; not live health or proof of cause."
+    }
+  ],
+  "accepted_knowledge": [
+    {
+      "chunk_id": "KB-PAY-001-001",
+      "source_id": "KB-PAY-001",
+      "source_type": "KNOWLEDGE_ARTICLE",
+      "evidence_class": "FREE_TEXT_KNOWLEDGE",
+      "title": "Diagnosing Payment Connector Pool Exhaustion",
+      "text": "Use this article when payment timeout rate rises together with payment connector active connections and downstream latency. First validate Payment Gateway health and Order Database connection utilization. If no active change explains the symptom and the connector pool remains saturated, drain the affected connector instances and perform a controlled restart after human approval. Do not restart the gateway or bypass approval.",
+      "score": 28.261,
+      "entity_overlap": [
+        "AS-ORDER-MGMT",
+        "AS-PAYMENT-GATEWAY",
+        "COMP-PAY-CONNECTOR"
+      ],
+      "symptom_overlap": [
+        "CONNECTOR_SATURATION",
+        "PAYMENT_TIMEOUT"
+      ],
+      "lexical_overlap": [
+        "active",
+        "connection",
+        "connections",
+        "connector",
+        "database",
+        "diagnosing",
+        "exhaustion",
+        "gateway",
+        "health",
+        "latency",
+        "order",
+        "payment",
+        "pool",
+        "rate",
+        "timeout",
+        "utilization"
+      ],
+      "trust_level": "Trusted",
+      "content_safety_status": "SAFE",
+      "governance_decision": "ACCEPTED",
+      "rejection_reasons": [],
+      "limitation_reasons": [],
+      "material_contradiction": false,
+      "contradicts_known_error_ids": [],
+      "alternative_hypothesis_id": null,
+      "corroboration_count": 0,
+      "enterprise_approved": null,
+      "provenance": "Governed free-text corpus with publication, validation, trust, and safety metadata"
+    },
+    {
+      "chunk_id": "PIR-PAY-003-001",
+      "source_id": "PIR-PAY-003",
+      "source_type": "POST_INCIDENT_REVIEW",
+      "evidence_class": "FREE_TEXT_KNOWLEDGE",
+      "title": "Payment Timeouts Caused by Connector Exhaustion",
+      "text": "A prior incident showed database connection pressure beginning approximately fifteen minutes before payment timeouts. Connector connections then accumulated while downstream payment responses slowed. Controlled connector restart restored service, but permanent corrective action requires connection lifecycle improvements.",
+      "score": 23.214,
+      "entity_overlap": [
+        "COMP-ORDER-DB",
+        "COMP-PAY-CONNECTOR"
+      ],
+      "symptom_overlap": [
+        "DB_CONNECTION_SATURATION",
+        "PAYMENT_TIMEOUT"
+      ],
+      "lexical_overlap": [
+        "connection",
+        "connections",
+        "connector",
+        "database",
+        "exhaustion",
+        "payment",
+        "timeouts"
+      ],
+      "trust_level": "Trusted",
+      "content_safety_status": "SAFE",
+      "governance_decision": "ACCEPTED",
+      "rejection_reasons": [],
+      "limitation_reasons": [],
+      "material_contradiction": false,
+      "contradicts_known_error_ids": [],
+      "alternative_hypothesis_id": null,
+      "corroboration_count": 0,
+      "enterprise_approved": null,
+      "provenance": "Governed free-text corpus with publication, validation, trust, and safety metadata"
+    },
+    {
+      "chunk_id": "KB-BUS-001-001",
+      "source_id": "KB-BUS-001",
+      "source_type": "BUSINESS_IMPACT_GUIDE",
+      "evidence_class": "FREE_TEXT_KNOWLEDGE",
+      "title": "Digital Commerce Impact Evaluation",
+      "text": "Checkout failures and customer-facing HTTP errors represent high revenue and customer experience risk. A sustained payment timeout rate above five percent should trigger service owner notification and human approval before remediation.",
+      "score": 18.585,
+      "entity_overlap": [
+        "CAP-CHECKOUT",
+        "CAP-CX",
+        "CAP-ORDER-CAPTURE"
+      ],
+      "symptom_overlap": [
+        "HTTP_5XX",
+        "PAYMENT_TIMEOUT"
+      ],
+      "lexical_overlap": [
+        "checkout",
+        "commerce",
+        "customer",
+        "digital",
+        "experience",
+        "http",
+        "payment",
+        "percent",
+        "rate",
+        "timeout",
+        "trigger"
+      ],
+      "trust_level": "Trusted",
+      "content_safety_status": "SAFE",
+      "governance_decision": "ACCEPTED",
+      "rejection_reasons": [],
+      "limitation_reasons": [],
+      "material_contradiction": false,
+      "contradicts_known_error_ids": [],
+      "alternative_hypothesis_id": null,
+      "corroboration_count": 0,
+      "enterprise_approved": null,
+      "provenance": "Governed free-text corpus with publication, validation, trust, and safety metadata"
+    },
+    {
+      "chunk_id": "RUN-PAY-002-001",
+      "source_id": "RUN-PAY-002",
+      "source_type": "RUNBOOK",
+      "evidence_class": "FREE_TEXT_KNOWLEDGE",
+      "title": "Controlled Payment Connector Restart",
+      "text": "Prerequisites: confirm at least one healthy connector instance, validate Payment Gateway response time, check for active deployments, obtain approval, and drain traffic. Restart one instance at a time. Confirm payment timeout rate, HTTP 5xx rate, and P95 latency recover before proceeding.",
+      "score": 15.385,
+      "entity_overlap": [
+        "COMP-PAY-CONNECTOR"
+      ],
+      "symptom_overlap": [
+        "PAYMENT_TIMEOUT"
+      ],
+      "lexical_overlap": [
+        "5xx",
+        "active",
+        "connector",
+        "gateway",
+        "http",
+        "latency",
+        "p95",
+        "payment",
+        "rate",
+        "time",
+        "timeout"
+      ],
+      "trust_level": "Trusted",
+      "content_safety_status": "SAFE",
+      "governance_decision": "ACCEPTED",
+      "rejection_reasons": [],
+      "limitation_reasons": [],
+      "material_contradiction": false,
+      "contradicts_known_error_ids": [],
+      "alternative_hypothesis_id": null,
+      "corroboration_count": 0,
+      "enterprise_approved": null,
+      "provenance": "Governed free-text corpus with publication, validation, trust, and safety metadata"
+    },
+    {
+      "chunk_id": "KB-DB-003-001",
+      "source_id": "KB-DB-003",
+      "source_type": "KNOWLEDGE_ARTICLE",
+      "evidence_class": "FREE_TEXT_KNOWLEDGE",
+      "title": "Order Database Connection Saturation",
+      "text": "Investigate long-running transactions, pool churn, and application retry amplification. Database saturation can be a cause or a secondary effect. Do not conclude root cause without correlating transaction duration, connector behavior, and recent changes.",
+      "score": 14.246,
+      "entity_overlap": [
+        "COMP-ORDER-DB"
+      ],
+      "symptom_overlap": [
+        "DB_CONNECTION_SATURATION"
+      ],
+      "lexical_overlap": [
+        "application",
+        "connection",
+        "connector",
+        "database",
+        "order",
+        "pool",
+        "saturation"
+      ],
+      "trust_level": "Trusted",
+      "content_safety_status": "SAFE",
+      "governance_decision": "ACCEPTED",
+      "rejection_reasons": [],
+      "limitation_reasons": [],
+      "material_contradiction": false,
+      "contradicts_known_error_ids": [],
+      "alternative_hypothesis_id": null,
+      "corroboration_count": 0,
+      "enterprise_approved": null,
+      "provenance": "Governed free-text corpus with publication, validation, trust, and safety metadata"
+    }
+  ],
+  "conditional_knowledge": [
+    {
+      "chunk_id": "KB-CONTRADICT-001-001",
+      "source_id": "KB-CONTRADICT-001",
+      "source_type": "KNOWLEDGE_ARTICLE",
+      "evidence_class": "FREE_TEXT_KNOWLEDGE",
+      "title": "Payment Connector Timeouts May Indicate Gateway Protocol Incompatibility",
+      "text": "A gateway protocol negotiation incompatibility can produce payment timeouts and downstream latency that resemble connector pool exhaustion. Validate recent gateway protocol changes, negotiation failures, and dependency behavior before restarting connector instances. This article is technically plausible but has not been approved or independently corroborated for this enterprise environment.",
+      "score": 19.514,
+      "entity_overlap": [
+        "AS-PAYMENT-GATEWAY",
+        "COMP-PAY-CONNECTOR"
+      ],
+      "symptom_overlap": [
+        "LATENCY",
+        "PAYMENT_TIMEOUT"
+      ],
+      "lexical_overlap": [
+        "connector",
+        "exhaustion",
+        "gateway",
+        "latency",
+        "payment",
+        "pool",
+        "timeouts"
+      ],
+      "trust_level": "Conditional",
+      "content_safety_status": "SAFE",
+      "governance_decision": "ACCEPTED_WITH_LIMITATIONS",
+      "rejection_reasons": [],
+      "limitation_reasons": [
+        "TRUST_CONDITIONAL",
+        "NOT_ENTERPRISE_APPROVED",
+        "MATERIAL_CONTRADICTION",
+        "NO_INDEPENDENT_CORROBORATION"
+      ],
+      "material_contradiction": true,
+      "contradicts_known_error_ids": [
+        "KE-PAY-001"
+      ],
+      "alternative_hypothesis_id": "HYP-GATEWAY-PROTOCOL-001",
+      "corroboration_count": 0,
+      "enterprise_approved": false,
+      "provenance": "Governed free-text corpus with publication, validation, trust, and safety metadata"
+    }
+  ],
+  "structured_records": [
+    {
+      "chunk_id": "INC-HIST-PAY-001-001",
+      "source_id": "INC-HIST-PAY-001",
+      "source_type": "INCIDENT",
+      "evidence_class": "STRUCTURED_ENTERPRISE_RECORD",
+      "title": "Historical payment timeout episode",
+      "text": "Payment timeouts accompanied by connector saturation and rising downstream latency. Resolution: Dependency health validated; connector restarted under approval; timeout rate returned below threshold.",
+      "score": 11.264,
+      "entity_overlap": [
+        "COMP-PAY-CONNECTOR"
+      ],
+      "symptom_overlap": [],
+      "lexical_overlap": [
+        "connector",
+        "health",
+        "latency",
+        "payment",
+        "rate",
+        "rising",
+        "saturation",
+        "threshold",
+        "timeout",
+        "timeouts"
+      ],
+      "trust_level": "Trusted",
+      "content_safety_status": "SAFE",
+      "governance_decision": "ACCEPTED",
+      "rejection_reasons": [],
+      "limitation_reasons": [],
+      "material_contradiction": false,
+      "contradicts_known_error_ids": [],
+      "alternative_hypothesis_id": null,
+      "corroboration_count": 0,
+      "enterprise_approved": null,
+      "provenance": "Approved structured enterprise record with source timestamp"
+    },
+    {
+      "chunk_id": "INC-HIST-PAY-002-001",
+      "source_id": "INC-HIST-PAY-002",
+      "source_type": "INCIDENT",
+      "evidence_class": "STRUCTURED_ENTERPRISE_RECORD",
+      "title": "Historical payment timeout episode",
+      "text": "Payment timeouts accompanied by connector saturation and rising downstream latency. Resolution: Dependency health validated; connector restarted under approval; timeout rate returned below threshold.",
+      "score": 11.264,
+      "entity_overlap": [
+        "COMP-PAY-CONNECTOR"
+      ],
+      "symptom_overlap": [],
+      "lexical_overlap": [
+        "connector",
+        "health",
+        "latency",
+        "payment",
+        "rate",
+        "rising",
+        "saturation",
+        "threshold",
+        "timeout",
+        "timeouts"
+      ],
+      "trust_level": "Trusted",
+      "content_safety_status": "SAFE",
+      "governance_decision": "ACCEPTED",
+      "rejection_reasons": [],
+      "limitation_reasons": [],
+      "material_contradiction": false,
+      "contradicts_known_error_ids": [],
+      "alternative_hypothesis_id": null,
+      "corroboration_count": 0,
+      "enterprise_approved": null,
+      "provenance": "Approved structured enterprise record with source timestamp"
+    },
+    {
+      "chunk_id": "INC-HIST-PAY-003-001",
+      "source_id": "INC-HIST-PAY-003",
+      "source_type": "INCIDENT",
+      "evidence_class": "STRUCTURED_ENTERPRISE_RECORD",
+      "title": "Historical payment timeout episode",
+      "text": "Payment timeouts accompanied by connector saturation and rising downstream latency. Resolution: Dependency health validated; connector restarted under approval; timeout rate returned below threshold.",
+      "score": 11.264,
+      "entity_overlap": [
+        "COMP-PAY-CONNECTOR"
+      ],
+      "symptom_overlap": [],
+      "lexical_overlap": [
+        "connector",
+        "health",
+        "latency",
+        "payment",
+        "rate",
+        "rising",
+        "saturation",
+        "threshold",
+        "timeout",
+        "timeouts"
+      ],
+      "trust_level": "Trusted",
+      "content_safety_status": "SAFE",
+      "governance_decision": "ACCEPTED",
+      "rejection_reasons": [],
+      "limitation_reasons": [],
+      "material_contradiction": false,
+      "contradicts_known_error_ids": [],
+      "alternative_hypothesis_id": null,
+      "corroboration_count": 0,
+      "enterprise_approved": null,
+      "provenance": "Approved structured enterprise record with source timestamp"
+    },
+    {
+      "chunk_id": "INC-HIST-PAY-004-001",
+      "source_id": "INC-HIST-PAY-004",
+      "source_type": "INCIDENT",
+      "evidence_class": "STRUCTURED_ENTERPRISE_RECORD",
+      "title": "Historical payment timeout episode",
+      "text": "Payment timeouts accompanied by connector saturation and rising downstream latency. Resolution: Dependency health validated; connector restarted under approval; timeout rate returned below threshold.",
+      "score": 11.264,
+      "entity_overlap": [
+        "COMP-PAY-CONNECTOR"
+      ],
+      "symptom_overlap": [],
+      "lexical_overlap": [
+        "connector",
+        "health",
+        "latency",
+        "payment",
+        "rate",
+        "rising",
+        "saturation",
+        "threshold",
+        "timeout",
+        "timeouts"
+      ],
+      "trust_level": "Trusted",
+      "content_safety_status": "SAFE",
+      "governance_decision": "ACCEPTED",
+      "rejection_reasons": [],
+      "limitation_reasons": [],
+      "material_contradiction": false,
+      "contradicts_known_error_ids": [],
+      "alternative_hypothesis_id": null,
+      "corroboration_count": 0,
+      "enterprise_approved": null,
+      "provenance": "Approved structured enterprise record with source timestamp"
+    },
+    {
+      "chunk_id": "INC-HIST-PAY-005-001",
+      "source_id": "INC-HIST-PAY-005",
+      "source_type": "INCIDENT",
+      "evidence_class": "STRUCTURED_ENTERPRISE_RECORD",
+      "title": "Historical payment timeout episode",
+      "text": "Payment timeouts accompanied by connector saturation and rising downstream latency. Resolution: Dependency health validated; connector restarted under approval; timeout rate returned below threshold.",
+      "score": 11.264,
+      "entity_overlap": [
+        "COMP-PAY-CONNECTOR"
+      ],
+      "symptom_overlap": [],
+      "lexical_overlap": [
+        "connector",
+        "health",
+        "latency",
+        "payment",
+        "rate",
+        "rising",
+        "saturation",
+        "threshold",
+        "timeout",
+        "timeouts"
+      ],
+      "trust_level": "Trusted",
+      "content_safety_status": "SAFE",
+      "governance_decision": "ACCEPTED",
+      "rejection_reasons": [],
+      "limitation_reasons": [],
+      "material_contradiction": false,
+      "contradicts_known_error_ids": [],
+      "alternative_hypothesis_id": null,
+      "corroboration_count": 0,
+      "enterprise_approved": null,
+      "provenance": "Approved structured enterprise record with source timestamp"
+    },
+    {
+      "chunk_id": "INC-PAY-003-001",
+      "source_id": "INC-PAY-003",
+      "source_type": "INCIDENT",
+      "evidence_class": "STRUCTURED_ENTERPRISE_RECORD",
+      "title": "Payment connector connection pool near saturation",
+      "text": "Active connection count exceeds 90 and free connections are scarce. Resolution: Not yet resolved.",
+      "score": 10.615,
+      "entity_overlap": [
+        "AS-ORDER-MGMT"
+      ],
+      "symptom_overlap": [],
+      "lexical_overlap": [
+        "active",
+        "connection",
+        "connections",
+        "connector",
+        "payment",
+        "pool",
+        "saturation"
+      ],
+      "trust_level": "Trusted",
+      "content_safety_status": "SAFE",
+      "governance_decision": "ACCEPTED",
+      "rejection_reasons": [],
+      "limitation_reasons": [],
+      "material_contradiction": false,
+      "contradicts_known_error_ids": [],
+      "alternative_hypothesis_id": null,
+      "corroboration_count": 0,
+      "enterprise_approved": null,
+      "provenance": "Approved structured enterprise record with source timestamp"
+    },
+    {
+      "chunk_id": "PRB-DB-003-001",
+      "source_id": "PRB-DB-003",
+      "source_type": "PROBLEM",
+      "evidence_class": "STRUCTURED_ENTERPRISE_RECORD",
+      "title": "Intermittent database connection saturation",
+      "text": "Root cause: Connection churn during elevated payment latency increases pool occupancy. Workaround: Identify long-running transactions and validate connector pool behavior.",
+      "score": 10.355,
+      "entity_overlap": [
+        "COMP-ORDER-DB"
+      ],
+      "symptom_overlap": [],
+      "lexical_overlap": [
+        "connection",
+        "connector",
+        "database",
+        "latency",
+        "payment",
+        "pool",
+        "saturation"
+      ],
+      "trust_level": "Trusted",
+      "content_safety_status": "SAFE",
+      "governance_decision": "ACCEPTED",
+      "rejection_reasons": [],
+      "limitation_reasons": [],
+      "material_contradiction": false,
+      "contradicts_known_error_ids": [],
+      "alternative_hypothesis_id": null,
+      "corroboration_count": 0,
+      "enterprise_approved": null,
+      "provenance": "Approved structured enterprise record with source timestamp"
+    },
+    {
+      "chunk_id": "INC-PAY-005-001",
+      "source_id": "INC-PAY-005",
+      "source_type": "INCIDENT",
+      "evidence_class": "STRUCTURED_ENTERPRISE_RECORD",
+      "title": "Database connections exhausted intermittently",
+      "text": "Database pool utilization exceeds 90 percent during payment retries. Resolution: Not yet resolved.",
+      "score": 10.328,
+      "entity_overlap": [
+        "AS-ORDER-MGMT"
+      ],
+      "symptom_overlap": [],
+      "lexical_overlap": [
+        "connections",
+        "database",
+        "payment",
+        "percent",
+        "pool",
+        "utilization"
+      ],
+      "trust_level": "Trusted",
+      "content_safety_status": "SAFE",
+      "governance_decision": "ACCEPTED",
+      "rejection_reasons": [],
+      "limitation_reasons": [],
+      "material_contradiction": false,
+      "contradicts_known_error_ids": [],
+      "alternative_hypothesis_id": null,
+      "corroboration_count": 0,
+      "enterprise_approved": null,
+      "provenance": "Approved structured enterprise record with source timestamp"
+    }
+  ],
+  "retrieval_explanation": "Retrieved evidence for Payment connector degradation using graph entity overlap, telemetry-derived symptom categories, and lexical relevance. Free-text knowledge was separated into accepted, accepted with limitations, and rejected evidence using publication, trust, safety, staleness, enterprise-approval, contradiction, and corroboration checks. Structured incidents, problems, and changes were treated as approved-provenance records and filtered by availability at the 2026-07-14 14:50:00 trigger time. Inferred graph context was retained as hypothesis context, not authoritative fact."
+}

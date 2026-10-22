@@ -10,6 +10,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from eaios_story_data import StoryDataError, StoryRepository, format_identifier
+import rag_review_panel
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -947,6 +948,8 @@ def main() -> None:
         st.divider()
         render_scenario_spread(repo)
     with tabs[2]:
+        rag_review_panel.render_rag_review(BASE_DIR, assessment["scenario_id"])
+        st.divider()
         render_evidence(repo, assessment, selected)
     with tabs[3]:
         render_readiness(repo, assessment, selected)
