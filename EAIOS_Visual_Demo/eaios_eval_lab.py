@@ -1,8 +1,9 @@
-﻿import argparse
+import argparse
 import hashlib
 from pathlib import Path
 
 from langsmith import Client
+from lab_evaluators import citation_validity
 from eaios_bedrock_lab import generate_brief
 
 BASE = Path(__file__).resolve().parent
@@ -36,7 +37,7 @@ def main():
     client.evaluate(
         target,
         data="eaios-payment-evals-v1",
-        evaluators=[normal_completion],
+        evaluators=[normal_completion, citation_validity],
         experiment_prefix=f"eaios-payment-{args.prompt}",
         metadata={
             "prompt_version": args.prompt,
